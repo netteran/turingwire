@@ -1,0 +1,311 @@
+---
+layout: default
+title: "ML Conference Calendar"
+description: "Key dates for major machine learning conferences: NeurIPS, ICML, ICLR, CVPR, ACL, EMNLP and more. Submission deadlines, notifications, and conference dates."
+permalink: /calendar/
+---
+
+{% assign cdata = site.data.conferences %}
+{% assign today = 'now' | date: "%Y-%m-%d" %}
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+  <!-- Page header -->
+  <div class="mb-8">
+    <div class="flex flex-wrap items-start justify-between gap-4 mb-3">
+      <div>
+        <h1 class="text-2xl font-bold tw-heading font-mono">ML Conference Calendar</h1>
+        <p class="tw-muted text-sm mt-1">Submission deadlines, notification dates, and conference schedules.</p>
+      </div>
+      <div class="text-right flex-shrink-0">
+        <p class="text-xs tw-muted font-mono">As of {{ today }}</p>
+      </div>
+    </div>
+
+    <!-- Status legend -->
+    <div class="flex flex-wrap gap-3 text-xs tw-muted">
+      <div class="flex items-center gap-1.5"><span class="tw-conf-badge tw-conf-submissions">Submissions open</span> Deadline upcoming</div>
+      <div class="flex items-center gap-1.5"><span class="tw-conf-badge tw-conf-notification">Notifications</span> Review complete</div>
+      <div class="flex items-center gap-1.5"><span class="tw-conf-badge tw-conf-upcoming">Upcoming</span> Accepted, not yet held</div>
+      <div class="flex items-center gap-1.5"><span class="tw-conf-badge tw-conf-ongoing">Ongoing</span> Conference in progress</div>
+      <div class="flex items-center gap-1.5"><span class="tw-conf-badge tw-conf-completed">Completed</span></div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="mb-6 space-y-3">
+    <div class="flex flex-wrap gap-2 items-center">
+      <span class="text-xs tw-muted font-mono uppercase tracking-widest mr-1">Year</span>
+      <button class="tw-filter-chip active" data-filter-year="all">All</button>
+      <button class="tw-filter-chip" data-filter-year="2026">2026</button>
+      <button class="tw-filter-chip" data-filter-year="2025">2025</button>
+    </div>
+    <div class="flex flex-wrap gap-2 items-center">
+      <span class="text-xs tw-muted font-mono uppercase tracking-widest mr-1">Track</span>
+      <button class="tw-filter-chip active" data-filter-track="all">All</button>
+      <button class="tw-filter-chip" data-filter-track="ml">ML</button>
+      <button class="tw-filter-chip" data-filter-track="nlp">NLP</button>
+      <button class="tw-filter-chip" data-filter-track="cv">Computer Vision</button>
+      <button class="tw-filter-chip" data-filter-track="robotics">Robotics / RL</button>
+      <button class="tw-filter-chip" data-filter-track="llm">LLM-focused</button>
+    </div>
+    <div class="flex flex-wrap gap-2 items-center">
+      <span class="text-xs tw-muted font-mono uppercase tracking-widest mr-1">Status</span>
+      <button class="tw-filter-chip active" data-filter-status="all">All</button>
+      <button class="tw-filter-chip" data-filter-status="submissions">Submissions open</button>
+      <button class="tw-filter-chip" data-filter-status="upcoming">Upcoming</button>
+      <button class="tw-filter-chip" data-filter-status="completed">Completed</button>
+    </div>
+  </div>
+
+  <span id="conf-count" class="text-xs tw-muted font-mono block mb-4"></span>
+
+  <!-- Conference cards -->
+  <div id="conf-grid" class="space-y-3">
+    {% for conf in cdata.conferences %}
+    {% assign tracks_str = conf.track | join: " " %}
+    <div class="conf-card tw-card rounded-xl border tw-border"
+         id="conf-{{ conf.id }}"
+         data-year="{{ conf.year }}"
+         data-track="{{ tracks_str }}"
+         data-submission="{{ conf.submission_deadline }}"
+         data-notification="{{ conf.notification_date }}"
+         data-start="{{ conf.conference_start }}"
+         data-end="{{ conf.conference_end }}">
+
+      <div class="p-5">
+        <div class="flex flex-wrap items-start justify-between gap-3 mb-3">
+          <!-- Title block -->
+          <div class="flex-1 min-w-0">
+            <div class="flex flex-wrap items-center gap-2 mb-1">
+              <h2 class="text-base font-bold tw-heading font-mono">{{ conf.name }}</h2>
+              <!-- Status badge injected by JS -->
+              <span class="conf-status-badge" data-conf-id="{{ conf.id }}"></span>
+            </div>
+            <p class="text-xs tw-muted">{{ conf.full_name }}</p>
+          </div>
+
+          <!-- Location + link + share -->
+          <div class="flex items-start gap-3 flex-shrink-0">
+            <div class="text-right">
+              <div class="text-sm tw-heading font-semibold">{{ conf.location }}</div>
+              {% if conf.acceptance_rate != "" %}
+              <div class="text-xs tw-muted font-mono">Accept rate: {{ conf.acceptance_rate }}</div>
+              {% endif %}
+              <a href="{{ conf.website }}" target="_blank" rel="noopener"
+                 class="text-xs tw-accent hover:underline font-mono">website ↗</a>
+            </div>
+            {% capture conf_share_url %}/calendar/#conf-{{ conf.id }}{% endcapture %}
+            {% capture conf_share_title %}{{ conf.name }} — {{ conf.full_name }}{% endcapture %}
+            {% include share.html
+               url=conf_share_url
+               title=conf_share_title
+               summary=conf.notes
+               variant="popover"
+               align="right" %}
+          </div>
+        </div>
+
+        <!-- Track chips -->
+        <div class="flex flex-wrap gap-1.5 mb-4">
+          {% for t in conf.track %}
+          <span class="tw-track-badge">{{ t | upcase }}</span>
+          {% endfor %}
+        </div>
+
+        <!-- Key dates -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div class="tw-date-block" data-date="{{ conf.submission_deadline }}">
+            <div class="tw-date-label">Submission deadline</div>
+            <div class="tw-date-value">{{ conf.submission_deadline | date: "%b %-d, %Y" }}</div>
+          </div>
+          <div class="tw-date-block" data-date="{{ conf.notification_date }}">
+            <div class="tw-date-label">Notification</div>
+            <div class="tw-date-value">{{ conf.notification_date | date: "%b %-d, %Y" }}</div>
+          </div>
+          <div class="tw-date-block" data-date="{{ conf.conference_start }}">
+            <div class="tw-date-label">Conference starts</div>
+            <div class="tw-date-value">{{ conf.conference_start | date: "%b %-d, %Y" }}</div>
+          </div>
+          <div class="tw-date-block" data-date="{{ conf.conference_end }}">
+            <div class="tw-date-label">Conference ends</div>
+            <div class="tw-date-value">{{ conf.conference_end | date: "%b %-d, %Y" }}</div>
+          </div>
+        </div>
+
+        {% if conf.notes != "" %}
+        <p class="text-xs tw-muted mt-3 leading-relaxed">{{ conf.notes }}</p>
+        {% endif %}
+      </div>
+
+    </div>
+    {% endfor %}
+  </div>
+
+  <div id="conf-empty" class="hidden text-center py-16 tw-muted">
+    <p class="text-lg font-mono">No conferences match the selected filters.</p>
+  </div>
+
+</div>
+
+<style>
+/* Status badges */
+.tw-conf-badge {
+  display: inline-flex; align-items: center;
+  padding: 0.15rem 0.6rem; border-radius: 9999px;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; font-weight: 600;
+  letter-spacing: 0.03em; white-space: nowrap;
+}
+.tw-conf-submissions  { background:color-mix(in srgb,#0891b2 15%,transparent); color:#0891b2; border:1px solid color-mix(in srgb,#0891b2 35%,transparent); }
+.tw-conf-notification { background:color-mix(in srgb,#d97706 15%,transparent); color:#d97706; border:1px solid color-mix(in srgb,#d97706 35%,transparent); }
+.tw-conf-upcoming     { background:color-mix(in srgb,#2563eb 15%,transparent); color:#2563eb; border:1px solid color-mix(in srgb,#2563eb 35%,transparent); }
+.tw-conf-ongoing      { background:color-mix(in srgb,#16a34a 15%,transparent); color:#16a34a; border:1px solid color-mix(in srgb,#16a34a 35%,transparent); }
+.tw-conf-completed    { background:color-mix(in srgb,var(--border) 80%,transparent); color:var(--fg-muted); border:1px solid var(--border); }
+[data-theme="dark"] .tw-conf-submissions  { color:#22d3ee; background:color-mix(in srgb,#22d3ee 10%,transparent); border-color:color-mix(in srgb,#22d3ee 25%,transparent); }
+[data-theme="dark"] .tw-conf-notification { color:#fbbf24; background:color-mix(in srgb,#fbbf24 10%,transparent); border-color:color-mix(in srgb,#fbbf24 25%,transparent); }
+[data-theme="dark"] .tw-conf-upcoming     { color:#60a5fa; background:color-mix(in srgb,#60a5fa 10%,transparent); border-color:color-mix(in srgb,#60a5fa 25%,transparent); }
+[data-theme="dark"] .tw-conf-ongoing      { color:#4ade80; background:color-mix(in srgb,#4ade80 10%,transparent); border-color:color-mix(in srgb,#4ade80 25%,transparent); }
+
+/* Track badges */
+.tw-track-badge {
+  display: inline-flex; align-items: center;
+  padding: 0.1rem 0.45rem; border-radius: 0.25rem;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.04em;
+  background: color-mix(in srgb, var(--border) 70%, transparent);
+  color: var(--fg-muted);
+  border: 1px solid var(--border);
+}
+
+/* Date blocks */
+.tw-date-block {
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--border) 30%, transparent);
+  border: 1px solid var(--border);
+}
+.tw-date-label { font-size: 0.65rem; color: var(--fg-muted); font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.2rem; }
+.tw-date-value { font-size: 0.8rem; font-weight: 600; color: var(--fg-heading); font-family: 'JetBrains Mono', monospace; }
+.tw-date-block.tw-date-highlight { border-color: color-mix(in srgb, var(--accent) 50%, transparent); }
+.tw-date-block.tw-date-highlight .tw-date-value { color: var(--accent); }
+.tw-date-block.tw-date-past .tw-date-value { color: var(--fg-muted); }
+</style>
+
+<script>
+(function () {
+  var today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  function parseDate(s) {
+    if (!s) return null;
+    var d = new Date(s + 'T00:00:00');
+    return isNaN(d) ? null : d;
+  }
+
+  function daysUntil(d) {
+    return Math.round((d - today) / 86400000);
+  }
+
+  function getStatus(card) {
+    var sub  = parseDate(card.dataset.submission);
+    var notif = parseDate(card.dataset.notification);
+    var start = parseDate(card.dataset.start);
+    var end   = parseDate(card.dataset.end);
+    if (end && today > end) return 'completed';
+    if (start && end && today >= start && today <= end) return 'ongoing';
+    if (notif && start && today >= notif && today < start) return 'upcoming';
+    if (sub && today <= sub) return 'submissions';
+    if (sub && notif && today > sub && today < notif) return 'notification';
+    if (start && today < start) return 'upcoming';
+    return 'completed';
+  }
+
+  var statusLabels = {
+    submissions:  'Submissions open',
+    notification: 'Under review',
+    upcoming:     'Upcoming',
+    ongoing:      'Ongoing',
+    completed:    'Completed'
+  };
+
+  // Inject status badges and highlight upcoming dates
+  document.querySelectorAll('.conf-card').forEach(function (card) {
+    var status = getStatus(card);
+    card.dataset.status = status;
+
+    var badge = card.querySelector('.conf-status-badge');
+    if (badge) {
+      badge.className = 'conf-status-badge tw-conf-badge tw-conf-' + status;
+      badge.textContent = statusLabels[status] || status;
+    }
+
+    // Highlight the next upcoming date block
+    var sub  = parseDate(card.dataset.submission);
+    var notif = parseDate(card.dataset.notification);
+    var start = parseDate(card.dataset.start);
+
+    card.querySelectorAll('.tw-date-block').forEach(function (db) {
+      var d = parseDate(db.dataset.date);
+      if (!d) return;
+      if (d < today) {
+        db.classList.add('tw-date-past');
+      }
+    });
+
+    // Highlight the single next milestone
+    var nextDate = null;
+    if (status === 'submissions' && sub) nextDate = sub.toISOString().slice(0,10);
+    else if (status === 'notification' && notif) nextDate = notif.toISOString().slice(0,10);
+    else if (status === 'upcoming' && start) nextDate = start.toISOString().slice(0,10);
+
+    if (nextDate) {
+      card.querySelectorAll('.tw-date-block').forEach(function (db) {
+        if (db.dataset.date === nextDate) db.classList.add('tw-date-highlight');
+      });
+    }
+  });
+
+  // Filters
+  var activeYear   = 'all';
+  var activeTrack  = 'all';
+  var activeStatus = 'all';
+
+  function applyFilters() {
+    var cards = document.querySelectorAll('.conf-card');
+    var visible = 0;
+    cards.forEach(function (card) {
+      var yearMatch   = activeYear   === 'all' || card.dataset.year   === activeYear;
+      var statusMatch = activeStatus === 'all' || card.dataset.status === activeStatus;
+      var trackMatch  = activeTrack  === 'all' || card.dataset.track.indexOf(activeTrack) !== -1;
+      var show = yearMatch && statusMatch && trackMatch;
+      card.classList.toggle('hidden', !show);
+      if (show) visible++;
+    });
+    var count = document.getElementById('conf-count');
+    if (count) count.textContent = visible + ' conference' + (visible !== 1 ? 's' : '');
+    var empty = document.getElementById('conf-empty');
+    if (empty) empty.classList.toggle('hidden', visible > 0);
+  }
+
+  document.querySelectorAll('[data-filter-year]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('[data-filter-year]').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active'); activeYear = btn.dataset.filterYear; applyFilters();
+    });
+  });
+  document.querySelectorAll('[data-filter-track]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('[data-filter-track]').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active'); activeTrack = btn.dataset.filterTrack; applyFilters();
+    });
+  });
+  document.querySelectorAll('[data-filter-status]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('[data-filter-status]').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active'); activeStatus = btn.dataset.filterStatus; applyFilters();
+    });
+  });
+
+  applyFilters();
+})();
+</script>

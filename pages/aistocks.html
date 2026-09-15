@@ -1,0 +1,172 @@
+---
+layout: default
+title: "AI Stocks"
+description: "AI and semiconductor stock market dashboard — TW AI Index, heatmap, and company news."
+permalink: /aistocks/
+---
+
+<!-- ECharts -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+
+<!-- Inject data for stocks.js -->
+<script>
+window._twStockData = {{ site.data.stocks_snapshot | jsonify }};
+window._twIndexHistory = {{ site.data.ai_index_history | jsonify }};
+</script>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-[25px] pb-10">
+
+  <!-- Header row -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+    <div>
+      <h1 class="text-3xl font-semibold tw-heading">AI Stocks</h1>
+      <p class="text-sm tw-muted mt-1 font-mono">
+        {% if site.data.stocks_snapshot.updated_at %}
+          Updated {{ site.data.stocks_snapshot.updated_at | date: "%b %-d, %Y %H:%M UTC" }}
+        {% else %}
+          Updating…
+        {% endif %}
+        · 15 min intervals during market hours
+      </p>
+      <div class="mt-2">
+        {% include share.html variant="popover" align="left" %}
+      </div>
+    </div>
+    {% if site.data.ai_index_history.latest %}
+    {% assign idx = site.data.ai_index_history.latest %}
+    <div class="tw-card rounded-lg border tw-border px-5 py-3 text-right">
+      <p class="text-xs font-mono tw-muted">TW AI Index</p>
+      <p class="text-3xl font-semibold tw-heading font-mono">{{ idx.value }}</p>
+      <p class="text-sm font-mono {% if idx.change_pct >= 0 %}tw-change-pos{% else %}tw-change-neg{% endif %}">
+        {% if idx.change_pct >= 0 %}▲{% else %}▼{% endif %}
+        {{ idx.change_pct | abs }}%
+        &nbsp;·&nbsp; {{ idx.n_tickers }} tickers
+      </p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Ecosystem framing note -->
+  <div class="tw-card rounded-lg border tw-border p-4 mb-8">
+    <p class="text-xs font-mono tw-muted leading-relaxed">
+      <span class="tw-heading font-semibold">Reading this as a practitioner:</span>
+      Semiconductors (NVDA, AMD, TSM) track compute availability and cost.
+      Hyperscalers (MSFT, GOOGL, AMZN, META) reflect cloud AI infrastructure investment.
+      Enterprise AI (PLTR, ORCL, CRM) signals deployment adoption pace.
+      These are ecosystem health indicators — not trading recommendations.
+      <span class="block mt-2 tw-heading font-semibold">Not investment advice.</span>
+      Market data is sourced from Finnhub and may be delayed up to 15 minutes; verify current prices with a licensed provider before any decision.
+      <a href="/disclaimer/" class="text-cyan-600 hover:text-cyan-500 transition-colors ml-1">Disclaimer →</a>
+    </p>
+  </div>
+
+  <!-- AI Index chart -->
+  <section class="tw-card rounded-lg border tw-border p-5 mb-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+      <h2 class="text-sm font-mono font-semibold tw-heading">TW AI Index</h2>
+      <div class="flex flex-wrap gap-1.5">
+        <button class="tw-filter-chip text-xs" data-range="1D">1D</button>
+        <button class="tw-filter-chip text-xs" data-range="1W">1W</button>
+        <button class="tw-filter-chip text-xs" data-range="1M">1M</button>
+        <button class="tw-filter-chip text-xs active" data-range="3M">3M</button>
+        <button class="tw-filter-chip text-xs" data-range="YTD">YTD</button>
+        <button class="tw-filter-chip text-xs" data-range="1Y">1Y</button>
+        <button class="tw-filter-chip text-xs" data-range="all">All</button>
+      </div>
+    </div>
+    <div id="tw-index-chart" class="tw-index-chart"></div>
+    <p class="text-xs font-mono tw-muted mt-2">
+      Equal-weighted index of {{ site.data.tickers.tickers | size }} AI-related equities.
+      Base = 100 on {{ site.data.ai_index_history.base_date | default: site.ai_index_base_date }}.
+    </p>
+  </section>
+
+  <!-- Heatmap -->
+  <section class="tw-card rounded-lg border tw-border p-5 mb-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-sm font-mono font-semibold tw-heading">Market heatmap</h2>
+      <span class="text-xs font-mono tw-muted">Tile size by price · color by daily change</span>
+    </div>
+    <div id="tw-heatmap" class="tw-heatmap"></div>
+  </section>
+
+  <!-- Ticker table -->
+  <section class="tw-card rounded-lg border tw-border p-5 mb-6 overflow-x-auto">
+    <h2 class="text-sm font-mono font-semibold tw-heading mb-4">All tickers</h2>
+    <table class="w-full text-sm font-mono">
+      <thead>
+        <tr class="text-left text-xs tw-muted border-b tw-border">
+          <th class="pb-2 font-medium">Symbol</th>
+          <th class="pb-2 font-medium">Name</th>
+          <th class="pb-2 font-medium">Sector</th>
+          <th class="pb-2 font-medium text-right">Price</th>
+          <th class="pb-2 font-medium text-right">Change</th>
+          <th class="pb-2 font-medium text-right">%</th>
+          <th class="pb-2 font-medium text-right hidden sm:table-cell">High</th>
+          <th class="pb-2 font-medium text-right hidden sm:table-cell">Low</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ticker in site.data.tickers.tickers %}
+        {% assign symbol = ticker.symbol %}
+        {% assign q = site.data.stocks_snapshot.quotes[symbol] %}
+        <tr class="border-b tw-border hover:bg-cyan-500/5 transition-colors">
+          <td class="py-2 font-semibold tw-heading">{{ symbol }}</td>
+          <td class="py-2 tw-muted text-xs truncate max-w-32">{{ ticker.name }}</td>
+          <td class="py-2 tw-muted text-xs">{{ ticker.sector | replace: '_', ' ' }}</td>
+          {% if q %}
+          <td class="py-2 text-right tw-heading">${{ q.price }}</td>
+          <td class="py-2 text-right {% if q.change >= 0 %}tw-change-pos{% else %}tw-change-neg{% endif %}">
+            {% if q.change >= 0 %}+{% endif %}{{ q.change }}
+          </td>
+          <td class="py-2 text-right {% if q.change_pct >= 0 %}tw-change-pos{% else %}tw-change-neg{% endif %}"
+              data-change="{{ q.change_pct }}">
+            {% if q.change_pct >= 0 %}+{% endif %}{{ q.change_pct }}%
+          </td>
+          <td class="py-2 text-right tw-muted hidden sm:table-cell">${{ q.high }}</td>
+          <td class="py-2 text-right tw-muted hidden sm:table-cell">${{ q.low }}</td>
+          {% else %}
+          <td class="py-2 text-right tw-muted" colspan="5">—</td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Stock-tagged news -->
+  <section>
+    <h2 class="text-sm font-mono font-semibold tw-heading mb-4">Market-relevant news</h2>
+
+    {% assign stock_posts = site.posts | where: "category", "stocks" %}
+    {% assign stock_posts2 = site.posts | where_exp: "p", "p.categories contains 'stocks'" %}
+
+    {% if stock_posts.size == 0 and stock_posts2.size == 0 %}
+    <p class="tw-muted text-sm font-mono">No market-relevant articles indexed yet.</p>
+    {% else %}
+    <div class="space-y-3">
+      {% for post in stock_posts limit: 20 %}
+        {% include post_card.html post=post %}
+      {% endfor %}
+      {% for post in stock_posts2 limit: 20 %}
+        {% unless stock_posts contains post %}
+          {% include post_card.html post=post %}
+        {% endunless %}
+      {% endfor %}
+    </div>
+    {% endif %}
+  </section>
+
+  <!-- Disclaimer -->
+  <div class="mt-10 tw-card rounded-lg border tw-border p-4">
+    <p class="text-xs tw-muted font-mono leading-relaxed">
+      <strong class="tw-heading">Not investment advice.</strong>
+      Data may be delayed up to 15 minutes. Turing Wire is not a registered investment advisor.
+      Verify all data with primary sources before making investment decisions.
+      Stock prices sourced from Finnhub.
+    </p>
+  </div>
+
+</div>
+
+<script src="{{ '/assets/js/stocks.js' | relative_url }}"></script>

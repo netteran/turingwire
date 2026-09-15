@@ -1,0 +1,129 @@
+# Research feed sources
+# arXiv categories: cs.AI, cs.LG, cs.CL, cs.CV, cs.NE
+# Capped at 30 new papers/day total across arXiv
+
+sources:
+
+  # ── arXiv API queries ──────────────────────────────────────────────────────
+  - name: "arXiv cs.AI"
+    url: "https://export.arxiv.org/api/query"
+    type: api
+    category_hint: research
+    requires_full_text_fetch: false
+    priority: 1
+    params:
+      search_query: "cat:cs.AI"
+      sortBy: submittedDate
+      sortOrder: descending
+      max_results: 30
+      date_filter: last_24h
+
+  - name: "arXiv cs.LG"
+    url: "https://export.arxiv.org/api/query"
+    type: api
+    category_hint: research
+    requires_full_text_fetch: false
+    priority: 1
+    params:
+      search_query: "cat:cs.LG"
+      sortBy: submittedDate
+      sortOrder: descending
+      max_results: 30
+      date_filter: last_24h
+
+  - name: "arXiv cs.CL"
+    url: "https://export.arxiv.org/api/query"
+    type: api
+    category_hint: research
+    requires_full_text_fetch: false
+    priority: 1
+    params:
+      search_query: "cat:cs.CL"
+      sortBy: submittedDate
+      sortOrder: descending
+      max_results: 30
+      date_filter: last_24h
+
+  - name: "arXiv cs.CV"
+    url: "https://export.arxiv.org/api/query"
+    type: api
+    category_hint: research
+    requires_full_text_fetch: false
+    priority: 1
+    params:
+      search_query: "cat:cs.CV"
+      sortBy: submittedDate
+      sortOrder: descending
+      max_results: 20
+      date_filter: last_24h
+
+  - name: "arXiv cs.NE"
+    url: "https://export.arxiv.org/api/query"
+    type: api
+    category_hint: research
+    requires_full_text_fetch: false
+    priority: 1
+    params:
+      search_query: "cat:cs.NE"
+      sortBy: submittedDate
+      sortOrder: descending
+      max_results: 10
+      date_filter: last_24h
+
+  # ── Journals ───────────────────────────────────────────────────────────────
+  - name: "Nature Machine Intelligence"
+    url: "https://www.nature.com/natmachintell.rss"
+    type: rss
+    category_hint: research
+    requires_full_text_fetch: false
+    priority: 1
+    notes: "Abstract-only for paywalled articles. source_truncated: true"
+
+  - name: "JMLR"
+    url: "https://jmlr.org/jmlr.xml"
+    type: rss
+    category_hint: research
+    requires_full_text_fetch: false
+    priority: 2
+
+  - name: "Science (AI abstracts)"
+    url: "https://www.science.org/rss/news_current.xml"
+    type: rss
+    category_hint: research
+    requires_full_text_fetch: false
+    priority: 2
+    notes: "Paywalled — abstract only. source_truncated: true"
+
+  # ── Papers with Code ──────────────────────────────────────────────────────
+  - name: "Papers with Code (trending)"
+    url: "https://paperswithcode.com/latest/rss"
+    type: rss
+    category_hint: research
+    requires_full_text_fetch: false
+    priority: 2
+
+  # ── Conference proceedings (seasonal activation) ──────────────────────────
+  # These are activated/deactivated based on conference season via the pipeline
+  - name: "NeurIPS Proceedings"
+    url: "https://proceedings.neurips.cc/rss.xml"
+    type: rss
+    category_hint: research
+    requires_full_text_fetch: false
+    priority: 1
+    active_months: [12]
+
+  - name: "ICML Proceedings"
+    url: "https://proceedings.mlr.press/rss.xml"
+    type: rss
+    category_hint: research
+    requires_full_text_fetch: false
+    priority: 1
+    active_months: [7, 8]
+
+  - name: "ICLR OpenReview"
+    url: "https://openreview.net/rss?venue=ICLR.cc"
+    type: rss
+    category_hint: research
+    requires_full_text_fetch: false
+    priority: 1
+    active_months: [5, 6]

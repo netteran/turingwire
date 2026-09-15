@@ -1,0 +1,27 @@
+# HTTP + Feed parsing
+feedparser==6.0.11
+requests==2.32.3
+beautifulsoup4==4.12.3
+lxml==5.2.2
+
+# NLP / dedup
+scikit-learn==1.5.1
+nltk==3.8.1
+
+# LLM client
+openai==1.57.0
+httpx>=0.28.0
+
+# Data
+PyYAML==6.0.2
+python-dateutil==2.9.0
+
+# Rate limiting / retry
+tenacity==8.4.2
+
+# Stocks
+finnhub-python==2.4.20
+yfinance>=0.2.54
+
+# Utilities
+python-slugify==8.0.4

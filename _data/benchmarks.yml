@@ -1,0 +1,256 @@
+updated_at: '2026-09-03'
+note: Results sourced from Papers With Code. Scores reflect published evaluations
+  and may use different prompting or few-shot settings.
+benchmarks:
+- id: mmlu
+  name: MMLU
+  full_name: Massive Multitask Language Understanding
+  description: 57 diverse subjects spanning STEM, humanities, social sciences, and
+    professional domains. Tests breadth of knowledge and reasoning.
+  metric: Accuracy
+  unit: '%'
+  higher_is_better: true
+  category: reasoning
+  pwc_task: multi-task-language-understanding
+  pwc_url: https://paperswithcode.com/sota/multi-task-language-understanding-on-mmlu
+  results:
+  - rank: 1
+    model: Llama 3.1 405B
+    provider: Meta
+    score: 88.6
+    date: 2024-07
+    paper_url: https://arxiv.org/abs/2407.21783
+  - rank: 2
+    model: GPT-4o
+    provider: OpenAI
+    score: 88.7
+    date: 2024-05
+    paper_url: https://arxiv.org/abs/2303.08774
+  - rank: 3
+    model: Claude 3 Opus
+    provider: Anthropic
+    score: 86.8
+    date: 2024-03
+    paper_url: https://www.anthropic.com/news/claude-3-family
+  - rank: 4
+    model: Gemini 1.5 Pro
+    provider: Google
+    score: 85.9
+    date: 2024-02
+    paper_url: https://arxiv.org/abs/2403.05530
+  - rank: 5
+    model: Mistral Large 2
+    provider: Mistral
+    score: 84.0
+    date: 2024-07
+    paper_url: https://mistral.ai/news/mistral-large-2407
+- id: humaneval
+  name: HumanEval
+  full_name: HumanEval (pass@1)
+  description: 164 handwritten Python programming problems. Tests ability to generate
+    correct code from a docstring. pass@1 = fraction solved in one attempt.
+  metric: pass@1
+  unit: '%'
+  higher_is_better: true
+  category: coding
+  pwc_task: code-generation
+  pwc_url: https://paperswithcode.com/sota/code-generation-on-humaneval
+  results:
+  - rank: 1
+    model: Claude 3.5 Sonnet
+    provider: Anthropic
+    score: 92.0
+    date: 2024-06
+    paper_url: https://www.anthropic.com/news/claude-3-5-sonnet
+  - rank: 2
+    model: GPT-4o
+    provider: OpenAI
+    score: 90.2
+    date: 2024-05
+    paper_url: https://arxiv.org/abs/2303.08774
+  - rank: 3
+    model: DeepSeek-Coder-V2
+    provider: DeepSeek
+    score: 90.2
+    date: 2024-06
+    paper_url: https://arxiv.org/abs/2406.11931
+  - rank: 4
+    model: Llama 3.1 405B
+    provider: Meta
+    score: 89.0
+    date: 2024-07
+    paper_url: https://arxiv.org/abs/2407.21783
+  - rank: 5
+    model: Gemini 1.5 Pro
+    provider: Google
+    score: 84.1
+    date: 2024-02
+    paper_url: https://arxiv.org/abs/2403.05530
+- id: math
+  name: MATH
+  full_name: MATH Benchmark
+  description: 12,500 competition-level mathematics problems across algebra, geometry,
+    number theory, and calculus. Difficulty ranges from AMC to AIME level.
+  metric: Accuracy
+  unit: '%'
+  higher_is_better: true
+  category: math
+  pwc_task: math-word-problem-solving
+  pwc_url: https://paperswithcode.com/sota/math-word-problem-solving-on-math
+  results:
+  - rank: 1
+    model: o1
+    provider: OpenAI
+    score: 96.4
+    date: 2024-09
+    paper_url: https://openai.com/research/learning-to-reason-with-llms
+  - rank: 2
+    model: Gemini 1.5 Pro
+    provider: Google
+    score: 91.5
+    date: 2024-02
+    paper_url: https://arxiv.org/abs/2403.05530
+  - rank: 3
+    model: Llama 3.1 405B
+    provider: Meta
+    score: 73.8
+    date: 2024-07
+    paper_url: https://arxiv.org/abs/2407.21783
+  - rank: 4
+    model: Claude 3.5 Sonnet
+    provider: Anthropic
+    score: 71.1
+    date: 2024-06
+    paper_url: https://www.anthropic.com/news/claude-3-5-sonnet
+  - rank: 5
+    model: GPT-4o
+    provider: OpenAI
+    score: 76.6
+    date: 2024-05
+    paper_url: https://arxiv.org/abs/2303.08774
+- id: gsm8k
+  name: GSM8K
+  full_name: Grade School Math 8K
+  description: 8,500 grade-school math word problems requiring multi-step reasoning.
+    A standard measure of arithmetic reasoning capability.
+  metric: Accuracy
+  unit: '%'
+  higher_is_better: true
+  category: math
+  pwc_task: arithmetic-reasoning
+  pwc_url: https://paperswithcode.com/sota/arithmetic-reasoning-on-gsm8k
+  results:
+  - rank: 1
+    model: o1
+    provider: OpenAI
+    score: 97.5
+    date: 2024-09
+    paper_url: https://openai.com/research/learning-to-reason-with-llms
+  - rank: 2
+    model: GPT-4o
+    provider: OpenAI
+    score: 97.0
+    date: 2024-05
+    paper_url: https://arxiv.org/abs/2303.08774
+  - rank: 3
+    model: Claude 3.5 Sonnet
+    provider: Anthropic
+    score: 96.4
+    date: 2024-06
+    paper_url: https://www.anthropic.com/news/claude-3-5-sonnet
+  - rank: 4
+    model: Llama 3.1 70B
+    provider: Meta
+    score: 95.1
+    date: 2024-07
+    paper_url: https://arxiv.org/abs/2407.21783
+  - rank: 5
+    model: Gemini 1.5 Pro
+    provider: Google
+    score: 90.8
+    date: 2024-02
+    paper_url: https://arxiv.org/abs/2403.05530
+- id: gpqa
+  name: GPQA Diamond
+  full_name: Graduate-Level Google-Proof Q&A (Diamond)
+  description: 448 expert-crafted multiple-choice questions in biology, chemistry,
+    and physics. Designed to be unsolvable by googling — requires genuine domain expertise.
+  metric: Accuracy
+  unit: '%'
+  higher_is_better: true
+  category: reasoning
+  pwc_task: question-answering
+  pwc_url: https://paperswithcode.com/sota/question-answering-on-gpqa
+  results:
+  - rank: 1
+    model: o1
+    provider: OpenAI
+    score: 77.3
+    date: 2024-09
+    paper_url: https://openai.com/research/learning-to-reason-with-llms
+  - rank: 2
+    model: Claude 3.5 Sonnet
+    provider: Anthropic
+    score: 65.0
+    date: 2024-06
+    paper_url: https://www.anthropic.com/news/claude-3-5-sonnet
+  - rank: 3
+    model: Gemini 1.5 Pro
+    provider: Google
+    score: 49.9
+    date: 2024-02
+    paper_url: https://arxiv.org/abs/2403.05530
+  - rank: 4
+    model: GPT-4o
+    provider: OpenAI
+    score: 53.6
+    date: 2024-05
+    paper_url: https://arxiv.org/abs/2303.08774
+  - rank: 5
+    model: Llama 3.1 405B
+    provider: Meta
+    score: 50.7
+    date: 2024-07
+    paper_url: https://arxiv.org/abs/2407.21783
+- id: swe-bench
+  name: SWE-bench Verified
+  full_name: SWE-bench Verified
+  description: 500 real GitHub issues from popular Python repositories. Measures the
+    ability of AI agents to autonomously resolve software engineering tasks end-to-end.
+  metric: '% Resolved'
+  unit: '%'
+  higher_is_better: true
+  category: coding
+  pwc_task: software-engineering
+  pwc_url: https://paperswithcode.com/sota/software-engineering-on-swe-bench-verified
+  results:
+  - rank: 1
+    model: Claude 3.5 Sonnet (SWE-agent)
+    provider: Anthropic
+    score: 50.8
+    date: 2024-10
+    paper_url: https://arxiv.org/abs/2405.15793
+  - rank: 2
+    model: GPT-4o (Moatless Tools)
+    provider: OpenAI
+    score: 40.0
+    date: 2024-09
+    paper_url: https://arxiv.org/abs/2410.20285
+  - rank: 3
+    model: Llama 3.1 70B (SWE-agent)
+    provider: Meta
+    score: 27.0
+    date: 2024-09
+    paper_url: https://arxiv.org/abs/2405.15793
+  - rank: 4
+    model: GPT-4o mini
+    provider: OpenAI
+    score: 22.0
+    date: 2024-08
+    paper_url: ''
+  - rank: 5
+    model: Gemini 1.5 Pro
+    provider: Google
+    score: 15.0
+    date: 2024-06
+    paper_url: ''

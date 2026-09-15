@@ -1,0 +1,4 @@
+---
+title: "Baidu"
+layout: company
+---

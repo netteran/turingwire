@@ -1,0 +1,15 @@
+{% assign impact = include.impact %}
+{% if impact == 'critical' %}
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono font-semibold bg-red-500 text-white">
+  <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>Critical
+</span>
+{% elsif impact == 'major' %}
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-semibold tw-badge-major">
+  Major
+</span>
+{% elsif impact == 'notable' %}
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono border tw-badge-notable">
+  Notable
+</span>
+{% endif %}
+{% comment %}minor: no badge rendered{% endcomment %}

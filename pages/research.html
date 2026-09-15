@@ -1,0 +1,54 @@
+---
+layout: default
+title: "Research"
+description: "AI research paper summaries for practitioners — arXiv, Nature, JMLR, and conference proceedings. Problem, method, results, and why it matters for what you're building."
+permalink: /research/
+---
+
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-[25px] pb-10">
+
+  <header class="mb-8">
+    <h1 class="text-3xl font-semibold tw-heading">Research</h1>
+    <p class="text-sm tw-muted mt-1 font-mono">arXiv · Nature · JMLR · conference proceedings</p>
+    <p class="text-sm tw-muted mt-2 max-w-2xl">Paper summaries structured for practitioners: problem, method, results, and why it matters. Each summary links to the original and arXiv where available.</p>
+  </header>
+
+  <!-- Subcategory filter chips -->
+  <div class="flex flex-wrap gap-2 mb-4">
+    <a href="/research/" class="tw-filter-chip active">All</a>
+    <a href="/research/?cat=foundation_models" class="tw-filter-chip">Foundation models</a>
+    <a href="/research/?cat=reasoning" class="tw-filter-chip">Reasoning</a>
+    <a href="/research/?cat=alignment_safety" class="tw-filter-chip">Alignment / Safety</a>
+    <a href="/research/?cat=interpretability" class="tw-filter-chip">Interpretability</a>
+    <a href="/research/?cat=agents_robotics" class="tw-filter-chip">Agents / Robotics</a>
+    <a href="/research/?cat=multimodal" class="tw-filter-chip">Multimodal</a>
+    <a href="/research/?cat=efficiency_inference" class="tw-filter-chip">Efficiency</a>
+    <a href="/research/?cat=training_methods" class="tw-filter-chip">Training</a>
+  </div>
+
+  <!-- Impact filter -->
+  <div class="flex flex-wrap gap-2 mb-8">
+    <button class="tw-filter-chip active text-xs" data-filter-impact="all">All impact</button>
+    <button class="tw-filter-chip text-xs" data-filter-impact="major+">Major+</button>
+    <button class="tw-filter-chip text-xs" data-filter-impact="critical">Critical only</button>
+  </div>
+
+  {% assign research_posts = site.posts | where: "category", "research" %}
+
+  {% if research_posts.size == 0 %}
+  <div class="tw-card rounded-lg border tw-border p-8 text-center">
+    <p class="tw-muted text-sm font-mono">No research articles indexed yet.</p>
+  </div>
+  {% else %}
+
+  <div class="space-y-3" id="post-list">
+    {% for post in research_posts limit: 60 %}
+    <div data-impact="{{ post.impact }}" data-date="{{ post.date | date: '%Y-%m-%dT%H:%M:%S' }}">
+      {% include post_card.html post=post %}
+    </div>
+    {% endfor %}
+  </div>
+
+  {% endif %}
+
+</div>

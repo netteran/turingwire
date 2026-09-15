@@ -1,0 +1,48 @@
+User-agent: *
+Allow: /
+
+# Brand-as-Source: Turing Wire is intentionally citable by AI assistants.
+# These bots are explicitly welcome.
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+# Data endpoints — not indexable content
+Disallow: /knowledge-graph.json
+Disallow: /llms.txt
+Disallow: /llms-full.txt
+Disallow: /missions-index.json
+
+Sitemap: https://turingwire.com/sitemap.xml

@@ -1,0 +1,4 @@
+---
+title: "Ethos"
+layout: company
+---

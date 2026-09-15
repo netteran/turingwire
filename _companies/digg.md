@@ -1,0 +1,4 @@
+---
+title: "Digg"
+layout: company
+---

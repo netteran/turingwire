@@ -1,0 +1,254 @@
+---
+layout: default
+---
+{% assign sources = page.sources | default: empty_array %}
+{% assign claims = page.claims | default: empty_array %}
+{% assign companies = page.companies | default: empty_array %}
+
+<article class="max-w-4xl mx-auto px-4 pt-[25px] pb-10 sm:px-6 lg:px-8">
+
+  <!-- Breadcrumb -->
+  <nav class="text-xs font-mono tw-muted mb-6 flex items-center gap-2" aria-label="Breadcrumb">
+    <a href="/" class="hover:tw-accent transition-colors">Home</a>
+    <span>/</span>
+    <a href="/stories/" class="hover:tw-accent transition-colors">Stories</a>
+    <span>/</span>
+    <span class="truncate max-w-xs">{{ page.title }}</span>
+  </nav>
+
+  <!-- Story badge -->
+  <div class="flex flex-wrap items-center gap-3 mb-4">
+    <span class="font-mono text-[10px] uppercase tracking-widest px-2 py-1 rounded"
+          style="background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent);">
+      Multi-source analysis
+    </span>
+    <span class="font-mono text-xs tw-muted">
+      {{ sources | size }} sources
+    </span>
+  </div>
+
+  <!-- Title + share -->
+  <div class="flex items-start justify-between gap-4 mb-3">
+    <h1 class="text-3xl font-semibold tw-heading leading-snug min-w-0 mb-0">
+      {{ page.title }}
+    </h1>
+    <div class="flex-shrink-0 mt-1">
+      {% include share.html
+         title=page.title
+         summary=page.lead
+         variant="popover"
+         align="right" %}
+    </div>
+  </div>
+  {% if page.lead %}
+  <p class="text-lg tw-muted leading-relaxed mb-6">{{ page.lead }}</p>
+  {% endif %}
+
+  <!-- Metadata bar -->
+  <div class="tw-card border tw-border rounded-lg px-5 py-4 mb-8">
+    <dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-3 text-xs font-mono">
+      <div>
+        <dt class="tw-muted mb-0.5">First seen</dt>
+        <dd class="tw-heading font-medium">{{ page.first_seen | date: "%b %-d, %Y" }}</dd>
+      </div>
+      <div>
+        <dt class="tw-muted mb-0.5">Last updated</dt>
+        <dd class="tw-heading font-medium">{{ page.last_updated | date: "%b %-d, %Y" }}</dd>
+      </div>
+      <div>
+        <dt class="tw-muted mb-0.5">Sources</dt>
+        <dd class="tw-heading font-medium">{{ sources | size }}</dd>
+      </div>
+      <div>
+        <dt class="tw-muted mb-0.5">Disputed claims</dt>
+        {% assign disputed_count = 0 %}
+        {% for c in claims %}{% if c.status == 'disputed' %}{% assign disputed_count = disputed_count | plus: 1 %}{% endif %}{% endfor %}
+        <dd class="tw-heading font-medium">{{ disputed_count }}</dd>
+      </div>
+    </dl>
+
+    {% if companies.size > 0 %}
+    <div class="mt-3 pt-3 border-t tw-border flex flex-wrap items-center gap-1.5">
+      <span class="text-xs font-mono tw-muted mr-1">Entities:</span>
+      {% for co in companies %}
+      <a href="/companies/{{ co | slugify }}/"
+         class="inline-block font-mono text-xs tw-muted border tw-border rounded px-2 py-0.5 hover:tw-accent hover:border-cyan-600 transition-colors">
+        {{ co }}
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Two-column synthesis: claims (left) | sources (right) -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+
+    <!-- Claims column -->
+    <section class="lg:col-span-2">
+      <h2 class="text-xs font-mono uppercase tracking-widest tw-muted mb-4">
+        Key findings
+      </h2>
+      <ol class="space-y-4 list-none pl-0">
+        {% for claim in claims %}
+        <li class="tw-card border tw-border rounded-lg p-4" id="claim-{{ forloop.index }}">
+          <div class="flex items-start gap-3">
+            <span class="font-mono text-xs tw-muted flex-shrink-0 mt-0.5">#{{ forloop.index }}</span>
+            <div class="flex-1 min-w-0">
+              <p class="tw-heading text-[15px] leading-relaxed">{{ claim.text }}</p>
+
+              <!-- Status pill -->
+              <div class="mt-3 flex flex-wrap items-center gap-2">
+                {% if claim.status == 'corroborated' %}
+                <span class="tw-claim-pill tw-claim-corroborated">
+                  ✓ Corroborated · {{ claim.supporting | size }} sources
+                </span>
+                {% elsif claim.status == 'disputed' %}
+                <span class="tw-claim-pill tw-claim-disputed">
+                  ⚠ Disputed
+                </span>
+                {% elsif claim.status == 'single_source' %}
+                <span class="tw-claim-pill tw-claim-single">
+                  ◐ Single source
+                </span>
+                {% else %}
+                <span class="tw-claim-pill tw-claim-unknown">
+                  · Unverified
+                </span>
+                {% endif %}
+
+              </div>
+
+              <!-- Supporting sources -->
+              {% if claim.supporting and claim.supporting.size > 0 %}
+              <div class="mt-3">
+                <p class="text-[11px] font-mono uppercase tracking-wide tw-muted mb-1.5">Supporting</p>
+                <div class="flex flex-wrap gap-1.5">
+                  {% for src_idx in claim.supporting %}
+                  {% assign src = sources[src_idx] %}
+                  <a href="#source-{{ src_idx | plus: 1 }}"
+                     class="tw-source-chip tw-source-chip--support">
+                    [{{ src_idx | plus: 1 }}] {{ src.publisher | default: "source" }}
+                  </a>
+                  {% endfor %}
+                </div>
+              </div>
+              {% endif %}
+
+              <!-- Contradicting sources -->
+              {% if claim.contradicting and claim.contradicting.size > 0 %}
+              <div class="mt-3">
+                <p class="text-[11px] font-mono uppercase tracking-wide tw-muted mb-1.5">Contradicts</p>
+                <div class="flex flex-wrap gap-1.5">
+                  {% for src_idx in claim.contradicting %}
+                  {% assign src = sources[src_idx] %}
+                  <a href="#source-{{ src_idx | plus: 1 }}"
+                     class="tw-source-chip tw-source-chip--contradict">
+                    [{{ src_idx | plus: 1 }}] {{ src.publisher | default: "source" }}
+                  </a>
+                  {% endfor %}
+                </div>
+              </div>
+              {% endif %}
+
+              {% if claim.note %}
+              <p class="mt-3 text-xs tw-muted italic leading-relaxed">{{ claim.note }}</p>
+              {% endif %}
+            </div>
+          </div>
+        </li>
+        {% endfor %}
+      </ol>
+
+      {% if content and content != "" %}
+      <div class="tw-prose prose-article mt-10">
+        <h2 class="text-xs font-mono uppercase tracking-widest tw-muted mb-3">Analysis</h2>
+        {{ content }}
+      </div>
+      {% endif %}
+    </section>
+
+    <!-- Sources column -->
+    <aside>
+      <h2 class="text-xs font-mono uppercase tracking-widest tw-muted mb-4">
+        Sources ({{ sources | size }})
+      </h2>
+      <ol class="space-y-3 list-none pl-0">
+        {% for src in sources %}
+        <li id="source-{{ forloop.index }}" class="tw-card border tw-border rounded-lg p-3">
+          <div class="flex items-start gap-2">
+            <span class="font-mono text-xs tw-muted flex-shrink-0">[{{ forloop.index }}]</span>
+            <div class="flex-1 min-w-0">
+              <a href="{{ src.url }}" target="_blank" rel="noopener noreferrer"
+                 class="block tw-heading font-medium text-sm hover:tw-accent transition-colors leading-snug">
+                {{ src.title | default: src.url }}
+              </a>
+              <div class="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] font-mono tw-muted">
+                <span>{{ src.publisher }}</span>
+                {% if src.date %}<span>·</span><span>{{ src.date | date: "%b %-d" }}</span>{% endif %}
+              </div>
+            </div>
+          </div>
+        </li>
+        {% endfor %}
+      </ol>
+    </aside>
+  </div>
+
+  <!-- About this story -->
+  <details class="tw-card border tw-border rounded-lg p-4 mt-6">
+    <summary class="cursor-pointer text-xs font-mono uppercase tracking-widest tw-muted">
+      About this story
+    </summary>
+    <div class="mt-3 text-sm tw-muted leading-relaxed space-y-2">
+      <p>
+        This story tracks a developing topic across multiple sources. Each key finding is cross-referenced
+        against the listed sources and labelled by how many independent outlets corroborate or contest it.
+        Disputed findings are surfaced explicitly rather than resolved editorially.
+      </p>
+      <p>
+        All source articles are linked directly. <a href="/about/" class="hover:tw-accent transition-colors">About our editorial standards →</a>
+      </p>
+    </div>
+  </details>
+
+</article>
+
+<!-- Schema.org: ClaimReview-style structured data for AI / search consumption -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": {{ page.title | jsonify }},
+  "description": {{ page.lead | default: page.title | jsonify }},
+  "datePublished": "{{ page.first_seen | default: page.date | date_to_xmlschema }}",
+  "dateModified": "{{ page.last_updated | default: page.date | date_to_xmlschema }}",
+  "publisher": {
+    "@type": "Organization",
+    "name": "{{ site.title }}",
+    "url": "{{ site.url }}"
+  },
+  "author": {
+    "@type": "Person",
+    "@id": "{{ site.url }}/about/#editorial-team",
+    "name": "Turing Wire Editorial Team",
+    "url": "{{ site.url }}/about/"
+  },
+  "mainEntityOfPage": "{{ page.url | absolute_url }}",
+  "about": [
+    {% for co in companies %}
+    { "@type": "Organization", "name": {{ co | jsonify }} }{% unless forloop.last %},{% endunless %}
+    {% endfor %}
+  ],
+  "citation": [
+    {% for src in sources %}
+    {
+      "@type": "CreativeWork",
+      "name": {{ src.title | default: src.url | jsonify }},
+      "url": {{ src.url | jsonify }},
+      "publisher": { "@type": "Organization", "name": {{ src.publisher | jsonify }} }{% if src.date %},
+      "datePublished": "{{ src.date | date_to_xmlschema }}"{% endif %}
+    }{% unless forloop.last %},{% endunless %}
+    {% endfor %}
+  ]
+}
+</script>

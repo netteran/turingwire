@@ -1,0 +1,4 @@
+---
+title: "SoftBank"
+layout: company
+---

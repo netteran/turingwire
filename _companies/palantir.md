@@ -1,0 +1,4 @@
+---
+title: "Palantir"
+layout: company
+---

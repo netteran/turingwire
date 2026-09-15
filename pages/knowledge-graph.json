@@ -1,0 +1,97 @@
+---
+permalink: /knowledge-graph.json
+layout: null
+sitemap: false
+---
+{
+  "@context": "https://schema.org",
+  "@type": "Dataset",
+  "name": "Turing Wire Knowledge Graph",
+  "description": "Structured AI-industry knowledge graph: companies, stories, claims, citations. Designed for retrieval-augmented generation by external LLMs and search agents.",
+  "url": "{{ site.url }}/knowledge-graph.json",
+  "publisher": {
+    "@type": "Organization",
+    "name": "{{ site.title }}",
+    "url": "{{ site.url }}"
+  },
+  "license": "https://creativecommons.org/licenses/by/4.0/",
+  "dateModified": "{{ site.time | date_to_xmlschema }}",
+  "keywords": ["AI", "machine learning", "news aggregation", "knowledge graph", "RAG"],
+
+  "entities": {
+    "organizations": [
+      {% for company in site.companies %}
+      {
+        "@type": "Organization",
+        "name": {{ company.title | jsonify }},
+        "url": "{{ site.url }}{{ company.url }}",
+        "identifier": {{ company.title | slugify | jsonify }}
+      }{% unless forloop.last %},{% endunless %}
+      {% endfor %}
+    ]
+  },
+
+  "stories": [
+    {% for story in site.stories %}
+    {
+      "@type": "Article",
+      "@id": "{{ site.url }}{{ story.url }}",
+      "headline": {{ story.title | jsonify }},
+      "description": {{ story.lead | default: "" | jsonify }},
+      "datePublished": "{{ story.first_seen | default: story.date | date_to_xmlschema }}",
+      "dateModified": "{{ story.last_updated | default: story.date | date_to_xmlschema }}",
+      "trustScore": {{ story.trust_score | default: 0 }},
+      "about": [
+        {% for co in story.companies %}
+        { "@type": "Organization", "name": {{ co | jsonify }}, "identifier": {{ co | slugify | jsonify }} }{% unless forloop.last %},{% endunless %}
+        {% endfor %}
+      ],
+      "claims": [
+        {% for c in story.claims %}
+        {
+          "text": {{ c.text | jsonify }},
+          "status": {{ c.status | jsonify }},
+          "confidence": {{ c.confidence | default: 0 }},
+          "supportingCount": {{ c.supporting | default: empty_array | size }},
+          "contradictingCount": {{ c.contradicting | default: empty_array | size }}
+        }{% unless forloop.last %},{% endunless %}
+        {% endfor %}
+      ],
+      "citations": [
+        {% for s in story.sources %}
+        {
+          "name": {{ s.title | default: s.url | jsonify }},
+          "url": {{ s.url | jsonify }},
+          "publisher": {{ s.publisher | jsonify }}
+        }{% unless forloop.last %},{% endunless %}
+        {% endfor %}
+      ]
+    }{% unless forloop.last %},{% endunless %}
+    {% endfor %}
+  ],
+
+  "articles": [
+    {% assign recent = site.posts | slice: 0, 200 %}
+    {% for post in recent %}
+    {
+      "@type": "NewsArticle",
+      "@id": "{{ site.url }}{{ post.url }}",
+      "headline": {{ post.title | jsonify }},
+      "datePublished": "{{ post.date | date_to_xmlschema }}",
+      "impact": {{ post.impact | default: "notable" | jsonify }},
+      "category": {{ post.subcategory | default: "other" | jsonify }},
+      "about": [
+        {% if post.company %}{ "@type": "Organization", "name": {{ post.company | jsonify }}, "identifier": {{ post.company | slugify | jsonify }} }{% if post.secondary_companies.size > 0 %},{% endif %}{% endif %}
+        {% for co in post.secondary_companies %}
+        { "@type": "Organization", "name": {{ co | jsonify }}, "identifier": {{ co | slugify | jsonify }} }{% unless forloop.last %},{% endunless %}
+        {% endfor %}
+      ],
+      "citation": {
+        "@type": "CreativeWork",
+        "name": {{ post.source_publisher | default: "" | jsonify }},
+        "url": {{ post.source_url | default: "" | jsonify }}
+      }
+    }{% unless forloop.last %},{% endunless %}
+    {% endfor %}
+  ]
+}

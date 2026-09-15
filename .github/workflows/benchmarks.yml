@@ -1,0 +1,57 @@
+name: benchmarks (auto + manual)
+
+on:
+  schedule:
+    # Every Monday at 06:00 UTC
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  fetch-benchmarks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Fetch benchmark results from Papers With Code
+        run: python scripts/fetch_benchmarks.py
+
+      - name: Commit updated benchmarks
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add _data/benchmarks.yml
+          git diff --cached --quiet && echo "nothing to commit" && exit 0
+          git commit -m "chore(benchmarks): update SOTA results [skip ci]"
+          for attempt in 1 2 3 4; do
+            git pull --rebase origin main && git push origin main && break
+            echo "push attempt $attempt failed, retrying..."
+            sleep $((attempt * 3))
+          done
+
+  notify-on-failure:
+    needs: fetch-benchmarks
+    if: failure()
+    uses: ./.github/workflows/issue-on-failure.yml
+    with:
+      workflow_name: "benchmarks"
+      run_id: ${{ github.run_id }}
+    secrets: inherit

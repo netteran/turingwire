@@ -1,0 +1,37 @@
+# Secrets & local env
+.env
+.env.local
+*.log
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+
+# Jekyll build output (served from gh-pages, not committed to main)
+_site/
+.sass-cache/
+.jekyll-cache/
+.jekyll-metadata
+
+# Operational pipeline data (written to workflow artifacts, not committed)
+_data/run_log.json
+_data/review_queue.json
+_data/backlog.json
+
+# Drafts
+_drafts/
+
+# Node (if Tailwind build step added later)
+node_modules/
+package-lock.json
+
+# OS
+.DS_Store
+Thumbs.db
