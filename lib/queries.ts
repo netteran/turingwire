@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { getSupabase } from "./supabase";
 import {
   CARD_COLUMNS,
   type Article,
@@ -17,7 +17,7 @@ import {
  * status = 'published', so body-less archived rows never surface.
  */
 
-const cards = () => supabase.from("articles").select(CARD_COLUMNS);
+const cards = () => getSupabase().from("articles").select(CARD_COLUMNS);
 
 /** Newest articles across every section. */
 export async function getRecentArticles(limit = 120): Promise<ArticleCard[]> {
@@ -44,7 +44,7 @@ export async function getArticlesByCategory(
 export async function countArticlesByCategory(
   category: ArticleCategory,
 ): Promise<number> {
-  const { count, error } = await supabase
+  const { count, error } = await getSupabase()
     .from("articles")
     .select("id", { count: "exact", head: true })
     .eq("category", category);
@@ -53,7 +53,7 @@ export async function countArticlesByCategory(
 }
 
 export async function countAllArticles(): Promise<number> {
-  const { count, error } = await supabase
+  const { count, error } = await getSupabase()
     .from("articles")
     .select("id", { count: "exact", head: true });
   if (error) throw error;
@@ -91,7 +91,7 @@ export async function getArticle(
   category: ArticleCategory,
   slug: string,
 ): Promise<Article | null> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("articles")
     .select("*")
     .eq("category", category)
@@ -109,7 +109,7 @@ export async function getArticle(
 export async function resolveLegacyPath(
   legacyPath: string,
 ): Promise<{ category: ArticleCategory; slug: string } | null> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("articles")
     .select("category,slug")
     .eq("legacy_path", legacyPath)
@@ -179,7 +179,7 @@ export interface CompanyCount {
 
 /** Companies with coverage counts, busiest first. */
 export async function getCompaniesWithCounts(): Promise<CompanyCount[]> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("company_article_counts")
     .select("*")
     .gt("article_count", 0)
@@ -190,7 +190,7 @@ export async function getCompaniesWithCounts(): Promise<CompanyCount[]> {
 }
 
 export async function getCompany(slug: string): Promise<Company | null> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("companies")
     .select("*")
     .eq("slug", slug)
@@ -200,7 +200,7 @@ export async function getCompany(slug: string): Promise<Company | null> {
 }
 
 export async function getStories(): Promise<Story[]> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("stories")
     .select("*")
     .order("last_updated", { ascending: false });
@@ -209,7 +209,7 @@ export async function getStories(): Promise<Story[]> {
 }
 
 export async function getStory(slug: string): Promise<Story | null> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("stories")
     .select("*")
     .eq("slug", slug)
@@ -224,7 +224,7 @@ export async function searchArticles(
   { limit = 50, category }: { limit?: number; category?: ArticleCategory } = {},
 ): Promise<Article[]> {
   if (!query.trim()) return [];
-  const { data, error } = await supabase.rpc("search_articles", {
+  const { data, error } = await getSupabase().rpc("search_articles", {
     search_query: query,
     result_limit: limit,
     filter_category: category ?? null,
@@ -248,7 +248,7 @@ export async function getAllArticleAddresses(): Promise<
   }[] = [];
 
   for (let offset = 0; ; offset += pageSize) {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from("articles")
       .select("category,slug,published_at,quality,summary_word_count,source_truncated")
       .order("published_at", { ascending: false })
@@ -270,14 +270,14 @@ export async function getAdjacentArticles(article: Pick<Article, "published_at">
   next: Pick<Article, "title" | "slug" | "category"> | null;
 }> {
   const [prevRes, nextRes] = await Promise.all([
-    supabase
+    getSupabase()
       .from("articles")
       .select("title,slug,category")
       .lt("published_at", article.published_at)
       .order("published_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
-    supabase
+    getSupabase()
       .from("articles")
       .select("title,slug,category")
       .gt("published_at", article.published_at)
@@ -293,7 +293,7 @@ export async function getAdjacentArticles(article: Pick<Article, "published_at">
 
 /** First story that covers a company, for the post page's in-depth rail. */
 export async function getStoryForCompany(company: string): Promise<Story | null> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("stories")
     .select("*")
     .contains("companies", [company])
@@ -306,7 +306,7 @@ export async function getStoryForCompany(company: string): Promise<Story | null>
 
 /** Distinct subcategories present in a section, for the filter chips. */
 export async function getSubcategories(category?: ArticleCategory): Promise<string[]> {
-  let q = supabase.from("articles").select("subcategory");
+  let q = getSupabase().from("articles").select("subcategory");
   if (category) q = q.eq("category", category);
   const { data, error } = await q.limit(2000);
   if (error) throw error;
