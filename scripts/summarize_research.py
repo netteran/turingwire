@@ -20,6 +20,7 @@ from slugify import slugify
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from quality import parse_summary_output, passes_quality
+from supabase_store import recent_articles, write_post
 
 ROOT = Path(__file__).parent.parent
 DATA_DIR = ROOT / "_data"
@@ -156,76 +157,8 @@ def word_count(text: str) -> int:
     return len(text.split())
 
 
-def build_front_matter(article: dict, summary: str, pub_date: datetime, description: str = "", quality: bool = False) -> str:
-    classification = article.get("classification", {})
-    company = classification.get("company") or article.get("source_company")
-    secondary = classification.get("secondary_companies", [])
-    impact = classification.get("impact", "notable")
-    subcategory = classification.get("subcategory", "other")
-    confidence = float(classification.get("confidence", 0.0))
-    source_name = article.get("source_name", "")
-    source_url = article.get("url", "")
-    arxiv_id = article.get("arxiv_id", "")
-    authors = article.get("authors", [])
-
-    slug = slugify(article.get("title", "untitled"))[:60]
-    wc = word_count(summary)
-    title = article.get("title", "").replace('"', '\\"')
-    secondary_yaml = json.dumps(secondary) if secondary else "[]"
-    company_line = f'company: "{company}"' if company else "company: null"
-    authors_yaml = json.dumps(authors[:6])
-
-    desc_escaped = description.replace('"', '\\"') if description else ""
-
-    lines = [
-        "---",
-        f'title: "{title}"',
-        f'date: {pub_date.strftime("%Y-%m-%d %H:%M:%S")} +0000',
-        f"category: research",
-        f"subcategory: {subcategory}",
-        company_line,
-        f"secondary_companies: {secondary_yaml}",
-        f"impact: {impact}",
-        f'source_publisher: "{source_name}"',
-        f'source_url: "{source_url}"',
-        f'arxiv_id: "{arxiv_id}"',
-        f"authors: {authors_yaml}",
-        f"slug: {slug}",
-        f"summary_word_count: {wc}",
-        f"classification_confidence: {confidence:.2f}",
-        f"source_truncated: false",
-        f"layout: post",
-    ]
-    if quality:
-        lines.append("quality: high")
-    if desc_escaped:
-        lines.append(f'description: "{desc_escaped}"')
-    lines.append("---")
-    return "\n".join(lines)
 
 
-def write_post(article: dict, summary: str, pub_date: datetime, description: str = "", quality: bool = False) -> Path:
-    year = pub_date.strftime("%Y")
-    month = pub_date.strftime("%m")
-    date_prefix = pub_date.strftime("%Y-%m-%d")
-    slug = slugify(article.get("title", "untitled"))[:60]
-    filename = f"{date_prefix}-{slug}.md"
-
-    post_dir = ROOT / "_posts" / year / month
-    post_dir.mkdir(parents=True, exist_ok=True)
-    post_path = post_dir / filename
-
-    if post_path.exists():
-        log.debug("post already exists, skipping: %s", post_path)
-        return post_path
-
-    front_matter = build_front_matter(article, summary, pub_date, description, quality)
-    content = f"{front_matter}\n\n{summary}\n"
-
-    with post_path.open("w") as f:
-        f.write(content)
-
-    return post_path
 
 
 def main() -> int:
@@ -278,10 +211,10 @@ def main() -> int:
         except Exception:
             pub_date = datetime.now(timezone.utc)
 
-        path = write_post(article, summary, pub_date, description, quality=True)
+        url = write_post(article, summary, pub_date, description, quality=True)
         seen[article["guid"]] = datetime.now(timezone.utc).isoformat()
 
-        log.info("wrote research post: %s (%d words)", path.name, wc)
+        log.info("stored research article: %s (%d words)", url, wc)
         new_posts += 1
         time.sleep(0.3)
 

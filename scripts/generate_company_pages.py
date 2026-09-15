@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
 """
-generate_company_pages.py — Generate _companies/<slug>.md files from classified posts.
+generate_company_pages.py — Keep the `companies` table in sync with coverage.
 
-Reads all _posts/**/*.md front matter to find company tags, then creates
-one company page file per unique company. These are Jekyll collection items
-served at /companies/<slug>/.
+Previously wrote _companies/<slug>.md files for Jekyll's collection. Company
+pages are now rendered from Postgres at /companies/<slug>/, so this just makes
+sure every organisation named in an article has a row.
 
-Run as part of the ingest pipeline after summarization.
+Run as part of the ingest pipeline, after summarization.
 """
 from __future__ import annotations
 
 import logging
-import re
 import sys
-from pathlib import Path
 
-import yaml
 from slugify import slugify
 
-ROOT = Path(__file__).parent.parent
-POSTS_DIR = ROOT / "_posts"
-COMPANIES_DIR = ROOT / "_companies"
+from supabase_store import (
+    SupabaseError,
+    companies_in_articles,
+    distinct_companies,
+    upsert_company,
+)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -30,52 +30,36 @@ logging.basicConfig(
 log = logging.getLogger("generate_company_pages")
 
 
-def extract_company_from_post(path: Path) -> str | None:
-    text = path.read_text()
-    if not text.startswith("---"):
-        return None
-    try:
-        end = text.index("---", 3)
-    except ValueError:
-        return None
-    try:
-        fm = yaml.safe_load(text[3:end])
-        return fm.get("company")
-    except Exception:
-        return None
-
-
 def main() -> int:
-    company_counts: dict[str, int] = {}
+    try:
+        named = companies_in_articles()
+        existing = set(distinct_companies())
+    except SupabaseError as exc:
+        log.error("%s", exc)
+        return 1
 
-    for md_file in POSTS_DIR.rglob("*.md"):
-        co = extract_company_from_post(md_file)
-        if co:
-            company_counts[co] = company_counts.get(co, 0) + 1
-
-    COMPANIES_DIR.mkdir(parents=True, exist_ok=True)
+    missing = sorted(named - existing)
+    if not missing:
+        log.info("companies up to date (%d tracked)", len(existing))
+        return 0
 
     created = 0
-    for company in sorted(company_counts):
-        slug = slugify(company)
-        page_path = COMPANIES_DIR / f"{slug}.md"
+    for name in missing:
+        if not slugify(name):
+            log.warning("skipping company with unusable name: %r", name)
+            continue
+        description = (
+            f"Turing Wire coverage of {name}: AI news, research summaries, and analysis."
+        )
+        try:
+            upsert_company(name, description)
+        except SupabaseError as exc:
+            log.error("failed to upsert %r: %s", name, exc)
+            continue
+        log.info("created company: %s", name)
+        created += 1
 
-        if not page_path.exists():
-            count = company_counts[company]
-            description = (
-                f"Turing Wire coverage of {company}: AI news, research summaries, "
-                f"and analysis across {count} article{'s' if count != 1 else ''}."
-            )
-            content = (
-                f'---\ntitle: "{company}"\n'
-                f'description: "{description}"\n'
-                f"layout: company\n---\n"
-            )
-            page_path.write_text(content)
-            log.info("created company page: %s", page_path.name)
-            created += 1
-
-    log.info("company pages: %d created, %d total", created, len(company_counts))
+    log.info("companies: %d created, %d total", created, len(existing) + created)
     return 0
 
 
