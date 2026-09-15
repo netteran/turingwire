@@ -60,7 +60,7 @@ exclude:
   - CONTRIBUTING.md
   - scripts/
   - feeds/
-  - requirements.txt
+  - vercel.json
   - "*.py"
   - ".github/"
   - node_modules/
