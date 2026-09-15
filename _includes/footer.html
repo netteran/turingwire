@@ -1,0 +1,97 @@
+<footer class="tw-footer border-t tw-border mt-16">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-[25px] pb-10">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8 text-sm">
+
+      <div>
+        <div class="flex items-center gap-2 mb-3">
+          <img src="{{ '/assets/img/turingwirelogo.png' | relative_url }}"
+               alt="Turing Wire"
+               class="w-6 h-6 object-contain">
+          <p class="font-mono font-semibold tw-heading">
+            Turing <span style="color:var(--accent)">Wire</span>
+          </p>
+        </div>
+        <p class="tw-muted text-xs leading-relaxed">
+          {{ site.tagline }}
+        </p>
+      </div>
+
+      <div>
+        <p class="font-mono text-xs uppercase tracking-widest tw-muted mb-3">Sections</p>
+        <ul class="space-y-2">
+          <li><a href="/news/"        class="tw-muted hover:tw-accent transition-colors text-xs">News</a></li>
+          <li><a href="/research/"    class="tw-muted hover:tw-accent transition-colors text-xs">Research</a></li>
+          <li><a href="/aistocks/"    class="tw-muted hover:tw-accent transition-colors text-xs">AIStocks</a></li>
+          <li><a href="/companies/"   class="tw-muted hover:tw-accent transition-colors text-xs">Companies</a></li>
+          <li><a href="/models/"      class="tw-muted hover:tw-accent transition-colors text-xs">Models</a></li>
+          <li><a href="/benchmarks/"  class="tw-muted hover:tw-accent transition-colors text-xs">Benchmarks</a></li>
+          <li><a href="/calendar/"    class="tw-muted hover:tw-accent transition-colors text-xs">Calendar</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <p class="font-mono text-xs uppercase tracking-widest tw-muted mb-3">Syndication</p>
+        <ul class="space-y-2">
+          <li>
+            <a href="/feed.xml" class="tw-muted hover:tw-accent transition-colors text-xs font-mono flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-sm flex-shrink-0" style="background:var(--accent)"></span> All posts
+            </a>
+          </li>
+          <li>
+            <a href="/feed-major.xml" class="tw-muted hover:tw-accent transition-colors text-xs font-mono flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-sm flex-shrink-0" style="background:var(--accent)"></span> Major+ only
+            </a>
+          </li>
+          <li>
+            <a href="/news/feed.xml" class="tw-muted hover:tw-accent transition-colors text-xs font-mono flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-sm bg-blue-500 flex-shrink-0"></span> News RSS
+            </a>
+          </li>
+          <li>
+            <a href="/research/feed.xml" class="tw-muted hover:tw-accent transition-colors text-xs font-mono flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-sm bg-purple-500 flex-shrink-0"></span> Research RSS
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <div>
+        <p class="font-mono text-xs uppercase tracking-widest tw-muted mb-3">Site</p>
+        <ul class="space-y-2">
+          <li><a href="/about/"       class="tw-muted hover:tw-accent transition-colors text-xs">About</a></li>
+          <li><a href="/about/editor/" class="tw-muted hover:tw-accent transition-colors text-xs">Editor</a></li>
+          <li><a href="/contact/"     class="tw-muted hover:tw-accent transition-colors text-xs">Contact</a></li>
+          <li><a href="/sources/"     class="tw-muted hover:tw-accent transition-colors text-xs">Sources</a></li>
+          <li><a href="/disclaimer/"  class="tw-muted hover:tw-accent transition-colors text-xs">Disclaimer</a></li>
+          <li><a href="/privacy/"     class="tw-muted hover:tw-accent transition-colors text-xs">Privacy</a></li>
+          <li><a href="/terms/"       class="tw-muted hover:tw-accent transition-colors text-xs">Terms</a></li>
+          <li><a href="/alan-turing/" class="tw-muted hover:tw-accent transition-colors text-xs">Alan Turing</a></li>
+        </ul>
+      </div>
+    </div>
+
+    {% if site.newsletter.action and site.newsletter.action != "" %}
+    <div class="border-t tw-border pt-6 mb-6">
+      <p class="font-mono text-xs uppercase tracking-widest tw-muted mb-2">Get the briefing</p>
+      <p class="tw-muted text-xs mb-3 max-w-md">The signal, not the volume — a low-noise digest of major AI developments.</p>
+      <form action="{{ site.newsletter.action }}" method="post" class="flex flex-wrap gap-2 max-w-md">
+        <label for="nl-email" class="sr-only">Email address</label>
+        <input id="nl-email" type="email" name="{{ site.newsletter.email_field | default: 'email' }}" required
+               placeholder="{{ site.newsletter.placeholder | default: 'you@example.com' }}"
+               class="flex-1 min-w-0 rounded border tw-border bg-transparent px-3 py-2 text-sm tw-heading"
+               autocomplete="email">
+        <button type="submit" class="rounded px-4 py-2 text-sm font-mono font-medium text-white" style="background:var(--accent)">Subscribe</button>
+      </form>
+    </div>
+    {% endif %}
+
+    <div class="border-t tw-border pt-6 space-y-2">
+      <p class="text-xs tw-muted">
+        Turing Wire is an independent AI industry publication. Original sources are linked in every article.
+      </p>
+      <p class="text-xs tw-muted">
+        © {{ 'now' | date: "%Y" }} Turing Wire. All rights reserved.
+      </p>
+    </div>
+  </div>
+</footer>

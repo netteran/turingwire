@@ -1,0 +1,145 @@
+<header id="site-header" class="tw-header sticky top-0 z-50 border-b tw-border-header">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
+
+    <!-- Logo -->
+    <a href="/" class="flex items-center gap-2.5 flex-shrink-0 group">
+      <img src="{{ '/assets/img/turingwirelogo.png' | relative_url }}"
+           alt="Turing Wire"
+           class="w-8 h-8 object-contain">
+      <span class="font-mono text-sm font-semibold tw-heading tracking-tight group-hover:tw-accent transition-colors">
+        Turing <span style="color:var(--accent)">Wire</span>
+      </span>
+    </a>
+
+    <!-- Desktop Nav (center) -->
+    <nav class="hidden md:flex items-center gap-1 text-sm font-medium" aria-label="Main navigation">
+
+      <div class="tw-nav-group">
+        <button type="button"
+                class="tw-nav-link tw-nav-trigger {% if page.url contains '/news' or page.url contains '/research' %}tw-nav-active{% endif %}"
+                aria-haspopup="true" aria-expanded="false">
+          The Wire <span aria-hidden="true" class="tw-nav-caret">&#9662;</span>
+        </button>
+        <div class="tw-nav-dropdown" role="menu">
+          <a href="/news/"     class="tw-dropdown-item" role="menuitem">News</a>
+          <a href="/research/" class="tw-dropdown-item" role="menuitem">Research</a>
+        </div>
+      </div>
+
+      <div class="tw-nav-group">
+        <button type="button"
+                class="tw-nav-link tw-nav-trigger {% if page.url contains '/stor' or page.url contains '/missions' %}tw-nav-active{% endif %}"
+                aria-haspopup="true" aria-expanded="false">
+          Intelligence <span aria-hidden="true" class="tw-nav-caret">&#9662;</span>
+        </button>
+        <div class="tw-nav-dropdown" role="menu">
+          <a href="/stories/"  class="tw-dropdown-item" role="menuitem">Stories</a>
+          <a href="/missions/" class="tw-dropdown-item" role="menuitem">Missions</a>
+        </div>
+      </div>
+
+      <div class="tw-nav-group">
+        <button type="button"
+                class="tw-nav-link tw-nav-trigger {% if page.url contains '/aistocks' or page.url contains '/companies' %}tw-nav-active{% endif %}"
+                aria-haspopup="true" aria-expanded="false">
+          Markets <span aria-hidden="true" class="tw-nav-caret">&#9662;</span>
+        </button>
+        <div class="tw-nav-dropdown" role="menu">
+          <a href="/aistocks/"  class="tw-dropdown-item" role="menuitem">AI Stocks</a>
+          <a href="/companies/" class="tw-dropdown-item" role="menuitem">Companies</a>
+        </div>
+      </div>
+
+      <div class="tw-nav-group">
+        <button type="button"
+                class="tw-nav-link tw-nav-trigger {% if page.url contains '/models' or page.url contains '/benchmarks' %}tw-nav-active{% endif %}"
+                aria-haspopup="true" aria-expanded="false">
+          Technical <span aria-hidden="true" class="tw-nav-caret">&#9662;</span>
+        </button>
+        <div class="tw-nav-dropdown" role="menu">
+          <a href="/models/"     class="tw-dropdown-item" role="menuitem">Models</a>
+          <a href="/benchmarks/" class="tw-dropdown-item" role="menuitem">Benchmarks</a>
+        </div>
+      </div>
+
+      <a href="/calendar/" class="tw-nav-link {% if page.url contains '/calendar' %}tw-nav-active{% endif %}">Events</a>
+    </nav>
+
+    <!-- Right: Search + Theme toggle + Mobile menu -->
+    <div class="flex items-center gap-2">
+
+      <!-- Search input -->
+      <div class="relative tw-search-wrapper hidden sm:block">
+        <form action="/search/" method="get" role="search">
+          <input
+            id="header-search"
+            type="search"
+            name="q"
+            placeholder="Search…"
+            aria-label="Search"
+            class="tw-search-input font-mono text-sm"
+            autocomplete="off"
+          >
+          <kbd class="tw-search-kbd hidden sm:flex" aria-hidden="true">/</kbd>
+        </form>
+      </div>
+
+      <!-- Theme toggle -->
+      <button id="theme-toggle" aria-label="Toggle dark mode" class="tw-icon-btn opacity-40 hover:opacity-80 transition-opacity">
+        <svg id="icon-sun" class="w-3.5 h-3.5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"/>
+        </svg>
+        <svg id="icon-moon" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+        </svg>
+      </button>
+
+      <!-- Mobile menu button -->
+      <button id="mobile-menu-toggle" aria-label="Open menu" aria-expanded="false" class="tw-icon-btn md:hidden">
+        <svg id="icon-menu" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+        <svg id="icon-close" class="w-5 h-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile nav drawer -->
+  <div id="mobile-nav" class="md:hidden hidden tw-mobile-nav border-t tw-border">
+    <nav class="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-1 text-sm font-medium">
+
+      <details class="tw-mobile-group" {% if page.url contains '/news' or page.url contains '/research' %}open{% endif %}>
+        <summary class="tw-nav-link py-2">The Wire</summary>
+        <a href="/news/"     class="py-2 {% if page.url contains '/news'     %}tw-nav-active{% endif %}">News</a>
+        <a href="/research/" class="py-2 {% if page.url contains '/research' %}tw-nav-active{% endif %}">Research</a>
+      </details>
+
+      <details class="tw-mobile-group" {% if page.url contains '/stor' or page.url contains '/missions' %}open{% endif %}>
+        <summary class="tw-nav-link py-2">Intelligence</summary>
+        <a href="/stories/"  class="py-2 {% if page.url contains '/stor'     %}tw-nav-active{% endif %}">Stories</a>
+        <a href="/missions/" class="py-2 {% if page.url contains '/missions' %}tw-nav-active{% endif %}">Missions</a>
+      </details>
+
+      <details class="tw-mobile-group" {% if page.url contains '/aistocks' or page.url contains '/companies' %}open{% endif %}>
+        <summary class="tw-nav-link py-2">Markets</summary>
+        <a href="/aistocks/"  class="py-2 {% if page.url contains '/aistocks'  %}tw-nav-active{% endif %}">AI Stocks</a>
+        <a href="/companies/" class="py-2 {% if page.url contains '/companies' %}tw-nav-active{% endif %}">Companies</a>
+      </details>
+
+      <details class="tw-mobile-group" {% if page.url contains '/models' or page.url contains '/benchmarks' %}open{% endif %}>
+        <summary class="tw-nav-link py-2">Technical</summary>
+        <a href="/models/"     class="py-2 {% if page.url contains '/models'     %}tw-nav-active{% endif %}">Models</a>
+        <a href="/benchmarks/" class="py-2 {% if page.url contains '/benchmarks' %}tw-nav-active{% endif %}">Benchmarks</a>
+      </details>
+
+      <a href="/calendar/" class="tw-nav-link py-2 {% if page.url contains '/calendar' %}tw-nav-active{% endif %}">Events</a>
+
+      <form action="/search/" method="get" class="mt-2">
+        <input type="search" name="q" placeholder="Search…"
+               class="tw-search-input w-full font-mono text-sm">
+      </form>
+    </nav>
+  </div>
+</header>

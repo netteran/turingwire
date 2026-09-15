@@ -1,0 +1,148 @@
+# AI Index ticker universe
+# Fields: symbol, name, sector, weight (all equal initially), inclusion_date
+# weight is overridden at runtime by equal-weighting logic in compute_ai_index.py
+
+index_base_date: "2026-01-02"
+index_name: "TW AI Index"
+
+tickers:
+  # ── AI / Software ──────────────────────────────────────────────────────────
+  - symbol: NVDA
+    name: "NVIDIA Corporation"
+    sector: semiconductors
+    inclusion_date: "2026-01-02"
+
+  - symbol: AMD
+    name: "Advanced Micro Devices"
+    sector: semiconductors
+    inclusion_date: "2026-01-02"
+
+  - symbol: INTC
+    name: "Intel Corporation"
+    sector: semiconductors
+    inclusion_date: "2026-01-02"
+
+  - symbol: TSM
+    name: "Taiwan Semiconductor Manufacturing"
+    sector: semiconductors
+    inclusion_date: "2026-01-02"
+
+  - symbol: GOOGL
+    name: "Alphabet Inc."
+    sector: hyperscaler
+    inclusion_date: "2026-01-02"
+
+  - symbol: MSFT
+    name: "Microsoft Corporation"
+    sector: hyperscaler
+    inclusion_date: "2026-01-02"
+
+  - symbol: META
+    name: "Meta Platforms"
+    sector: hyperscaler
+    inclusion_date: "2026-01-02"
+
+  - symbol: AMZN
+    name: "Amazon.com Inc."
+    sector: hyperscaler
+    inclusion_date: "2026-01-02"
+
+  - symbol: AAPL
+    name: "Apple Inc."
+    sector: hyperscaler
+    inclusion_date: "2026-01-02"
+
+  - symbol: ORCL
+    name: "Oracle Corporation"
+    sector: enterprise_ai
+    inclusion_date: "2026-01-02"
+
+  - symbol: PLTR
+    name: "Palantir Technologies"
+    sector: enterprise_ai
+    inclusion_date: "2026-01-02"
+
+  - symbol: SMCI
+    name: "Super Micro Computer"
+    sector: infrastructure
+    inclusion_date: "2026-01-02"
+
+  - symbol: AVGO
+    name: "Broadcom Inc."
+    sector: semiconductors
+    inclusion_date: "2026-01-02"
+
+  - symbol: ARM
+    name: "Arm Holdings"
+    sector: semiconductors
+    inclusion_date: "2026-01-02"
+
+  - symbol: ASML
+    name: "ASML Holding"
+    sector: semiconductor_equipment
+    inclusion_date: "2026-01-02"
+
+  - symbol: AMAT
+    name: "Applied Materials"
+    sector: semiconductor_equipment
+    inclusion_date: "2026-01-02"
+
+  - symbol: LRCX
+    name: "Lam Research"
+    sector: semiconductor_equipment
+    inclusion_date: "2026-01-02"
+
+  - symbol: MU
+    name: "Micron Technology"
+    sector: semiconductors
+    inclusion_date: "2026-01-02"
+
+  - symbol: IBM
+    name: "IBM"
+    sector: enterprise_ai
+    inclusion_date: "2026-01-02"
+
+  - symbol: CRM
+    name: "Salesforce Inc."
+    sector: enterprise_ai
+    inclusion_date: "2026-01-02"
+
+  - symbol: NOW
+    name: "ServiceNow"
+    sector: enterprise_ai
+    inclusion_date: "2026-01-02"
+
+  - symbol: SNOW
+    name: "Snowflake Inc."
+    sector: enterprise_ai
+    inclusion_date: "2026-01-02"
+
+  - symbol: PATH
+    name: "UiPath Inc."
+    sector: enterprise_ai
+    inclusion_date: "2026-01-02"
+
+  - symbol: AI
+    name: "C3.ai Inc."
+    sector: enterprise_ai
+    inclusion_date: "2026-01-02"
+
+  - symbol: BBAI
+    name: "BigBear.ai"
+    sector: enterprise_ai
+    inclusion_date: "2026-01-02"
+
+  - symbol: CRWV
+    name: "CoreWeave Inc."
+    sector: infrastructure
+    inclusion_date: "2026-01-02"
+
+  - symbol: BIDU
+    name: "Baidu Inc."
+    sector: hyperscaler
+    inclusion_date: "2026-01-02"
+
+  - symbol: BABA
+    name: "Alibaba Group"
+    sector: hyperscaler
+    inclusion_date: "2026-01-02"

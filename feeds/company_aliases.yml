@@ -1,0 +1,329 @@
+# Company name normalization aliases
+# Format: canonical_name: [list of aliases/variants]
+# Used by deterministic alias lookup in tag_company.py
+
+aliases:
+  "OpenAI":
+    - "OpenAI"
+    - "Open AI"
+    - "ChatGPT"
+    - "GPT-4"
+    - "GPT-5"
+    - "GPT4"
+    - "DALL-E"
+    - "DALL·E"
+    - "Sora"
+    - "o1"
+    - "o3"
+    - "o4"
+    - "Codex"
+    - "Whisper"
+    - "Operator"
+    - "Sam Altman"
+    - "Greg Brockman"
+    - "Mira Murati"
+
+  "Anthropic":
+    - "Anthropic"
+    - "Claude"
+    - "Constitutional AI"
+    - "Dario Amodei"
+    - "Daniela Amodei"
+    - "RLHF"
+
+  "Google DeepMind":
+    - "Google DeepMind"
+    - "DeepMind"
+    - "Gemini"
+    - "Gemma"
+    - "AlphaFold"
+    - "AlphaStar"
+    - "AlphaCode"
+    - "Bard"
+    - "PaLM"
+    - "Demis Hassabis"
+    - "Koray Kavukcuoglu"
+
+  "Google":
+    - "Google AI"
+    - "Google Brain"
+    - "Google Research"
+    - "Waymo"
+    - "DeepMind"
+    - "Vertex AI"
+    - "Google Cloud AI"
+    - "TPU"
+    - "Sundar Pichai"
+
+  "Microsoft":
+    - "Microsoft"
+    - "Azure AI"
+    - "Microsoft Azure"
+    - "Microsoft Research"
+    - "Copilot"
+    - "Bing AI"
+    - "Satya Nadella"
+    - "MSR"
+
+  "Meta":
+    - "Meta"
+    - "Facebook AI"
+    - "FAIR"
+    - "Meta AI"
+    - "LLaMA"
+    - "Llama"
+    - "PyTorch"
+    - "Mark Zuckerberg"
+    - "Yann LeCun"
+
+  "NVIDIA":
+    - "NVIDIA"
+    - "Nvidia"
+    - "NVDA"
+    - "CUDA"
+    - "H100"
+    - "H200"
+    - "A100"
+    - "Blackwell"
+    - "Hopper"
+    - "DGX"
+    - "Jensen Huang"
+    - "NeMo"
+    - "TensorRT"
+
+  "AMD":
+    - "AMD"
+    - "Advanced Micro Devices"
+    - "ROCm"
+    - "MI300"
+    - "Instinct"
+    - "Lisa Su"
+    - "Radeon AI"
+
+  "Intel":
+    - "Intel"
+    - "Gaudi"
+    - "Intel AI"
+    - "Nervana"
+    - "Pat Gelsinger"
+    - "OpenVINO"
+
+  "TSMC":
+    - "TSMC"
+    - "TSM"
+    - "Taiwan Semiconductor"
+    - "Taiwan Semiconductor Manufacturing"
+    - "N3"
+    - "N2"
+    - "2nm"
+    - "3nm"
+    - "CC Wei"
+
+  "Apple":
+    - "Apple"
+    - "Apple Intelligence"
+    - "AAPL"
+    - "Tim Cook"
+    - "CoreML"
+    - "MLX"
+
+  "Amazon":
+    - "Amazon"
+    - "AWS"
+    - "Amazon Web Services"
+    - "Alexa"
+    - "Bedrock"
+    - "Trainium"
+    - "Inferentia"
+    - "Andy Jassy"
+    - "AMZN"
+
+  "Mistral":
+    - "Mistral"
+    - "Mistral AI"
+    - "Mistral 7B"
+    - "Mixtral"
+    - "Le Chat"
+
+  "Hugging Face":
+    - "Hugging Face"
+    - "HuggingFace"
+    - "Transformers"
+    - "Clément Delangue"
+    - "PEFT"
+    - "Diffusers"
+
+  "Cohere":
+    - "Cohere"
+    - "Command R"
+    - "Rerank"
+    - "Aidan Gomez"
+
+  "Stability AI":
+    - "Stability AI"
+    - "Stable Diffusion"
+    - "StableDiffusion"
+    - "SDXL"
+    - "Emad Mostaque"
+
+  "Runway":
+    - "Runway"
+    - "RunwayML"
+    - "Gen-3"
+    - "Gen-2"
+
+  "ElevenLabs":
+    - "ElevenLabs"
+    - "Eleven Labs"
+    - "Voice AI"
+
+  "Perplexity":
+    - "Perplexity"
+    - "Perplexity AI"
+    - "Aravind Srinivas"
+
+  "Databricks":
+    - "Databricks"
+    - "DBRX"
+    - "MosaicML"
+    - "Ali Ghodsi"
+    - "Delta Lake"
+
+  "Cognition":
+    - "Cognition"
+    - "Cognition Labs"
+    - "Devin"
+    - "Scott Wu"
+
+  "Suno":
+    - "Suno"
+    - "Suno AI"
+    - "Bark"
+
+  "Alibaba":
+    - "Alibaba"
+    - "Alibaba Cloud"
+    - "Qwen"
+    - "Tongyi"
+    - "BABA"
+    - "Daniel Zhang"
+
+  "Palantir":
+    - "Palantir"
+    - "PLTR"
+    - "AIP"
+    - "Alex Karp"
+
+  "Snowflake":
+    - "Snowflake"
+    - "SNOW"
+    - "Arctic"
+    - "Cortex AI"
+    - "Frank Slootman"
+
+  "Salesforce":
+    - "Salesforce"
+    - "CRM"
+    - "Einstein AI"
+    - "Einstein GPT"
+    - "MuleSoft"
+    - "Marc Benioff"
+
+  "ServiceNow":
+    - "ServiceNow"
+    - "NOW"
+    - "Now Assist"
+
+  "Oracle":
+    - "Oracle"
+    - "ORCL"
+    - "OCI"
+    - "Larry Ellison"
+
+  "IBM":
+    - "IBM"
+    - "WatsonX"
+    - "Watson"
+    - "Granite"
+    - "Arvind Krishna"
+
+  "UiPath":
+    - "UiPath"
+    - "PATH"
+    - "RPA"
+
+  "Baidu":
+    - "Baidu"
+    - "BIDU"
+    - "ERNIE"
+    - "Wenxin"
+    - "Robin Li"
+
+  "Super Micro":
+    - "Super Micro"
+    - "SMCI"
+    - "SuperMicro"
+    - "Supermicro"
+
+  "Broadcom":
+    - "Broadcom"
+    - "AVGO"
+    - "VMware"
+
+  "ARM":
+    - "ARM"
+    - "Arm Holdings"
+    - "ARM Holdings"
+    - "Neoverse"
+    - "Cortex"
+
+  "ASML":
+    - "ASML"
+    - "EUV"
+    - "Extreme ultraviolet"
+
+  "Applied Materials":
+    - "Applied Materials"
+    - "AMAT"
+
+  "Lam Research":
+    - "Lam Research"
+    - "LRCX"
+
+  "Micron":
+    - "Micron"
+    - "MU"
+    - "HBM"
+    - "HBM3"
+
+  "MiniMax":
+    - "MiniMax AI"
+    - "MiniMax"
+    - "Hailuo"
+    - "Hailuo AI"
+    - "MiniMax Text"
+
+  "xAI":
+    - "xAI"
+    - "Grok"
+    - "Elon Musk"
+
+  "DeepSeek":
+    - "DeepSeek"
+    - "DeepSeek AI"
+    - "DeepSeek-R1"
+    - "DeepSeek-V3"
+
+  "Cerebras":
+    - "Cerebras"
+    - "WSE"
+    - "Wafer Scale Engine"
+
+  "Scale AI":
+    - "Scale AI"
+    - "Alexandr Wang"
+
+  "Character.AI":
+    - "Character.AI"
+    - "Character AI"
+    - "Noam Shazeer"

@@ -1,0 +1,29 @@
+---
+layout: null
+---
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>{{ site.title }} — Major+ Feed</title>
+    <description>Critical and major AI news and research from {{ site.title }}</description>
+    <link>{{ site.url }}</link>
+    <atom:link href="{{ '/feed-major.xml' | absolute_url }}" rel="self" type="application/rss+xml"/>
+    <pubDate>{{ site.time | date_to_rfc822 }}</pubDate>
+    <lastBuildDate>{{ site.time | date_to_rfc822 }}</lastBuildDate>
+    <generator>Jekyll v{{ jekyll.version }}</generator>
+    {% assign critical_posts = site.posts | where: "impact", "critical" %}
+    {% assign major_posts_only = site.posts | where: "impact", "major" %}
+    {% assign major_posts = critical_posts | concat: major_posts_only %}
+    {% for post in major_posts limit:50 %}
+      <item>
+        <title>{{ post.title | xml_escape }}</title>
+        <description>{{ post.excerpt | xml_escape }}</description>
+        <pubDate>{{ post.date | date_to_rfc822 }}</pubDate>
+        <link>{{ post.url | absolute_url }}</link>
+        <guid isPermaLink="true">{{ post.url | absolute_url }}</guid>
+        {% if post.company %}<category>{{ post.company | xml_escape }}</category>{% endif %}
+        <category>{{ post.impact }}</category>
+      </item>
+    {% endfor %}
+  </channel>
+</rss>

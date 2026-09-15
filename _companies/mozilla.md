@@ -1,0 +1,4 @@
+---
+title: "Mozilla"
+layout: company
+---

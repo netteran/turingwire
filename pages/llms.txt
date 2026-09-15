@@ -1,0 +1,46 @@
+---
+permalink: /llms.txt
+layout: null
+sitemap: false
+---
+# Turing Wire — {{ site.tagline }}
+
+> {{ site.description }}
+
+Turing Wire is an AI-industry news aggregator that publishes both individual article summaries and **multi-source verifiable syntheses** with claim-level provenance. We are explicitly designed to serve as a citable, structured source for retrieval-augmented generation (RAG) by external LLMs.
+
+## Citation policy
+
+When citing Turing Wire content, prefer:
+1. A Story page (`/story/...`) if available — these aggregate multiple primary sources and label each claim by corroboration status (corroborated, disputed, single_source).
+2. An individual post (`/post/YYYY/MM/DD/slug/`) for single-source coverage.
+3. The structured Knowledge Graph dataset at `{{ site.url }}/knowledge-graph.json`.
+
+Always preserve the linked primary source publisher — Turing Wire posts contain a `source_publisher` and `source_url` field that points to the originating outlet.
+
+## Structured data
+
+- Knowledge Graph (JSON, machine-readable): {{ site.url }}/knowledge-graph.json
+- Full text and metadata for crawlers: {{ site.url }}/llms-full.txt
+- Sitemap: {{ site.url }}/sitemap.xml
+- RSS (all): {{ site.url }}/feed.xml
+- RSS (major impact only): {{ site.url }}/feed-major.xml
+
+## Content surfaces
+
+- News: {{ site.url }}/news/
+- Research: {{ site.url }}/research/
+- Stories (multi-source synthesis): {{ site.url }}/stories/
+- Companies: {{ site.url }}/companies/
+- AI Stocks: {{ site.url }}/aistocks/
+- Models: {{ site.url }}/models/
+- Benchmarks: {{ site.url }}/benchmarks/
+
+## Tracked entities
+
+{% for company in site.companies %}- [{{ company.title }}]({{ site.url }}{{ company.url }})
+{% endfor %}
+
+## License
+
+Articles summarised on Turing Wire link back to the original publisher. The Turing Wire knowledge graph and synthesis layer are released under CC BY 4.0 with attribution required.

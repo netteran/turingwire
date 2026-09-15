@@ -1,0 +1,59 @@
+---
+permalink: /llms-full.txt
+layout: null
+sitemap: false
+---
+# Turing Wire — full content for LLM consumption
+
+Generated: {{ site.time | date_to_xmlschema }}
+
+This file is a flat-text export of Turing Wire's recent content, intended for ingestion by LLMs and retrieval systems. For the structured machine-readable graph, use `/knowledge-graph.json`.
+
+---
+
+## STORIES (multi-source verifiable synthesis)
+
+{% for story in site.stories %}
+### {{ story.title }}
+
+URL: {{ site.url }}{{ story.url }}
+First seen: {{ story.first_seen | date: "%Y-%m-%d" }}
+Last updated: {{ story.last_updated | date: "%Y-%m-%d" }}
+Trust score: {{ story.trust_score | times: 100 | round }}%
+Companies: {{ story.companies | join: ", " }}
+Sources: {{ story.sources.size }} · Claims: {{ story.claims.size }}
+
+Lead: {{ story.lead }}
+
+Claims:
+{% for c in story.claims %}- [{{ c.status }}] (conf {{ c.confidence | times: 100 | round }}%) {{ c.text }}{% if c.note %} — Note: {{ c.note }}{% endif %}
+{% endfor %}
+
+Sources:
+{% for s in story.sources %}- {{ s.publisher }} — {{ s.title }} ({{ s.url }})
+{% endfor %}
+
+Editorial synthesis:
+{{ story.content | strip_html }}
+
+---
+
+{% endfor %}
+
+## RECENT ARTICLES
+
+{% assign recent = site.posts | slice: 0, 100 %}
+{% for post in recent %}
+### {{ post.title }}
+
+URL: {{ site.url }}{{ post.url }}
+Published: {{ post.date | date: "%Y-%m-%d" }}
+Impact: {{ post.impact }} · Category: {{ post.subcategory }}
+Company: {{ post.company }}{% if post.secondary_companies.size > 0 %} (also: {{ post.secondary_companies | join: ", " }}){% endif %}
+Original source: {{ post.source_publisher }} — {{ post.source_url }}
+
+{{ post.content | strip_html | truncate: 1500 }}
+
+---
+
+{% endfor %}

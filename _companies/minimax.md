@@ -1,0 +1,4 @@
+---
+title: "MiniMax"
+layout: company
+---

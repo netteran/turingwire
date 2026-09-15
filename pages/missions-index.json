@@ -1,0 +1,26 @@
+---
+permalink: /missions-index.json
+layout: null
+sitemap: false
+---
+[
+{% assign all_items = "" | split: "" %}
+{% for post in site.posts %}{% assign all_items = all_items | push: post %}{% endfor %}
+{% for story in site.stories %}{% assign all_items = all_items | push: story %}{% endfor %}
+{% for item in all_items %}
+{
+  "type": {% if item.collection == "stories" %}"story"{% else %}"post"{% endif %},
+  "title": {{ item.title | jsonify }},
+  "url": {{ item.url | jsonify }},
+  "date": "{{ item.date | date_to_xmlschema }}",
+  "company": {{ item.company | default: "" | jsonify }},
+  "secondary_companies": {{ item.secondary_companies | default: empty_array | jsonify }},
+  "companies": {{ item.companies | default: empty_array | jsonify }},
+  "impact": {{ item.impact | default: "" | jsonify }},
+  "subcategory": {{ item.subcategory | default: "" | jsonify }},
+  "category": {{ item.category | default: item.collection | jsonify }},
+  "summary": {{ item.lead | default: item.content | strip_html | truncatewords: 60 | jsonify }},
+  "trust_score": {{ item.trust_score | default: 0 }}
+}{% unless forloop.last %},{% endunless %}
+{% endfor %}
+]

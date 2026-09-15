@@ -1,0 +1,4 @@
+---
+title: "Dell"
+layout: company
+---

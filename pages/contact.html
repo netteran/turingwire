@@ -1,0 +1,144 @@
+---
+layout: default
+title: "Contact"
+description: "Get in touch with Turing Wire — sponsorship, source suggestions, bug reports, or general questions."
+permalink: /contact/
+---
+
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-[25px] pb-10">
+
+  <header class="mb-8">
+    <h1 class="text-3xl font-semibold tw-heading">Contact</h1>
+    <p class="text-sm tw-muted mt-2 font-mono">Sponsorship · source suggestions · bug reports · general questions</p>
+  </header>
+
+  <!-- Success state -->
+  <div id="form-success" class="hidden tw-card rounded-xl border border-emerald-500/40 bg-emerald-500/5 p-8 mb-8 text-center">
+    <div class="flex flex-col items-center gap-3">
+      <div class="w-12 h-12 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-500 text-xl font-bold">✓</div>
+      <p class="text-lg font-semibold tw-heading">Message sent — thank you!</p>
+      <p class="text-sm tw-muted max-w-sm leading-relaxed">
+        Your message has been received. We read every note and typically reply within a few days.
+      </p>
+      <button
+        onclick="document.getElementById('form-success').classList.add('hidden'); document.getElementById('form-wrapper').classList.remove('hidden'); document.getElementById('contact-form').reset();"
+        class="mt-2 text-xs font-mono tw-muted hover:text-cyan-600 transition-colors underline underline-offset-2"
+      >Send another message</button>
+    </div>
+  </div>
+
+  <div>
+
+    <div id="form-wrapper">
+      <form id="contact-form" class="space-y-5">
+        <input type="hidden" name="access_key" value="094380df-2abc-419b-8607-c336825897c1">
+
+        <div>
+          <label for="name" class="block text-xs font-mono tw-muted mb-1.5 uppercase tracking-wider">Name</label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            required
+            autocomplete="name"
+            placeholder="Your name"
+            class="tw-input w-full"
+          >
+        </div>
+
+        <div>
+          <label for="email" class="block text-xs font-mono tw-muted mb-1.5 uppercase tracking-wider">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            required
+            autocomplete="email"
+            placeholder="you@example.com"
+            class="tw-input w-full"
+          >
+        </div>
+
+        <div>
+          <label for="topic" class="block text-xs font-mono tw-muted mb-1.5 uppercase tracking-wider">Topic</label>
+          <select id="topic" name="topic" class="tw-input w-full">
+            <option value="general">General question</option>
+            <option value="sponsorship">Sponsorship / advertising</option>
+            <option value="source">Source suggestion</option>
+            <option value="bug">Bug report</option>
+            <option value="copyright">Copyright / content concern</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="message" class="block text-xs font-mono tw-muted mb-1.5 uppercase tracking-wider">Message</label>
+          <textarea
+            id="message"
+            name="message"
+            required
+            rows="6"
+            placeholder="What's on your mind?"
+            class="tw-input w-full resize-y"
+          ></textarea>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <button type="submit" id="submit-btn" class="tw-btn-primary w-full sm:w-auto">
+            Send message →
+          </button>
+          <p id="form-error" class="hidden text-sm text-red-500"></p>
+        </div>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const form = document.getElementById('contact-form');
+  const formWrapper = document.getElementById('form-wrapper');
+  const successBanner = document.getElementById('form-success');
+  const submitBtn = document.getElementById('submit-btn');
+  const errorEl = document.getElementById('form-error');
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    errorEl.classList.add('hidden');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending…';
+
+    const formData = new FormData(form);
+
+    try {
+      const response = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        formWrapper.classList.add('hidden');
+        successBanner.classList.remove('hidden');
+        successBanner.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        showError(data.message || 'Something went wrong. Please try again.');
+        resetBtn();
+      }
+    } catch (_) {
+      showError('Network error — please check your connection and try again.');
+      resetBtn();
+    }
+  });
+
+  function resetBtn() {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Send message →';
+  }
+
+  function showError(msg) {
+    errorEl.textContent = msg;
+    errorEl.classList.remove('hidden');
+  }
+</script>

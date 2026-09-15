@@ -1,0 +1,49 @@
+---
+layout: default
+title: "Stories"
+description: "Multi-source synthesis with claim-level provenance. Each story links every claim to the articles that support or contradict it."
+permalink: /stories/
+---
+
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-[25px] pb-10">
+
+  <header class="mb-8">
+    <h1 class="text-2xl sm:text-3xl font-semibold tw-heading mb-2">Stories</h1>
+    <p class="text-sm tw-muted leading-relaxed max-w-2xl">
+      Each story is a multi-source synthesis of an evolving event. Every claim is mapped to the
+      articles that support or contradict it, so you see disagreement rather than a smoothed
+      single-tone summary.
+    </p>
+  </header>
+
+  {% assign stories = site.stories | sort: "last_updated" | reverse %}
+  {% if stories.size == 0 %}
+  <p class="tw-muted text-sm">No synthesized stories yet.</p>
+  {% else %}
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    {% for story in stories %}
+    <a href="{{ story.url }}" class="tw-card border tw-border rounded-lg p-5 hover:border-cyan-600 transition-colors block">
+      <div class="flex flex-wrap items-center gap-2 mb-2">
+        {% if story.trust_score %}
+        <span class="font-mono text-[10px] uppercase tracking-widest px-2 py-0.5 rounded"
+              style="background: color-mix(in srgb, var(--accent) 10%, transparent); color: var(--accent);">
+          Trust {{ story.trust_score | times: 100 | round }}%
+        </span>
+        {% endif %}
+        <span class="font-mono text-[11px] tw-muted">
+          {{ story.sources.size }} sources · {{ story.claims.size }} claims
+        </span>
+      </div>
+      <h2 class="tw-heading font-semibold text-base leading-snug mb-1.5">{{ story.title }}</h2>
+      <p class="text-xs tw-muted leading-relaxed">{{ story.lead | truncate: 180 }}</p>
+      <div class="mt-3 flex flex-wrap items-center gap-1.5">
+        {% for co in story.companies limit: 4 %}
+        <span class="font-mono text-[10px] tw-muted border tw-border rounded px-1.5 py-0.5">{{ co }}</span>
+        {% endfor %}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+</div>

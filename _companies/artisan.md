@@ -1,0 +1,4 @@
+---
+title: "Artisan"
+layout: company
+---

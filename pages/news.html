@@ -1,0 +1,64 @@
+---
+layout: default
+title: "News"
+description: "AI industry news — product launches, model releases, funding, policy, and more."
+permalink: /news/
+---
+
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-[25px] pb-10">
+
+  <header class="mb-6">
+    <h1 class="text-3xl font-semibold tw-heading">News</h1>
+    <p class="text-sm tw-muted mt-1 font-mono">AI industry coverage</p>
+  </header>
+
+  <!-- Subcategory filter chips (JS-filtered) -->
+  <div class="flex flex-wrap gap-2 mb-3">
+    <button class="tw-filter-chip active" data-filter-subcategory="all">All</button>
+    <button class="tw-filter-chip" data-filter-subcategory="model_release">Model releases</button>
+    <button class="tw-filter-chip" data-filter-subcategory="product_launch">Product launches</button>
+    <button class="tw-filter-chip" data-filter-subcategory="funding_round">Funding</button>
+    <button class="tw-filter-chip" data-filter-subcategory="regulation_policy">Policy</button>
+    <button class="tw-filter-chip" data-filter-subcategory="safety_alignment">Safety</button>
+    <button class="tw-filter-chip" data-filter-subcategory="infrastructure_compute">Infrastructure</button>
+    <button class="tw-filter-chip" data-filter-subcategory="partnership">Partnerships</button>
+  </div>
+
+  <!-- Impact filter -->
+  <div class="flex flex-wrap gap-2 mb-8">
+    <button class="tw-filter-chip active text-xs" data-filter-impact="all">All impact</button>
+    <button class="tw-filter-chip text-xs" data-filter-impact="major+">Major+</button>
+    <button class="tw-filter-chip text-xs" data-filter-impact="critical">Critical only</button>
+  </div>
+
+  {% assign news_posts = site.posts | where: "category", "news" %}
+  {% assign news_posts2 = site.posts | where_exp: "p", "p.categories contains 'news'" %}
+
+  {% if news_posts.size == 0 and news_posts2.size == 0 %}
+  <div class="tw-card rounded-lg border tw-border p-8 text-center">
+    <p class="tw-muted text-sm font-mono">No news articles indexed yet.</p>
+  </div>
+  {% else %}
+
+  <div class="space-y-3" id="post-list">
+    {% for post in news_posts limit: 60 %}
+    <div data-impact="{{ post.impact }}"
+         data-subcategory="{{ post.subcategory }}"
+         data-date="{{ post.date | date: '%Y-%m-%dT%H:%M:%S' }}">
+      {% include post_card.html post=post %}
+    </div>
+    {% endfor %}
+    {% for post in news_posts2 limit: 60 %}
+    {% unless news_posts contains post %}
+    <div data-impact="{{ post.impact }}"
+         data-subcategory="{{ post.subcategory }}"
+         data-date="{{ post.date | date: '%Y-%m-%dT%H:%M:%S' }}">
+      {% include post_card.html post=post %}
+    </div>
+    {% endunless %}
+    {% endfor %}
+  </div>
+
+  {% endif %}
+
+</div>
