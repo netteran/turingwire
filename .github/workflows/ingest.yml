@@ -2,8 +2,8 @@ name: ingest (auto + manual)
 
 on:
   schedule:
-    # Hourly at :17 past the hour (offset to reduce GitHub Actions queue contention)
-    - cron: "17 * * * *"
+    # Runs at 8am, 11am, 2pm, and 5pm UTC
+    - cron: "0 8,11,14,17 * * *"
   workflow_dispatch:
     inputs:
       dry_run:
@@ -67,7 +67,6 @@ jobs:
         run: python scripts/summarize_news.py
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          # Upgrade summary quality by setting repo variable SUMMARIZER_MODEL (e.g. gpt-4o).
           SUMMARIZER_MODEL: ${{ vars.SUMMARIZER_MODEL || 'gpt-4o-mini' }}
 
       - name: Summarize research
@@ -116,7 +115,6 @@ jobs:
             sleep $((attempt * 3))
           done
 
-    # Notify on failure via issue-on-failure workflow
     outputs:
       job_status: ${{ job.status }}
 
