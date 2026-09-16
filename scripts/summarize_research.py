@@ -21,13 +21,17 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 
 from quality import parse_summary_output, passes_quality, scaled_word_target
 from supabase_store import recent_articles, write_post
-from ingest_store import current_run_id, mark_seen, update_run_stats, get_setting_int
+from ingest_store import current_run_id, mark_seen, update_run_stats, get_setting, get_setting_int
 from prompts import get_prompt, render
 
 ROOT = Path(__file__).parent.parent
 DATA_DIR = ROOT / "_data"
 CLASSIFIED_FILE = DATA_DIR / "classified_articles.json"
 
+# The `summarizer_model` Admin setting wins when set; SUMMARIZER_MODEL (e.g. a
+# GitHub Actions repo variable) is the fallback for when nobody has opted into
+# the DB-driven override yet; gpt-4o-mini keeps cost low if neither is set.
+# Resolved for real in main() — this is just the pre-settings-lookup default.
 MODEL = os.environ.get("SUMMARIZER_MODEL", "gpt-4o-mini")
 TEMPERATURE = 0.0
 # Length follows substance, not a fixed target: scaled_word_target() grows the
@@ -148,6 +152,9 @@ def word_count(text: str) -> int:
 
 
 def main() -> int:
+    global MODEL
+    MODEL = get_setting("summarizer_model", MODEL)
+
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
         log.error("OPENAI_API_KEY not set")
