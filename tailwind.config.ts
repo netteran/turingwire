@@ -3,7 +3,12 @@ import type { Config } from "tailwindcss";
 // Mirrors the inline tailwind.config the Jekyll site declared against the CDN
 // build, so ported markup keeps rendering identically.
 export default {
-  content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./lib/**/*.{ts,tsx}"],
+  content: [
+    "./app/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./lib/**/*.{ts,tsx}",
+    "./content/html/**/*.html",
+  ],
   darkMode: ["selector", '[data-theme="dark"]'],
   theme: {
     extend: {

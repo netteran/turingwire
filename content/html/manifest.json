@@ -10,11 +10,5 @@
     "title": "Contact",
     "description": "Get in touch with Turing Wire \u2014 sponsorship, source suggestions, bug reports, or general questions.",
     "script": "/assets/js/page-contact.js"
-  },
-  "missions": {
-    "permalink": "/missions/",
-    "title": "Missions",
-    "description": "Standing AI-driven missions: tell Turing Wire what to track, how often to brief you, and in what format. Missions persist locally and rerun on every visit.",
-    "script": "/assets/js/page-missions.js"
   }
 }

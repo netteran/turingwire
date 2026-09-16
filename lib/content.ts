@@ -2,6 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
 import { marked } from "marked";
+import { site } from "./site";
+import { slugify } from "./slugify";
 
 /**
  * Static editorial pages.
@@ -11,10 +13,10 @@ import { marked } from "marked";
  *
  *   content/*.md        prose pages (about, privacy, terms…), rendered via marked
  *   content/html/*.html pages whose original markup was worth preserving
- *                       verbatim (the Alan Turing profile, the contact form,
- *                       the Missions tool). Their inline <script> blocks were
- *                       extracted to public/assets/js/page-<name>.js, since
- *                       markup injected as HTML never executes scripts.
+ *                       verbatim (the Alan Turing profile, the contact form).
+ *                       Their inline <script> blocks were extracted to
+ *                       public/assets/js/page-<name>.js, since markup
+ *                       injected as HTML never executes scripts.
  */
 const CONTENT_DIR = path.join(process.cwd(), "content");
 const HTML_DIR = path.join(CONTENT_DIR, "html");
@@ -44,6 +46,37 @@ function toSegments(permalink: string): string[] {
   return permalink.split("/").filter(Boolean);
 }
 
+/**
+ * The handful of Jekyll `{{ site.* }}` tags that survive in prose content.
+ * `marked` only parses Markdown, so these were rendering as literal text —
+ * substitute the small fixed set still in use rather than pull in a
+ * templating engine for content that's otherwise plain Markdown.
+ */
+function renderVars(content: string): string {
+  return content
+    .replaceAll("{{ site.editor.name }}", site.editor.name)
+    .replaceAll("{{ site.editor.role | downcase }}", site.editor.role.toLowerCase());
+}
+
+/**
+ * `marked` doesn't generate heading ids (that was kramdown, under Jekyll) or
+ * understand kramdown's `{#custom-id}` override — so cross-page anchors like
+ * `/about/#ownership` silently went nowhere, and the literal `{#ownership}`
+ * leaked into the rendered heading. Give every heading an id: the explicit
+ * override when a page sets one, otherwise a slug of its text.
+ */
+function anchorHeadings(content: string): string {
+  return content.replace(
+    /^(#{1,6})[ \t]+(.+?)[ \t]*$/gm,
+    (_match, hashes: string, text: string) => {
+      const override = text.match(/\s*\{#([a-zA-Z0-9_-]+)\}\s*$/);
+      const id = override ? override[1] : slugify(text);
+      const label = override ? text.slice(0, override.index).trimEnd() : text;
+      return `${hashes} <a id="${id}"></a>${label}`;
+    },
+  );
+}
+
 function readMarkdownPages(): ContentPage[] {
   if (!fs.existsSync(CONTENT_DIR)) return [];
 
@@ -62,7 +95,7 @@ function readMarkdownPages(): ContentPage[] {
         description: data.description,
         redirectTo: data.redirect_to,
         sitemap: data.sitemap !== false,
-        html: marked.parse(content, { async: false }) as string,
+        html: marked.parse(anchorHeadings(renderVars(content)), { async: false }) as string,
         raw: false,
       };
     });

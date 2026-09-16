@@ -17,15 +17,15 @@ The feeds and tools serve distinct needs:
 - **Research** — Paper summaries structured for practitioners: problem, method, results, and *why it matters for what you're building*. Covers arXiv, Nature Machine Intelligence, JMLR, and major conference proceedings. Each summary links directly to the original and, where available, to the arXiv abstract.
 - **AIStocks** — Semiconductor supply, hyperscaler capex, and enterprise AI deployment health — framed as ecosystem signals, not trading tips. When NVDA earnings disappoint or TSMC cuts guidance, it tells you something about where the compute supply chain is heading.
 - **Stories** — In-depth coverage of developing events. When a topic evolves across multiple articles over days, a Story brings all the threads together: each key finding is cross-referenced against independent sources, with links to every supporting or contradicting article. Contested findings are surfaced explicitly.
-- **Missions** — Persistent tracking goals you define yourself. Specify companies, keywords, and a minimum impact level; Missions surfaces only items new since you last checked. Results can be exported as JSON or bookmarked as a pinnable URL. Missions also supports browser notifications for critical matches.
+- **TW AI Index** — A standing, daily answer to the question the whole industry keeps arguing about: is the AI trade overheating, or just getting started? An equal-weighted basket of chipmakers, hyperscalers, and AI pure-plays, indexed to 100 at launch. Watch the line, not the hot takes.
 
 ## Intelligence
 
-The **Intelligence** section — [Stories](/stories/) and [Missions](/missions/) — is where Turing Wire goes deeper on individual topics.
+**Intelligence** — [Stories](/stories/) and the [TW AI Index](/aistocks/) — is where Turing Wire goes beyond the daily feed.
 
 **Stories** exist because AI coverage is rarely a single event. A model launch becomes a week-long story as benchmarks are contested, safety evaluations are released, and competitors respond. Rather than leaving you to manually connect ten articles, a Story does it: it clusters related sources, cross-references key findings, and presents the result with full source links. Disagreements between sources are surfaced explicitly — you see what's settled and what's still contested.
 
-**Missions** exist because most practitioners care deeply about a narrow slice of the field. A Mission lets you express that directly: "Show me everything about Anthropic enterprise deals above Major impact" or "Track inference cost across any lab, keyword: tokens per second." The Mission reruns on every visit, remembers what you've already seen, and notifies you when something new matches. You can run multiple Missions in parallel, export their results, or share a Mission URL with a colleague.
+**The TW AI Index** exists because "is this a bubble?" has become the industry's most argued-about question, and arguments aren't data. The Index tracks an equal-weighted basket of AI-exposed equities daily, indexed to 100 at a fixed base date, so the market's actual verdict is visible as a single trend line — independent of any one earnings call or hot take. It won't settle the debate. It'll tell you, at a glance, which way the money is leaning today.
 
 ## What it isn't
 
@@ -39,7 +39,7 @@ It is also not financial advice. See the [disclaimer](/disclaimer/).
 
 **Follow an evolving event:** Check [Stories](/stories/) when a topic is developing across multiple sources. Each story card shows source count and whether findings are contested.
 
-**Set up a Mission:** Go to [Missions](/missions/), name your goal, add companies or keywords, pick a minimum impact level, and save. Come back anytime — or enable browser notifications — to see what's new since your last visit.
+**Watch the AI trade:** Bookmark the [TW AI Index](/aistocks/) and check it alongside the news — a quick way to see whether sentiment and price are moving with the headlines or against them.
 
 **Track a company:** Every article is tagged by company. Use the [Companies directory](/companies/) or the tags in any article to see everything from a given lab or vendor.
 
@@ -49,7 +49,7 @@ It is also not financial advice. See the [disclaimer](/disclaimer/).
 
 ## Who maintains it
 
-Turing Wire is edited by **{{ site.editor.name }}** ({{ site.editor.role | downcase }}), the pen name of the founder — a practitioner working in the AI field. See the [editor page](/about/editor/) for more. If you spot an error, want to suggest a source, or have any other question, use the [contact form](/contact/).
+Turing Wire is edited by {{ site.editor.name }} ({{ site.editor.role | downcase }}), the pen name of the founder — a practitioner working in the AI field. See the [editor page](/about/editor/) for more. If you spot an error, want to suggest a source, or have any other question, use the [contact form](/contact/).
 
 ### Ownership & funding {#ownership}
 
@@ -59,7 +59,7 @@ Turing Wire is an independent, self-funded personal project. It is **not owned b
 
 Every article on Turing Wire is written from a primary source and follows consistent editorial standards.
 
-**Sources.** Turing Wire monitors arXiv (cs.AI, cs.LG, cs.CL, stat.ML), Nature Machine Intelligence, JMLR, NeurIPS/ICML/ICLR proceedings, TechCrunch, VentureBeat, The Information, Reuters Technology, MIT Technology Review, IEEE Spectrum, and approximately 30 additional specialised AI publications. All monitored sources are listed on the [Sources page](/sources/).
+**Sources.** Turing Wire monitors arXiv (cs.AI, cs.LG, cs.CL, stat.ML), Nature Machine Intelligence, JMLR, NeurIPS/ICML/ICLR proceedings, TechCrunch, VentureBeat, The Information, Reuters Technology, MIT Technology Review, IEEE Spectrum, and approximately 30 additional specialised AI publications.
 
 **Coverage scope.** Each article is categorised by topic (news or research), subject area (e.g. model release, funding, regulation, inference optimisation), and significance level (Critical → Minor). Coverage is focused on developments with practical implications for the AI field.
 
@@ -83,7 +83,7 @@ Summaries are produced with AI assistance under human editorial oversight. The e
 No. Market data is shown as ecosystem signal, not trading guidance, and may be delayed up to 15 minutes. See the [disclaimer](/disclaimer/).
 
 **How do I follow Turing Wire?**
-Use the [Major+ RSS feed](/feed-major.xml) for the lowest-noise option, or any of the [other feeds](/feed.xml). You can also set up a [Mission](/missions/) to track a specific company or topic.
+Use the [Major+ RSS feed](/feed-major.xml) for the lowest-noise option, or any of the [other feeds](/feed.xml). You can also bookmark the [TW AI Index](/aistocks/) to track where the market thinks AI is headed.
 
 **How often is it updated?**
 Continuously. News and research are added throughout the day; market data refreshes every 15 minutes during market hours.
@@ -111,7 +111,7 @@ Continuously. News and research are added throughout the day; market data refres
     {
       "@type": "Question",
       "name": "How do I follow Turing Wire?",
-      "acceptedAnswer": { "@type": "Answer", "text": "Use the Major+ RSS feed for the lowest-noise option, or any of the other feeds. You can also set up a Mission to track a specific company or topic." }
+      "acceptedAnswer": { "@type": "Answer", "text": "Use the Major+ RSS feed for the lowest-noise option, or any of the other feeds. You can also bookmark the TW AI Index to track where the market thinks AI is headed." }
     },
     {
       "@type": "Question",

@@ -15,7 +15,6 @@ const SITE_LINKS = [
   ["/about/", "About"],
   ["/about/editor/", "Editor"],
   ["/contact/", "Contact"],
-  ["/sources/", "Sources"],
   ["/disclaimer/", "Disclaimer"],
   ["/privacy/", "Privacy"],
   ["/terms/", "Terms"],
