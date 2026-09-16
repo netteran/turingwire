@@ -7,10 +7,12 @@ export function RunIngestButton() {
   const router = useRouter();
   const [state, setState] = useState<"idle" | "busy" | "queued">("idle");
   const [error, setError] = useState<string | null>(null);
+  const [detail, setDetail] = useState<string | null>(null);
 
   async function run() {
     setState("busy");
     setError(null);
+    setDetail(null);
 
     try {
       const res = await fetch("/api/admin/ingest/", { method: "POST" });
@@ -18,6 +20,9 @@ export function RunIngestButton() {
 
       if (!res.ok) {
         setError(body.error ?? `Request failed (${res.status})`);
+        // GitHub's own message says which permission is missing; dropping it
+        // left "GitHub returned 403" as the only clue.
+        setDetail(body.detail ?? null);
         setState("idle");
         return;
       }
@@ -47,9 +52,14 @@ export function RunIngestButton() {
         </p>
       )}
       {error && (
-        <p className="text-xs font-mono max-w-xs text-right" style={{ color: "#ef4444" }}>
-          {error}
-        </p>
+        <div className="max-w-md text-right">
+          <p className="text-xs font-mono leading-relaxed" style={{ color: "#ef4444" }}>
+            {error}
+          </p>
+          {detail && (
+            <p className="text-xs font-mono tw-muted mt-1">GitHub said: {detail}</p>
+          )}
+        </div>
       )}
     </div>
   );
