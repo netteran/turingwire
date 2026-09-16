@@ -35,3 +35,6 @@ package-lock.json
 # OS
 .DS_Store
 Thumbs.db
+
+# Migration bundle — regenerate with scripts/migrate_extract.py
+_data/migration_bundle.json
