@@ -10,14 +10,13 @@ Dedup strategy (applied in order):
 When a cluster has multiple sources, keep the one closest to the publisher
 (lowest priority number, then highest priority source_company match).
 
-Also filters against seen_articles.json GUID cache (last 30 days).
+Also filters GUIDs already recorded in the seen_articles table.
 """
 from __future__ import annotations
 
 import json
 import logging
 import sys
-from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -25,11 +24,12 @@ import yaml
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
+from ingest_store import current_run_id, filter_unseen, update_run_stats
+
 ROOT = Path(__file__).parent.parent
 DATA_DIR = ROOT / "_data"
 STAGING_FILE = DATA_DIR / "staging_articles.json"
 DEDUPED_FILE = DATA_DIR / "deduped_articles.json"
-SEEN_FILE = DATA_DIR / "seen_articles.json"
 
 TITLE_SIM_THRESHOLD = 0.85
 BODY_PREFIX_LEN = 200
@@ -44,31 +44,14 @@ logging.basicConfig(
 log = logging.getLogger("deduplicate")
 
 
-def load_seen() -> dict[str, str]:
-    """Load GUID -> ISO timestamp cache."""
-    if SEEN_FILE.exists():
-        with SEEN_FILE.open() as f:
-            return json.load(f)
-    return {}
-
-
-def prune_seen(seen: dict[str, str]) -> dict[str, str]:
-    cutoff = datetime.now(timezone.utc) - timedelta(days=SEEN_WINDOW_DAYS)
-    return {
-        guid: ts
-        for guid, ts in seen.items()
-        if datetime.fromisoformat(ts.replace("Z", "+00:00")) > cutoff
-    }
-
-
 def pick_best(cluster: list[dict]) -> dict:
     """From a cluster of duplicates, return the most-publisher-proximate article."""
     return min(cluster, key=lambda a: (a.get("priority", 99), a.get("source_company") is None))
 
 
-def deduplicate_batch(articles: list[dict], seen: dict[str, str]) -> list[dict]:
-    # Filter already-seen GUIDs
-    novel = [a for a in articles if a["guid"] not in seen]
+def deduplicate_batch(articles: list[dict], unseen_guids: set[str]) -> list[dict]:
+    # Drop anything the pipeline has already processed on a previous run.
+    novel = [a for a in articles if a["guid"] in unseen_guids]
     log.info("%d articles after seen-cache filter (was %d)", len(novel), len(articles))
 
     if not novel:
@@ -153,11 +136,12 @@ def main() -> int:
     with STAGING_FILE.open() as f:
         articles = json.load(f)
 
-    seen = load_seen()
-    seen = prune_seen(seen)
+    # One indexed query decides which GUIDs we have not processed before.
+    unseen_guids = filter_unseen([a["guid"] for a in articles])
 
-    deduped = deduplicate_batch(articles, seen)
+    deduped = deduplicate_batch(articles, unseen_guids)
     log.info("final batch size: %d articles", len(deduped))
+    update_run_stats(current_run_id(), fetched=len(articles), deduped=len(deduped))
 
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     with DEDUPED_FILE.open("w") as f:

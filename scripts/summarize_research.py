@@ -21,11 +21,11 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 
 from quality import parse_summary_output, passes_quality
 from supabase_store import recent_articles, write_post
+from ingest_store import current_run_id, mark_seen, update_run_stats
 
 ROOT = Path(__file__).parent.parent
 DATA_DIR = ROOT / "_data"
 CLASSIFIED_FILE = DATA_DIR / "classified_articles.json"
-SEEN_FILE = DATA_DIR / "seen_articles.json"
 
 MODEL = os.environ.get("SUMMARIZER_MODEL", "gpt-4o-mini")
 TEMPERATURE = 0.0
@@ -174,10 +174,7 @@ def main() -> int:
     with CLASSIFIED_FILE.open() as f:
         articles = json.load(f)
 
-    seen: dict[str, str] = {}
-    if SEEN_FILE.exists():
-        with SEEN_FILE.open() as f:
-            seen = json.load(f)
+    newly_seen: list[str] = []
 
     client = OpenAI(api_key=api_key)
     research_articles = [a for a in articles if "research" in a.get("categories", [])]
@@ -212,7 +209,7 @@ def main() -> int:
             pub_date = datetime.now(timezone.utc)
 
         url = write_post(article, summary, pub_date, description, quality=True)
-        seen[article["guid"]] = datetime.now(timezone.utc).isoformat()
+        newly_seen.append(article["guid"])
 
         log.info("stored research article: %s (%d words)", url, wc)
         new_posts += 1
@@ -220,9 +217,8 @@ def main() -> int:
 
     log.info("quality gate skipped %d summaries", skipped)
 
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    with SEEN_FILE.open("w") as f:
-        json.dump(seen, f, indent=2)
+    mark_seen(newly_seen)
+    update_run_stats(current_run_id(), research_published=new_posts, research_skipped=skipped)
 
     log.info("wrote %d new research posts", new_posts)
     return 0

@@ -27,11 +27,12 @@ from bs4 import BeautifulSoup
 from dateutil import parser as dateparser
 from tenacity import retry, stop_after_attempt, wait_exponential
 
+from ingest_store import load_sources, record_source_result
+
 ROOT = Path(__file__).parent.parent
 FEEDS_DIR = ROOT / "feeds"
 DATA_DIR = ROOT / "_data"
 STAGING_FILE = DATA_DIR / "staging_articles.json"
-ETAG_CACHE_FILE = DATA_DIR / "etag_cache.json"
 
 logging.basicConfig(
     level=logging.INFO,
@@ -77,19 +78,6 @@ def canonical_url(url: str) -> str:
 def load_yaml(path: Path) -> dict:
     with path.open() as f:
         return yaml.safe_load(f)
-
-
-def load_etag_cache() -> dict:
-    if ETAG_CACHE_FILE.exists():
-        with ETAG_CACHE_FILE.open() as f:
-            return json.load(f)
-    return {}
-
-
-def save_etag_cache(cache: dict) -> None:
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    with ETAG_CACHE_FILE.open("w") as f:
-        json.dump(cache, f, indent=2)
 
 
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
@@ -325,39 +313,56 @@ def fetch_arxiv(source: dict, dry_run: bool) -> list[dict]:
 
 def main(dry_run: bool = False) -> int:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
-    etag_cache = load_etag_cache()
 
-    news_config = load_yaml(FEEDS_DIR / "news_sources.yml")
-    research_config = load_yaml(FEEDS_DIR / "research_sources.yml")
+    sources = load_sources(active_only=True)
+    log.info("loaded %d active sources from the database", len(sources))
 
     all_articles: list[dict] = []
     current_month = datetime.now(timezone.utc).month
 
-    for source in news_config.get("sources", []):
-        articles = fetch_rss_atom(source, etag_cache, dry_run)
-        all_articles.extend(articles)
-        time.sleep(0.5)
-
-    for source in research_config.get("sources", []):
-        active_months = source.get("active_months")
-        if active_months and current_month not in active_months:
+    for source in sources:
+        # Some research venues only publish around their conference dates.
+        months = source.get("active_months") or []
+        if months and current_month not in months:
             log.debug("skipping %s (inactive month %d)", source["name"], current_month)
+            record_source_result(source["id"], "skipped", 0)
             continue
 
-        if source.get("type") == "api" and "arxiv" in source.get("url", ""):
-            articles = fetch_arxiv(source, dry_run)
-        else:
-            articles = fetch_rss_atom(source, etag_cache, dry_run)
+        # fetch_rss_atom still takes a {url: {etag, last_modified}} mapping, so
+        # hand it just this source's entry and read any refresh back out.
+        cache = {source["url"]: {
+            "etag": source.get("etag") or "",
+            "last_modified": source.get("last_modified") or "",
+        }}
+
+        try:
+            if source.get("type") == "api" and "arxiv" in (source.get("url") or ""):
+                articles = fetch_arxiv(source, dry_run)
+            else:
+                articles = fetch_rss_atom(source, cache, dry_run)
+        except Exception as exc:  # one bad feed must not end the run
+            log.warning("source failed: %s: %s", source["name"], exc)
+            record_source_result(source["id"], "error", 0, error=str(exc))
+            continue
 
         all_articles.extend(articles)
-        time.sleep(1.0)
+
+        entry = cache.get(source["url"], {})
+        record_source_result(
+            source["id"],
+            "ok" if articles else "not_modified",
+            len(articles),
+            etag=entry.get("etag"),
+            last_modified=entry.get("last_modified"),
+        )
+
+        time.sleep(1.0 if source.get("kind") == "research" else 0.5)
 
     log.info("total raw articles fetched: %d", len(all_articles))
 
     if not dry_run:
         with STAGING_FILE.open("w") as f:
             json.dump(all_articles, f, indent=2, default=str)
-        save_etag_cache(etag_cache)
         log.info("wrote %d articles to %s", len(all_articles), STAGING_FILE)
 
     return 0

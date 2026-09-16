@@ -1,34 +1,55 @@
-name: ingest (auto + manual)
+name: Ingest
+
+# The single pipeline action. Replaces the separate ingest, models,
+# benchmarks and stocks workflows — everything that used to run on its own
+# schedule now runs here, in order.
+#
+# Every 4 hours on weekdays. Nothing is committed: feed config, dedupe state
+# and run history all live in Postgres, so the repo stays untouched.
 
 on:
   schedule:
-    # Runs at 8am, 11am, 2pm, and 5pm UTC
-    - cron: "0 8,11,14,17 * * *"
+    # 00:00, 04:00, 08:00, 12:00, 16:00, 20:00 UTC, Monday–Friday
+    - cron: "0 */4 * * 1-5"
   workflow_dispatch:
     inputs:
       dry_run:
-        description: "Dry run (fetch only, no LLM calls or post writes)"
+        description: "Dry run (fetch only, no LLM calls or writes)"
         type: boolean
         default: false
+      trigger:
+        description: "Who started this run (set to 'admin' by the admin page)"
+        type: string
+        default: manual
 
 permissions:
+  # the market-data step pushes _data/*.json back to main
   contents: write
   issues: write
+
+concurrency:
+  # A 4-hourly run plus an admin-triggered one could otherwise overlap and
+  # double-summarise the same articles.
+  group: ingest
+  cancel-in-progress: false
 
 jobs:
   ingest:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 40
+
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      # scripts/ import each other directly, and the stage scripts attach
+      # their counters to the run opened by the first step.
+      PYTHONPATH: scripts
 
     steps:
-      - name: Checkout main
-        uses: actions/checkout@v4
-        with:
-          ref: main
-          fetch-depth: 1
+      - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
@@ -41,80 +62,114 @@ jobs:
         run: |
           echo "::add-mask::${{ secrets.OPENAI_API_KEY }}"
           echo "::add-mask::${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
+          echo "::add-mask::${{ secrets.FINNHUB_API_KEY }}"
+
+      - name: Open run record
+        if: ${{ !inputs.dry_run }}
+        id: run
+        run: |
+          python -c "
+          from ingest_store import start_run
+          import os
+          rid = start_run(os.environ.get('TRIGGER', 'schedule'))
+          print(f'run_id={rid or \"\"}')
+          " >> "$GITHUB_OUTPUT"
+        env:
+          TRIGGER: ${{ inputs.trigger || 'schedule' }}
+
+      # ── Articles ────────────────────────────────────────────────
 
       - name: Fetch feeds
-        run: python scripts/fetch_feeds.py ${{ github.event.inputs.dry_run == 'true' && '--dry-run' || '' }}
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python scripts/fetch_feeds.py ${{ inputs.dry_run && '--dry-run' || '' }}
 
       - name: Deduplicate
-        if: github.event.inputs.dry_run != 'true'
+        if: ${{ !inputs.dry_run }}
         run: python scripts/deduplicate.py
+        env:
+          INGEST_RUN_ID: ${{ steps.run.outputs.run_id }}
 
       - name: Classify articles
-        if: github.event.inputs.dry_run != 'true'
+        if: ${{ !inputs.dry_run }}
         run: python scripts/classify_article.py
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       - name: Tag companies
-        if: github.event.inputs.dry_run != 'true'
+        if: ${{ !inputs.dry_run }}
         run: python scripts/tag_company.py
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       - name: Summarize news
-        if: github.event.inputs.dry_run != 'true'
+        if: ${{ !inputs.dry_run }}
         run: python scripts/summarize_news.py
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          INGEST_RUN_ID: ${{ steps.run.outputs.run_id }}
           SUMMARIZER_MODEL: ${{ vars.SUMMARIZER_MODEL || 'gpt-4o-mini' }}
 
       - name: Summarize research
-        if: github.event.inputs.dry_run != 'true'
+        if: ${{ !inputs.dry_run }}
         run: python scripts/summarize_research.py
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          INGEST_RUN_ID: ${{ steps.run.outputs.run_id }}
           SUMMARIZER_MODEL: ${{ vars.SUMMARIZER_MODEL || 'gpt-4o-mini' }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
       - name: Sync company records
-        if: github.event.inputs.dry_run != 'true'
+        if: ${{ !inputs.dry_run }}
         run: python scripts/generate_company_pages.py
+
+      # ── Market data and reference tables ────────────────────────
+      # Folded in from the retired stocks / models / benchmarks workflows.
+      # These write _data/*.json and *.yml, which are committed below because
+      # the front end still reads them from the repo.
+
+      - name: Fetch stocks
+        if: ${{ !inputs.dry_run }}
+        run: python scripts/fetch_stocks.py
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+        continue-on-error: true
 
-      - name: Upload operational artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pipeline-artifacts-${{ github.run_id }}
-          path: |
-            _data/run_log.json
-            _data/review_queue.json
-            _data/backlog.json
-            _data/staging_articles.json
-          retention-days: 30
-          if-no-files-found: ignore
+      - name: Compute AI index
+        if: ${{ !inputs.dry_run }}
+        run: python scripts/compute_ai_index.py
+        continue-on-error: true
 
-      - name: Commit pipeline state
-        if: github.event.inputs.dry_run != 'true'
+      - name: Refresh benchmarks
+        if: ${{ !inputs.dry_run }}
+        run: python scripts/fetch_benchmarks.py
+        continue-on-error: true
+
+      - name: Check model pricing
+        if: ${{ !inputs.dry_run }}
+        run: python scripts/fetch_models.py
+        continue-on-error: true
+
+      # ── Persist the data files the site still reads from git ────
+
+      - name: Commit market data
+        if: ${{ !inputs.dry_run }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          # Articles now live in Supabase; only dedupe/ETag caches are versioned.
-          git add _data/seen_articles.json _data/etag_cache.json || true
+          git add _data/stocks_snapshot.json _data/ai_index_history.json \
+                  _data/benchmarks.yml _data/models.yml || true
           git diff --cached --quiet && echo "nothing to commit" && exit 0
-          git commit -m "chore(ingest): update pipeline state [skip ci]"
+          git commit -m "chore(ingest): refresh market data [skip ci]"
           for attempt in 1 2 3 4; do
             git pull --rebase origin main && git push origin main && break
             echo "push attempt $attempt failed, retrying..."
             sleep $((attempt * 3))
           done
+
+      - name: Close run record
+        if: ${{ always() && !inputs.dry_run && steps.run.outputs.run_id != '' }}
+        run: |
+          python -c "
+          from ingest_store import finish_run
+          import os
+          finish_run(int(os.environ['RUN_ID']), os.environ['STATUS'], {}, os.environ.get('ERR') or None)
+          "
+        env:
+          RUN_ID: ${{ steps.run.outputs.run_id }}
+          STATUS: ${{ job.status == 'success' && 'success' || 'failed' }}
+          ERR: ${{ job.status != 'success' && format('Job finished with status {0}', job.status) || '' }}
 
     outputs:
       job_status: ${{ job.status }}
@@ -124,6 +179,6 @@ jobs:
     if: failure()
     uses: ./.github/workflows/issue-on-failure.yml
     with:
-      workflow_name: "ingest"
+      workflow_name: "Ingest"
       run_id: ${{ github.run_id }}
     secrets: inherit
