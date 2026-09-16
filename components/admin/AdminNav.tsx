@@ -24,7 +24,7 @@ export function AdminNav() {
   useEffect(() => setOpen(false), [pathname]);
 
   return (
-    <div className="tw-admin-nav border-b tw-border">
+    <div className="tw-admin-nav border-t border-b tw-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <nav
           className="hidden md:flex items-center gap-1 h-8"
