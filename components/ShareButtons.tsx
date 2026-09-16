@@ -119,7 +119,7 @@ export function ShareButtons({
     <div className="tw-share-popover-wrap relative" ref={ref}>
       <button
         type="button"
-        className="tw-icon-btn"
+        className="tw-icon-btn flex"
         aria-haspopup="true"
         aria-expanded={open}
         aria-label="Share"
