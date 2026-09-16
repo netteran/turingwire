@@ -27,7 +27,7 @@ export function AdminNav() {
     <div className="tw-admin-nav border-b tw-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <nav
-          className="hidden md:flex items-center gap-1 h-10"
+          className="hidden md:flex items-center gap-1 h-8"
           aria-label="Admin sections"
         >
           {TABS.map(([href, label]) => (
@@ -41,7 +41,7 @@ export function AdminNav() {
           ))}
         </nav>
 
-        <div className="md:hidden flex items-center justify-between h-10">
+        <div className="md:hidden flex items-center justify-between h-8">
           <span className="text-xs font-mono uppercase tracking-widest tw-muted">
             {current}
           </span>
@@ -87,14 +87,14 @@ export function AdminNav() {
 
       <div
         id="admin-mobile-nav"
-        className={`md:hidden tw-mobile-nav border-t tw-border${open ? "" : " hidden"}`}
+        className={`md:hidden border-t tw-border${open ? "" : " hidden"}`}
       >
-        <nav className="max-w-7xl mx-auto px-4 py-2 flex flex-col gap-1 text-sm font-mono">
+        <nav className="max-w-7xl mx-auto px-4 py-1.5 flex flex-col gap-1 text-sm font-mono">
           {TABS.map(([href, label]) => (
             <Link
               key={href}
               href={href}
-              className={`py-2${isActive(href) ? " tw-nav-active" : ""}`}
+              className={`py-1.5${isActive(href) ? " tw-nav-active" : ""}`}
             >
               {label}
             </Link>

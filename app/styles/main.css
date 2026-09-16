@@ -11,6 +11,7 @@
   --bg-card:       #ffffff;
   --bg-header:     #ffffffee;
   --bg-mobile:     #ffffff;
+  --bg-admin-nav:  #f4f4f5;
   --fg:            #111827;
   --fg-muted:      #64748b;
   --fg-heading:    #0f172a;
@@ -29,6 +30,7 @@
   --bg-card:       #0d1732;
   --bg-header:     #060d1fee;
   --bg-mobile:     #060d1f;
+  --bg-admin-nav:  #15171c;
   --fg:            #e2e8f0;
   --fg-muted:      #94a3b8;
   --fg-heading:    #f0f4ff;
@@ -267,15 +269,13 @@ body.tw-body {
   position: sticky;
   top: 3.5625rem;
   z-index: 40;
-  background-color: var(--bg-header);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background-color: var(--bg-admin-nav);
 }
 
 .tw-admin-nav-link {
   display: inline-flex;
   align-items: center;
-  padding: 0.3rem 0.625rem;
+  padding: 0.2rem 0.625rem;
   border-radius: 0.375rem;
   color: var(--fg-muted);
   text-decoration: none;
