@@ -43,7 +43,6 @@ Allow: /
 Disallow: /knowledge-graph.json
 Disallow: /llms.txt
 Disallow: /llms-full.txt
-Disallow: /missions-index.json
 
 Sitemap: https://turingwire.com/sitemap.xml
 

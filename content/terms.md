@@ -4,7 +4,7 @@ title: "Terms of Use"
 permalink: /terms/
 ---
 
-*Last updated: {{ site.time | date: "%B %-d, %Y" }}*
+*Last updated: September 16, 2026*
 
 ## Acceptance
 

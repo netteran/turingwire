@@ -22,14 +22,6 @@ const NAV_GROUPS = [
     ],
   },
   {
-    label: "Intelligence",
-    match: ["/stor", "/missions"],
-    items: [
-      ["/stories/", "Stories"],
-      ["/missions/", "Missions"],
-    ],
-  },
-  {
     label: "Markets",
     match: ["/aistocks", "/companies"],
     items: [
@@ -205,6 +197,15 @@ export function Header() {
           ))}
 
           <Link
+            href="/stories/"
+            className={`tw-nav-link${
+              isActive(["/stor"]) ? " tw-nav-active" : ""
+            }`}
+          >
+            Stories
+          </Link>
+
+          <Link
             href="/calendar/"
             className={`tw-nav-link${
               isActive(["/calendar"]) ? " tw-nav-active" : ""
@@ -354,6 +355,15 @@ export function Header() {
               ))}
             </details>
           ))}
+
+          <Link
+            href="/stories/"
+            className={`tw-nav-link py-2${
+              isActive(["/stor"]) ? " tw-nav-active" : ""
+            }`}
+          >
+            Stories
+          </Link>
 
           <Link
             href="/calendar/"
