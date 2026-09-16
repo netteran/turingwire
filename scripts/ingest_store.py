@@ -111,6 +111,15 @@ def filter_unseen(guids: list[str]) -> set[str]:
             timeout=TIMEOUT,
         )
         if resp.status_code >= 400:
+            # PGRST202 means PostgREST cannot resolve the function: either it
+            # was never created, or its schema cache predates it.
+            if "PGRST202" in resp.text:
+                raise SupabaseError(
+                    "the unseen_guids function is missing. Run the "
+                    "`create or replace function public.unseen_guids` block from "
+                    "supabase/migrations/0004_admin_and_ingest.sql, then "
+                    "`notify pgrst, 'reload schema';` in case the schema cache is stale."
+                )
             raise SupabaseError(
                 f"unseen_guids failed ({resp.status_code}): {resp.text[:300]}"
             )
