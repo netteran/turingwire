@@ -67,6 +67,7 @@ exclude:
   - vendor/
   - archive/
   - docs/
+  - supabase/
 
 # Include
 include:
