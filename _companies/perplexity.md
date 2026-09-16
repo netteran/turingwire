@@ -1,4 +1,0 @@
----
-title: "Perplexity"
-layout: company
----

@@ -1,4 +1,0 @@
----
-title: "ModelRift"
-layout: company
----

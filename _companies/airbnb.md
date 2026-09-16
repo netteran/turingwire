@@ -1,4 +1,0 @@
----
-title: "Airbnb"
-layout: company
----

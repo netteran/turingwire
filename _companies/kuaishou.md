@@ -1,4 +1,0 @@
----
-title: "KuaiShou"
-layout: company
----

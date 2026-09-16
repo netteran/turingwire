@@ -1,4 +1,0 @@
----
-title: "LUCID"
-layout: company
----

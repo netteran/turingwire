@@ -1,4 +1,0 @@
----
-title: "Bull"
-layout: company
----

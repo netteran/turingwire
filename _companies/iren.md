@@ -1,4 +1,0 @@
----
-title: "Iren"
-layout: company
----

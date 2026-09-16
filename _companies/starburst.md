@@ -1,4 +1,0 @@
----
-title: "Starburst"
-layout: company
----

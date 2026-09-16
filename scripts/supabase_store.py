@@ -321,3 +321,28 @@ def upsert_story(story: dict) -> None:
     )
     if resp.status_code >= 400:
         raise SupabaseError(f"story upsert failed ({resp.status_code}): {resp.text[:400]}")
+
+
+def recent_article_texts(days: int = 30, limit: int = 1000) -> list[dict]:
+    """Title + body of articles published within the last `days`.
+
+    Backs the pricing-change scan in fetch_models.py, which used to glob
+    _posts/**/*.md before articles moved into Postgres.
+    """
+    from datetime import timedelta
+
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+    resp = requests.get(
+        _rest("articles"),
+        headers=_headers(),
+        params={
+            "select": "title,body,slug,category,published_at",
+            "status": "eq.published",
+            "published_at": f"gte.{cutoff}",
+            "order": "published_at.desc",
+            "limit": limit,
+        },
+        timeout=TIMEOUT,
+    )
+    resp.raise_for_status()
+    return resp.json()

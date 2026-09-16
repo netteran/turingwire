@@ -1,4 +1,0 @@
----
-title: "Box"
-layout: company
----

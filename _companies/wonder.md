@@ -1,4 +1,0 @@
----
-title: "Wonder"
-layout: company
----

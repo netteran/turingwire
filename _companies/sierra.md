@@ -1,4 +1,0 @@
----
-title: "Sierra"
-layout: company
----

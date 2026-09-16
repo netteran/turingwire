@@ -1,4 +1,0 @@
----
-title: "Oppo"
-layout: company
----

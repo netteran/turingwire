@@ -1,4 +1,0 @@
----
-title: "ServiceNow"
-layout: company
----

@@ -1,4 +1,0 @@
----
-title: "TCS"
-layout: company
----

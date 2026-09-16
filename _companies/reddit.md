@@ -1,4 +1,0 @@
----
-title: "Reddit"
-layout: company
----

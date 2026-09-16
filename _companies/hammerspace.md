@@ -1,4 +1,0 @@
----
-title: "Hammerspace"
-layout: company
----

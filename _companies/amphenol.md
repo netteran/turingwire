@@ -1,4 +1,0 @@
----
-title: "Amphenol"
-layout: company
----

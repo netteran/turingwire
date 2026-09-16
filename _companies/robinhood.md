@@ -1,4 +1,0 @@
----
-title: "Robinhood"
-layout: company
----

@@ -1,4 +1,0 @@
----
-title: "Microsoft"
-layout: company
----

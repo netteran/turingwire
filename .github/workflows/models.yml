@@ -40,11 +40,14 @@ jobs:
       - name: Mask secrets
         run: |
           echo "::add-mask::${{ secrets.OPENAI_API_KEY }}"
+          echo "::add-mask::${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
 
       - name: Check for pricing changes
         run: python scripts/fetch_models.py
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         # Exit code 1 = pricing change detected → triggers notify-pricing-change job
         continue-on-error: true
         id: pricing_check

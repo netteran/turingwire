@@ -1,4 +1,0 @@
----
-title: "Notion"
-layout: company
----

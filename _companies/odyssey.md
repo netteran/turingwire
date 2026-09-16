@@ -1,4 +1,0 @@
----
-title: "Odyssey"
-layout: company
----

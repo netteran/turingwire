@@ -1,4 +1,0 @@
----
-title: "XCENA"
-layout: company
----

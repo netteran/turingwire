@@ -1,4 +1,0 @@
----
-title: "Datadog"
-layout: company
----

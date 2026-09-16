@@ -1,4 +1,0 @@
----
-title: "X"
-layout: company
----

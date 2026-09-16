@@ -1,4 +1,0 @@
----
-title: "SiPearl"
-layout: company
----

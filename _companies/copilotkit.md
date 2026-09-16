@@ -1,4 +1,0 @@
----
-title: "CopilotKit"
-layout: company
----

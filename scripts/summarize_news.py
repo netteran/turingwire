@@ -25,7 +25,6 @@ from supabase_store import recent_articles, write_post
 
 ROOT = Path(__file__).parent.parent
 DATA_DIR = ROOT / "_data"
-POSTS_DIR = ROOT / "_posts"
 CLASSIFIED_FILE = DATA_DIR / "classified_articles.json"
 SEEN_FILE = DATA_DIR / "seen_articles.json"
 

@@ -1,4 +1,0 @@
----
-title: "Figma"
-layout: company
----

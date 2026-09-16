@@ -1,4 +1,0 @@
----
-title: "Pinterest"
-layout: company
----

@@ -1,4 +1,0 @@
----
-title: "Altara"
-layout: company
----

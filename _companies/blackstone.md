@@ -1,4 +1,0 @@
----
-title: "Blackstone"
-layout: company
----

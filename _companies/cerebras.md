@@ -1,4 +1,0 @@
----
-title: "Cerebras"
-layout: company
----

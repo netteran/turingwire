@@ -1,4 +1,0 @@
----
-title: "BlackRock"
-layout: company
----

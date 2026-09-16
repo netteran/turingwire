@@ -1,4 +1,0 @@
----
-title: "Meta"
-layout: company
----

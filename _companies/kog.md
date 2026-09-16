@@ -1,4 +1,0 @@
----
-title: "Kog"
-layout: company
----

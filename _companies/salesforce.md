@@ -1,4 +1,0 @@
----
-title: "Salesforce"
-layout: company
----

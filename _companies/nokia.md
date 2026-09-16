@@ -1,4 +1,0 @@
----
-title: "Nokia"
-layout: company
----

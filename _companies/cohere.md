@@ -1,4 +1,0 @@
----
-title: "Cohere"
-layout: company
----

@@ -1,4 +1,0 @@
----
-title: "NVIDIA"
-layout: company
----

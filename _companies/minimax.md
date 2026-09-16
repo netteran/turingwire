@@ -1,4 +1,0 @@
----
-title: "MiniMax"
-layout: company
----

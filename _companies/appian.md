@@ -1,4 +1,0 @@
----
-title: "Appian"
-layout: company
----

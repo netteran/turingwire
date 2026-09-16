@@ -1,4 +1,0 @@
----
-title: "xAI"
-layout: company
----

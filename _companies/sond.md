@@ -1,4 +1,0 @@
----
-title: "SOND"
-layout: company
----

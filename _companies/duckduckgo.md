@@ -1,4 +1,0 @@
----
-title: "DuckDuckGo"
-layout: company
----
