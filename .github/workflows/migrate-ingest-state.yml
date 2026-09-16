@@ -1,0 +1,96 @@
+name: Migrate ingest state (manual)
+
+# One-off, idempotent. Moves the last two pieces of pipeline state out of the
+# repo and into Postgres:
+#
+#   _data/seen_articles.json -> seen_articles       (5,252 GUIDs)
+#   _data/etag_cache.json    -> ingest_sources.etag / last_modified
+#
+# Run this BEFORE the next Ingest. With seen_articles empty, dedupe treats
+# every article in every feed as new — a few hundred needless OpenAI calls,
+# then a wall of source_url uniqueness rejections.
+#
+# Requires the SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY repository secrets,
+# and migration 0004 already applied.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run (report what would be migrated, write nothing)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  # Must not overlap an Ingest run, which writes the same tables.
+  group: ingest
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      PYTHONPATH: scripts
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: scripts/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r scripts/requirements.txt
+
+      - name: Mask secrets
+        run: echo "::add-mask::${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
+
+      - name: Check prerequisites
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::error::Set the SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY repository secrets first (Settings -> Secrets and variables -> Actions)."
+            exit 1
+          fi
+          if [ ! -f _data/seen_articles.json ]; then
+            echo "::error::_data/seen_articles.json is missing. It may already have been migrated and deleted — check the seen_articles row count in Supabase before re-running."
+            exit 1
+          fi
+          python -c "import json;print('seen_articles.json:', len(json.load(open('_data/seen_articles.json'))), 'GUIDs')"
+
+      - name: Migrate
+        id: migrate
+        run: |
+          set -o pipefail
+          python scripts/migrate_ingest_state.py ${{ inputs.dry_run && '--dry-run' || '' }} 2>&1 | tee migrate.log
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### Ingest state migration"
+            echo ""
+            if [ "${{ inputs.dry_run }}" = "true" ]; then
+              echo "**Dry run — nothing was written.** Re-run with \`dry_run\` unchecked to migrate."
+            elif [ "${{ steps.migrate.outcome }}" = "success" ]; then
+              echo "**Migrated.** Next: run **Ingest**, then delete \`_data/seen_articles.json\` and \`_data/etag_cache.json\` from the repo."
+            else
+              echo "**Failed.** Nothing downstream should run until this succeeds — see the log below."
+            fi
+            echo ""
+            if [ -f migrate.log ]; then
+              echo '```'
+              # The interesting lines are the counts and any per-feed warnings;
+              # the batch progress lines are noise in a summary pane.
+              grep -v 'seen_articles: [0-9]*/' migrate.log | tail -40
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

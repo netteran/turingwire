@@ -67,37 +67,70 @@ def migrate_seen(dry_run: bool) -> int:
     return done
 
 
+def _affected(resp: requests.Response) -> int:
+    """Rows touched, read off PostgREST's Content-Range. -1 when it is absent."""
+    total = resp.headers.get("content-range", "").split("/")[-1]
+    return int(total) if total.isdigit() else -1
+
+
+def _source_exists(url: str) -> bool:
+    resp = requests.get(
+        _rest("ingest_sources"),
+        headers=_headers(),
+        params={"select": "id", "url": f"eq.{url}", "limit": 1},
+        timeout=TIMEOUT,
+    )
+    return resp.status_code < 400 and bool(resp.json())
+
+
 def migrate_etags(dry_run: bool) -> int:
+    """Copy conditional-GET validators onto the matching ingest_sources rows.
+
+    Counts only what actually lands. Eight of the cached feeds never returned
+    an ETag or a Last-Modified, and a cached URL that no seeded source shares
+    matches nothing — reporting either as migrated would overstate the result
+    and leave those feeds re-downloading in full on every run.
+    """
     if not ETAG_FILE.exists():
         log.info("no etag_cache.json — nothing to migrate")
         return 0
 
     cache = json.loads(ETAG_FILE.read_text())
-    log.info("etag_cache.json: %d feeds", len(cache))
+    usable = {
+        url: entry
+        for url, entry in cache.items()
+        if (entry or {}).get("etag") or (entry or {}).get("last_modified")
+    }
+    log.info("etag_cache.json: %d feeds, %d carrying a validator", len(cache), len(usable))
 
     if dry_run:
-        return len(cache)
+        matched = sum(1 for url in usable if _source_exists(url))
+        log.info("  %d of those match a source in ingest_sources", matched)
+        return matched
 
     updated = 0
-    for url, entry in cache.items():
-        etag = (entry or {}).get("etag") or None
-        last_modified = (entry or {}).get("last_modified") or None
-        if not etag and not last_modified:
-            continue
-
+    for url, entry in usable.items():
         resp = requests.patch(
             _rest("ingest_sources"),
-            headers=_headers("return=minimal"),
+            headers=_headers("return=minimal,count=exact"),
             params={"url": f"eq.{url}"},
-            json={"etag": etag, "last_modified": last_modified},
+            json={
+                "etag": (entry or {}).get("etag") or None,
+                "last_modified": (entry or {}).get("last_modified") or None,
+            },
             timeout=TIMEOUT,
         )
         if resp.status_code >= 400:
             log.warning("  could not set etag for %s: %s", url, resp.text[:150])
             continue
+        # A PATCH whose filter matches no row still returns 204, so without the
+        # count a renamed feed URL would be reported as migrated.
+        if _affected(resp) == 0:
+            log.warning("  no ingest_sources row with url %s — validator not applied", url)
+            continue
         updated += 1
 
-    log.info("  updated validators on %d sources", updated)
+    log.info("  updated validators on %d of %d sources", updated, len(usable))
     return updated
 
 
