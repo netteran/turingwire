@@ -124,6 +124,14 @@ jobs:
         if: ${{ !inputs.dry_run }}
         run: python scripts/generate_company_pages.py
 
+      - name: Build stories
+        if: ${{ !inputs.dry_run }}
+        run: python scripts/build_stories.py
+        env:
+          INGEST_RUN_ID: ${{ steps.run.outputs.run_id }}
+          SUMMARIZER_MODEL: ${{ vars.SUMMARIZER_MODEL || 'gpt-4o-mini' }}
+        continue-on-error: true
+
       # ── Market data and reference tables ────────────────────────
       # Folded in from the retired stocks / models / benchmarks workflows.
       # These write _data/*.json and *.yml, which are committed below because
