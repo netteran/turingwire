@@ -1,13 +1,14 @@
 # Turing Wire — SEO, E-E-A-T & Visibility Audit
 
-*Internal strategy document. Not part of the published site (excluded from the Jekyll build).*
+*Internal strategy document. Not part of the published site — `docs/` has no route.*
 
 ## 1. What Turing Wire is
 
-An independent AI-industry publication on Jekyll + GitHub Pages. It aggregates and summarises
-other publishers' AI news and research (~4,500 posts on a 90-day rolling window) and adds original
-data layers: the **TW AI Index**, an **AI Stocks** dashboard, **model-pricing** and **benchmark**
-comparisons, ~2,000 **company** pages, multi-source **Stories**, and user-defined **Missions**.
+An independent AI-industry publication built with Next.js on Vercel, with articles in Supabase. It
+aggregates and summarises other publishers' AI news and research (~4,500 posts on a 90-day rolling
+window) and adds original data layers: the **TW AI Index**, an **AI Stocks** dashboard,
+**model-pricing** and **benchmark** comparisons, ~2,000 **company** pages, multi-source **Stories**,
+and user-defined **Missions**.
 
 The defensible value is the *structured/original* layer, not the news summaries. The summaries are
 the largest URL set and the weakest SEO surface.

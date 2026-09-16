@@ -7,8 +7,8 @@ import type { ArticleCard } from "@/lib/types";
 /**
  * Impact + subcategory filtering for the section listings.
  *
- * Jekyll shipped every card and toggled `style.display` from main.js; here the
- * filtering is React state, so the DOM stays consistent with the render tree.
+ * Filtering is React state rather than a `style.display` toggle, so the DOM
+ * stays consistent with the render tree.
  */
 
 type Chip = { value: string; label: string };

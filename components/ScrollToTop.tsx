@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-/** Ported from the scroll-to-top block in assets/js/main.js. */
+/** Back-to-top control, revealed once the reader is 300px down the page. */
 export function ScrollToTop() {
   const [visible, setVisible] = useState(false);
 

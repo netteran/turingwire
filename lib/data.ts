@@ -5,9 +5,11 @@ import yaml from "js-yaml";
 /**
  * Curated, hand-maintained datasets that stay in the repo.
  *
- * Only *articles* moved to Supabase. These files are small, versioned
- * alongside the code, and updated by their own scheduled workflows, so
- * reading them from disk at render time keeps that pipeline untouched.
+ * Only *articles* moved to Supabase. These files are small and versioned
+ * alongside the code: `models.yml`, `benchmarks.yml` and the market-data JSON
+ * are refreshed by the Ingest workflow, which commits them back to main;
+ * `conferences.yml` and `tickers.yml` are hand-maintained. Reading them from
+ * disk at render time is enough — none of them change within a deployment.
  */
 const DATA_DIR = path.join(process.cwd(), "_data");
 

@@ -22,7 +22,6 @@ from urllib.parse import urlencode, urlparse, urlunparse, parse_qs
 
 import feedparser
 import requests
-import yaml
 from bs4 import BeautifulSoup
 from dateutil import parser as dateparser
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -30,7 +29,6 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 from ingest_store import load_sources, record_source_result
 
 ROOT = Path(__file__).parent.parent
-FEEDS_DIR = ROOT / "feeds"
 DATA_DIR = ROOT / "_data"
 STAGING_FILE = DATA_DIR / "staging_articles.json"
 
@@ -73,11 +71,6 @@ def canonical_url(url: str) -> str:
     filtered = {k: v for k, v in qs.items() if k.lower() not in TRACKING_PARAMS}
     new_query = urlencode(filtered, doseq=True)
     return urlunparse(parsed._replace(query=new_query, fragment=""))
-
-
-def load_yaml(path: Path) -> dict:
-    with path.open() as f:
-        return yaml.safe_load(f)
 
 
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))

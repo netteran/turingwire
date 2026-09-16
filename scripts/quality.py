@@ -2,9 +2,9 @@
 """
 quality.py — shared quality gate for the summarizer pipeline.
 
-Rejects thin/boilerplate/fabricated summaries before they are written to _posts/.
-The goal is Google's test: an original, satisfying answer the reader can't easily
-find elsewhere. A summary that fails the gate is not published.
+Rejects thin/boilerplate/fabricated summaries before they reach the articles
+table. The goal is Google's test: an original, satisfying answer the reader
+can't easily find elsewhere. A summary that fails the gate is not published.
 """
 from __future__ import annotations
 
