@@ -239,17 +239,41 @@ def update_run_stats(run_id: int | None, **stats) -> None:
 # Settings
 # --------------------------------------------------------------------------
 
-def get_settings() -> dict[str, str]:
+# Populated on first call and reused for the life of the process. Every
+# prompt lookup in prompts.py goes through get_setting(), so without this a
+# single article could trigger a dozen redundant round trips for the same
+# unchanging table.
+_settings_cache: dict[str, str] | None = None
+
+
+def get_settings(force: bool = False) -> dict[str, str]:
+    global _settings_cache
+    if _settings_cache is not None and not force:
+        return _settings_cache
     try:
         resp = requests.get(
             _rest("settings"), headers=_headers(), params={"select": "key,value"}, timeout=TIMEOUT
         )
         resp.raise_for_status()
-        return {r["key"]: r["value"] for r in resp.json()}
-    except requests.RequestException as exc:
+        _settings_cache = {r["key"]: r["value"] for r in resp.json()}
+    except (requests.RequestException, SupabaseError) as exc:
+        # SupabaseError fires when SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY are
+        # unset — settings are an optional override, so that must degrade to
+        # defaults rather than take the pipeline down.
         log.warning("could not read settings, using defaults: %s", exc)
-        return {}
+        _settings_cache = {}
+    return _settings_cache
 
 
 def get_setting(key: str, default: str = "") -> str:
-    return get_settings().get(key) or default
+    value = get_settings().get(key)
+    return value if value else default
+
+
+def get_setting_int(key: str, default: int) -> int:
+    raw = get_setting(key, "")
+    try:
+        return int(raw) if raw.strip() else default
+    except ValueError:
+        log.warning("setting %r has non-integer value %r, using default %d", key, raw, default)
+        return default

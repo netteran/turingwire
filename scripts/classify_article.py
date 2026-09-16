@@ -19,6 +19,8 @@ from typing import Any
 from openai import OpenAI
 from tenacity import retry, stop_after_attempt, wait_exponential
 
+from prompts import get_prompt, render
+
 ROOT = Path(__file__).parent.parent
 DATA_DIR = ROOT / "_data"
 DEDUPED_FILE = DATA_DIR / "deduped_articles.json"
@@ -36,59 +38,12 @@ logging.basicConfig(
 )
 log = logging.getLogger("classify_article")
 
-SYSTEM_PROMPT = """You are a classification engine for an AI industry news aggregator.
-Return ONLY valid JSON with no prose, no markdown fences, no explanation.
-Classify the article according to the schema provided."""
-
-CLASSIFICATION_PROMPT = """Classify the following article. Return ONLY a JSON object with these exact fields:
-
-{{
-  "category": "news" | "research" | "stocks" | "skip",
-  "subcategory": "<see below>",
-  "company": "<string or null>",
-  "secondary_companies": ["<string>"],
-  "impact": "critical" | "major" | "notable" | "minor",
-  "confidence": <float 0.0-1.0>,
-  "rationale": "<one sentence>"
-}}
-
-SUBCATEGORIES:
-- news: product_launch, model_release, partnership, regulation_policy, safety_alignment, infrastructure_compute, hiring_org_changes, opinion_essay, funding_round, other
-- research: foundation_models, alignment_safety, interpretability, reasoning, multimodal, agents_robotics, training_methods, evaluation_benchmarks, theory, efficiency_inference, other
-- stocks: earnings, guidance, analyst_action, deal_ma, capex_announcement, regulatory_filing, macro_ai_demand, executive_change
-
-IMPACT CALIBRATION — assign based on these anchors:
-
-critical — moves markets, shifts the field, or changes governance.
-  Examples: flagship model release (GPT-5, Claude 5, Gemini 3.0); M&A/IPO >$1B for a top AI lab or chipmaker; major regulatory action (EU AI Act enforcement, US executive order); security incident affecting many users; new SOTA on a recognized hard benchmark (GPQA, ARC-AGI, FrontierMath, SWE-bench) by non-trivial margin; genuinely new architecture comparable in scope to the original Transformer.
-
-major — significant for industry watchers but not field-changing.
-  Examples: non-flagship model from a top-5 lab (GPT-4.1, Claude Sonnet, Gemini Flash); funding round $500M+; important new product (agent platform); strategic partnership between major players; senior leadership change at a frontier lab; meaningful eval improvement; paper from DeepMind/OpenAI/Anthropic/FAIR with novel methodology.
-
-notable — worth covering for completeness; incremental progress.
-  Examples: incremental product features; funding rounds $10–500M; mid-tier lab announcements; hardware roadmap updates without strategic surprise; solid incremental research; mid-tier open-weight model releases.
-
-minor — covered for archive, not surfaced prominently.
-  Examples: patch notes; small UI updates; rebrandings; personnel changes below VP; routine arXiv submissions without strong novelty; pure marketing posts.
-
-When in doubt between two levels, choose the lower one.
-
-COMPANY: primary company (string) or null if none. Use canonical names: OpenAI, Anthropic, Google DeepMind, Google, Microsoft, Meta, NVIDIA, AMD, Intel, TSMC, Apple, Amazon, Mistral, Hugging Face, Cohere, Stability AI, Runway, ElevenLabs, Perplexity, Databricks, Cognition, Suno, Alibaba, Palantir, Snowflake, Salesforce, ServiceNow, Oracle, IBM, UiPath, xAI, DeepSeek, Cerebras, Scale AI, Character.AI, ASML, Applied Materials, Lam Research, Micron, ARM, Broadcom, Super Micro, Baidu.
-
-ROUTING:
-- An article can be BOTH news AND stocks if it has market-moving implications. In that case return category as a JSON array: ["news", "stocks"].
-- Return "skip" for articles clearly off-topic (personal finance, non-AI tech, sports, entertainment).
-
-Article title: {title}
-Article body (may be truncated): {body}
-Source: {source_name}
-Category hint: {category_hint}"""
-
 
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
 def classify_one(client: OpenAI, article: dict) -> dict:
     body_excerpt = (article.get("body") or "")[:3000]
-    prompt = CLASSIFICATION_PROMPT.format(
+    prompt = render(
+        "prompt.classify.user",
         title=article.get("title", ""),
         body=body_excerpt,
         source_name=article.get("source_name", ""),
@@ -99,7 +54,7 @@ def classify_one(client: OpenAI, article: dict) -> dict:
         model=MODEL,
         temperature=TEMPERATURE,
         messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "system", "content": get_prompt("prompt.classify.system")},
             {"role": "user", "content": prompt},
         ],
         response_format={"type": "json_object"},

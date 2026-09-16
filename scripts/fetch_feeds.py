@@ -26,7 +26,7 @@ from bs4 import BeautifulSoup
 from dateutil import parser as dateparser
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-from ingest_store import load_sources, record_source_result
+from ingest_store import get_setting_int, load_sources, record_source_result
 
 ROOT = Path(__file__).parent.parent
 DATA_DIR = ROOT / "_data"
@@ -61,7 +61,16 @@ USER_AGENT = (
 )
 REQUEST_TIMEOUT = 20
 FULL_TEXT_TIMEOUT = 15
-MAX_BODY_CHARS = 8000
+# How much of a source article to capture before summarization ever sees it.
+# This used to be a flat 8000 chars (~1,300 words) for every source, which
+# silently clipped long-form articles (investigative pieces, deep-dive
+# essays) well before the summarizer got a chance to write from them — no
+# amount of prompt tuning downstream can recover substance cut here. Kept
+# generous and overridable via the `max_source_chars` setting so it can be
+# tuned without a deploy. Set once per run in main(); the module-level value
+# is just the fallback if Supabase is unreachable.
+DEFAULT_MAX_BODY_CHARS = 24000
+MAX_BODY_CHARS = DEFAULT_MAX_BODY_CHARS
 
 
 def canonical_url(url: str) -> str:
@@ -107,8 +116,8 @@ def resolve_redirect(url: str) -> str:
         return url
 
 
-def fetch_full_text(url: str) -> str:
-    """Attempt to extract main article text from a URL."""
+def fetch_full_text(url: str) -> tuple[str, bool]:
+    """Attempt to extract main article text from a URL. Returns (text, was_truncated)."""
     try:
         resp = requests.get(
             url,
@@ -121,10 +130,10 @@ def fetch_full_text(url: str) -> str:
             tag.decompose()
         article = soup.find("article") or soup.find("main") or soup.find("body")
         text = article.get_text(separator=" ", strip=True) if article else ""
-        return text[:MAX_BODY_CHARS]
+        return text[:MAX_BODY_CHARS], len(text) > MAX_BODY_CHARS
     except Exception as exc:
         log.debug("full text fetch failed for %s: %s", url, exc)
-        return ""
+        return "", False
 
 
 def fetch_rss_atom(source: dict, etag_cache: dict, dry_run: bool) -> list[dict]:
@@ -190,18 +199,22 @@ def fetch_rss_atom(source: dict, etag_cache: dict, dry_run: bool) -> list[dict]:
             link = resolve_redirect(link)
 
         body = ""
+        body_truncated = False
         for field in ("summary", "content"):
             raw = getattr(entry, field, None)
             if raw:
                 if isinstance(raw, list):
                     raw = raw[0].get("value", "") if raw else ""
                 soup = BeautifulSoup(raw or "", "lxml")
-                body = soup.get_text(separator=" ", strip=True)[:MAX_BODY_CHARS]
+                full_text = soup.get_text(separator=" ", strip=True)
+                body = full_text[:MAX_BODY_CHARS]
+                body_truncated = len(full_text) > MAX_BODY_CHARS
                 if body:
                     break
 
         if source.get("requires_full_text_fetch") and len(body) < 200:
-            body = fetch_full_text(link) or body
+            fetched_text, body_truncated = fetch_full_text(link)
+            body = fetched_text or body
 
         title = getattr(entry, "title", "").strip()
         if _is_cyrillic_dominant(title):
@@ -219,7 +232,11 @@ def fetch_rss_atom(source: dict, etag_cache: dict, dry_run: bool) -> list[dict]:
             "category_hint": source.get("category_hint", "news"),
             "source_company": source.get("company"),
             "priority": source.get("priority", 2),
-            "source_truncated": source.get("notes", "").find("source_truncated: true") != -1,
+            # True when the captured text hit MAX_BODY_CHARS — i.e. we know
+            # there was more source material than we kept, so the summary is
+            # necessarily based on a partial article. lib/seo.ts noindexes
+            # these rather than letting a summary-of-a-fragment get indexed.
+            "source_truncated": body_truncated,
         })
 
     max_articles = source.get("max_articles")
@@ -305,6 +322,9 @@ def fetch_arxiv(source: dict, dry_run: bool) -> list[dict]:
 
 
 def main(dry_run: bool = False) -> int:
+    global MAX_BODY_CHARS
+    MAX_BODY_CHARS = max(2000, get_setting_int("max_source_chars", DEFAULT_MAX_BODY_CHARS))
+
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
     sources = load_sources(active_only=True)

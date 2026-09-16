@@ -54,6 +54,25 @@ SUPERLATIVE_RE = re.compile(
 )
 
 
+def scaled_word_target(
+    source_words: int, *, min_floor: int, max_floor: int, max_cap: int, ratio: float = 0.5
+) -> tuple[int, int]:
+    """Scale the target article length to how much source material exists.
+
+    A 300-word press release and a 4,000-word investigative piece should not
+    be squeezed into the same length: the ceiling grows with the source
+    (up to max_cap) instead of clipping every article to one flat number.
+
+    - max_floor: ceiling used for a thin source, so short items still read
+      as complete rather than being padded up to fill a long minimum.
+    - max_cap: hard ceiling regardless of source length.
+    - min_floor: never suggest fewer words than this, however thin the source.
+    """
+    max_words = min(max_cap, max(max_floor, round(source_words * ratio)))
+    min_words = max(min_floor, min(max_words - 50, round(max_words * 0.32)))
+    return min_words, max_words
+
+
 def clean_headline(raw: str) -> str | None:
     """Normalize a generated headline; return None if it should be rejected
     (empty, too short/long, or marketing/clickbait) so the caller can fall back

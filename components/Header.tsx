@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { createBrowserClient } from "@supabase/ssr";
 
 /**
  * Site header: navigation, theme toggle, mobile nav and the search shortcut.
@@ -48,10 +49,60 @@ const NAV_GROUPS = [
 
 export function Header() {
   const pathname = usePathname() ?? "/";
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
+
+  // Checked client-side (rather than in the server layout) so this stays a
+  // plain client-only concern — reading cookies in the root layout would
+  // force every statically-generated page in the site into dynamic
+  // rendering just to show a button only admins ever see.
+  useEffect(() => {
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    );
+
+    async function checkAdmin(userId: string | undefined) {
+      if (!userId) {
+        setIsAdmin(false);
+        return;
+      }
+      const { data } = await supabase
+        .from("admin_users")
+        .select("user_id")
+        .eq("user_id", userId)
+        .maybeSingle();
+      setIsAdmin(!!data);
+    }
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      checkAdmin(session?.user?.id);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      checkAdmin(session?.user?.id);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  async function handleSignOut() {
+    setSigningOut(true);
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    );
+    await supabase.auth.signOut();
+    router.push("/");
+    router.refresh();
+  }
 
   const isActive = (fragments: readonly string[]) =>
     fragments.some((f) => pathname.startsWith(f));
@@ -182,6 +233,26 @@ export function Header() {
             </form>
           </div>
 
+          {isAdmin && !pathname.startsWith("/admin") && (
+            <Link
+              href="/admin"
+              className="hidden sm:inline-flex items-center h-7 px-2.5 rounded-md border tw-border text-xs font-mono tw-muted hover:tw-accent transition-colors"
+            >
+              Admin
+            </Link>
+          )}
+
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={handleSignOut}
+              disabled={signingOut}
+              className="hidden sm:inline-flex items-center h-7 px-2.5 rounded-md border tw-border text-xs font-mono tw-muted hover:tw-accent transition-colors disabled:opacity-50"
+            >
+              {signingOut ? "Signing out…" : "Sign out"}
+            </button>
+          )}
+
           <button
             id="theme-toggle"
             onClick={toggleTheme}
@@ -301,6 +372,24 @@ export function Header() {
               className="tw-search-input w-full font-mono text-sm"
             />
           </form>
+
+          {isAdmin && (
+            <div className="mt-2 pt-2 border-t tw-border flex flex-col gap-1">
+              {!pathname.startsWith("/admin") && (
+                <Link href="/admin" className="tw-nav-link py-2">
+                  Admin panel
+                </Link>
+              )}
+              <button
+                type="button"
+                onClick={handleSignOut}
+                disabled={signingOut}
+                className="tw-nav-link py-2 text-left disabled:opacity-50"
+              >
+                {signingOut ? "Signing out…" : "Sign out"}
+              </button>
+            </div>
+          )}
         </nav>
       </div>
     </header>

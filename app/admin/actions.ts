@@ -62,6 +62,7 @@ export async function updateSetting(key: string, value: string) {
   const { error } = await supabase.from("settings").update({ value }).eq("key", key);
   if (error) throw error;
   revalidatePath("/admin/settings");
+  revalidatePath("/admin/prompts");
 }
 
 /**
