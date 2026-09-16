@@ -45,9 +45,11 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       # Only needed when the `summarizer_model` Admin setting picks a
-      # gemini-* model (scripts/llm.py dispatches on that prefix). Empty if
-      # the secret was never added — fine, since it's then simply unused.
+      # gemini-* or claude-* model (scripts/llm.py dispatches on that
+      # prefix). Empty if the secret was never added — fine, since it's
+      # then simply unused.
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       # scripts/ import each other directly, and the stage scripts attach
       # their counters to the run opened by the first step.
       PYTHONPATH: scripts
@@ -68,6 +70,7 @@ jobs:
         run: |
           echo "::add-mask::${{ secrets.OPENAI_API_KEY }}"
           echo "::add-mask::${{ secrets.GEMINI_API_KEY }}"
+          echo "::add-mask::${{ secrets.ANTHROPIC_API_KEY }}"
           echo "::add-mask::${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
           echo "::add-mask::${{ secrets.FINNHUB_API_KEY }}"
 

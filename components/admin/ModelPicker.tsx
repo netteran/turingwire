@@ -8,9 +8,9 @@ import { useState } from "react";
  * (scripts/llm.py: provider_for_model) — there's no separate provider field
  * that could drift out of sync with whatever is picked here.
  *
- * OpenAI has no genuinely free API tier — "low-cost" means its cheapest
- * per-token models, not $0. Gemini's models below do have a real
- * no-billing-required free tier via a Google AI Studio API key (rate
+ * OpenAI and Anthropic have no genuinely free API tier — "low-cost" means
+ * their cheapest per-token models, not $0. Gemini's models below do have a
+ * real no-billing-required free tier via a Google AI Studio API key (rate
  * limited, not unlimited). Pricing and model lineups shift over time — if a
  * listed model ever 404s, check each provider's current pricing/model page
  * and update this list; "Custom / other…" always stays available below as
@@ -31,6 +31,13 @@ const MODEL_GROUPS: { label: string; options: { value: string; label: string }[]
       { value: "gemini-2.5-flash", label: "Gemini 2.5 Flash" },
       { value: "gemini-2.5-flash-lite", label: "Gemini 2.5 Flash-Lite (cheapest/fastest)" },
       { value: "gemini-2.0-flash", label: "Gemini 2.0 Flash" },
+    ],
+  },
+  {
+    label: "Anthropic Claude — low-cost",
+    options: [
+      { value: "claude-haiku-4-5", label: "Claude Haiku 4.5 (cheapest)" },
+      { value: "claude-sonnet-5", label: "Claude Sonnet 5" },
     ],
   },
 ];
