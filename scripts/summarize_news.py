@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-summarize_news.py — Generate news summaries using OpenAI gpt-4o-mini.
+summarize_news.py — Generate news summaries via OpenAI or Gemini (see llm.py).
 
 Processes articles classified as category=news from classified_articles.json.
 Writes rows to the Supabase `articles` table (the source of truth).
@@ -15,14 +15,13 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-from openai import OpenAI
 from slugify import slugify
-from tenacity import retry, stop_after_attempt, wait_exponential
 
 from quality import clean_headline, parse_summary_output, passes_quality, scaled_word_target
 from supabase_store import recent_articles, write_post
 from ingest_store import current_run_id, mark_seen, update_run_stats, get_setting, get_setting_int
 from prompts import get_prompt, render
+from llm import call_llm, required_env_var
 
 ROOT = Path(__file__).parent.parent
 DATA_DIR = ROOT / "_data"
@@ -49,24 +48,6 @@ logging.basicConfig(
 log = logging.getLogger("summarize_news")
 
 
-@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
-def _call(client: OpenAI, system: str, user: str, temperature: float = TEMPERATURE, json_mode: bool = False) -> str:
-    kwargs = {
-        "model": MODEL,
-        "temperature": temperature,
-        "messages": [
-            {"role": "system", "content": system},
-            {"role": "user", "content": user},
-        ],
-    }
-    if json_mode:
-        kwargs["response_format"] = {"type": "json_object"}
-    response = client.chat.completions.create(**kwargs)
-    return (response.choices[0].message.content or "").strip()
-
-
-
-
 
 
 def related_context(index: list[dict], company: str | None, subcategory: str, title: str, limit: int = 5) -> str:
@@ -90,15 +71,15 @@ def related_context(index: list[dict], company: str | None, subcategory: str, ti
     )
 
 
-def summarize_one(client: OpenAI, article: dict, index: list[dict] | None = None) -> tuple[str, str, str]:
+def summarize_one(article: dict, index: list[dict] | None = None) -> tuple[str, str, str]:
     """Two-stage pipeline: extract facts → write article. Returns (title, description, summary_body)."""
     raw_body = article.get("body") or ""
     title = article.get("title", "")
     classification = article.get("classification", {})
 
     # Stage 1 — extract structured facts (temperature 0 for determinism)
-    extracted = _call(
-        client,
+    extracted = call_llm(
+        MODEL,
         get_prompt("prompt.news_extract.system"),
         render("prompt.news_extract.user", title=title, body=raw_body),
         temperature=0,
@@ -131,7 +112,7 @@ def summarize_one(client: OpenAI, article: dict, index: list[dict] | None = None
         source_name=article.get("source_name", ""),
         url=article.get("url", ""),
     )
-    raw = _call(client, get_prompt("prompt.news_write.system"), prompt, json_mode=True)
+    raw = call_llm(MODEL, get_prompt("prompt.news_write.system"), prompt, temperature=TEMPERATURE, json_mode=True)
     return parse_summary_output(raw)
 
 
@@ -145,9 +126,9 @@ def main() -> int:
     global MODEL
     MODEL = get_setting("summarizer_model", MODEL)
 
-    api_key = os.environ.get("OPENAI_API_KEY")
-    if not api_key:
-        log.error("OPENAI_API_KEY not set")
+    required_key = required_env_var(MODEL)
+    if not os.environ.get(required_key):
+        log.error("%s not set (required for model %r)", required_key, MODEL)
         return 1
 
     if not CLASSIFIED_FILE.exists():
@@ -159,7 +140,6 @@ def main() -> int:
 
     newly_seen: list[str] = []
 
-    client = OpenAI(api_key=api_key)
     news_articles = [a for a in articles if "news" in a.get("categories", [])]
     log.info("summarizing %d news articles", len(news_articles))
 
@@ -170,7 +150,7 @@ def main() -> int:
     for article in news_articles:
         title = article.get("title", "")
         try:
-            gen_title, description, summary = summarize_one(client, article, index)
+            gen_title, description, summary = summarize_one(article, index)
         except Exception as exc:
             log.warning("summarization failed for '%s': %s", title, exc)
             continue

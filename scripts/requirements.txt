@@ -7,8 +7,9 @@ lxml==5.2.2
 # Dedup (TF-IDF near-duplicate detection)
 scikit-learn==1.5.1
 
-# LLM client
+# LLM clients
 openai==1.57.0
+google-genai==2.23.0
 httpx>=0.28.0
 
 # Data
