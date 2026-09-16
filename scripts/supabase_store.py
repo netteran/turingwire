@@ -68,8 +68,8 @@ def _rest(path: str) -> str:
 def clean_slug(title: str, fallback: str = "") -> str:
     """Word-boundary-aware slug, capped at SLUG_MAX.
 
-    Must stay in sync with scripts/migrate_extract.py so newly ingested
-    articles get the same URL shape as the backfilled ones.
+    This is the only slug generator left; the backfilled articles were
+    given the same shape, so changing the rule here orphans their URLs.
     """
     s = slugify(title or "") or slugify(fallback or "") or "untitled"
     if len(s) > SLUG_MAX:

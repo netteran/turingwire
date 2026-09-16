@@ -2,14 +2,13 @@
 """
 ingest_store.py — Pipeline control plane, backed by Postgres.
 
-Replaces the three pieces of pipeline state that used to live in the repo:
+Holds the pipeline state that used to sit in the repo as YAML and JSON:
+feed configuration and conditional-GET validators in `ingest_sources`, dedupe
+GUIDs in `seen_articles`, run history in `ingest_runs`.
 
-    feeds/*.yml              -> ingest_sources
-    _data/etag_cache.json    -> ingest_sources.etag / last_modified
-    _data/seen_articles.json -> seen_articles
-
-which is what lets the Ingest workflow run without committing anything, and
-gives the admin page something to read and edit.
+Keeping it in Postgres is what lets the article stages of the Ingest workflow
+run without committing anything, and gives the admin page something to read
+and edit.
 
 Uses the service-role key, so it bypasses RLS. That key belongs only in
 GitHub Actions secrets.

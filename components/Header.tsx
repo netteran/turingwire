@@ -5,9 +5,10 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 /**
- * Ported from _includes/header.html plus the theme / mobile-nav / search
- * shortcut behaviour that used to live in assets/js/main.js. Those handlers
- * mutated DOM that React now owns, so they're React state here instead.
+ * Site header: navigation, theme toggle, mobile nav and the search shortcut.
+ *
+ * All four are React state rather than DOM handlers — they touch markup React
+ * owns, so mutating it directly would fight the render tree.
  */
 
 const NAV_GROUPS = [

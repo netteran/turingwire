@@ -1,6 +1,7 @@
 # Secrets & local env
 .env
 .env.local
+.env*.local
 *.log
 
 # Python
@@ -14,42 +15,26 @@ dist/
 build/
 .pytest_cache/
 
-# Jekyll build output (served from gh-pages, not committed to main)
-_site/
-.sass-cache/
-.jekyll-cache/
-.jekyll-metadata
+# Node
+node_modules/
+package-lock.json
 
-# Operational pipeline data (written to workflow artifacts, not committed)
+# Next.js
+/.next/
+/out/
+next-env.d.ts
+tsconfig.tsbuildinfo
+.vercel
+
+# Pipeline scratch files. Each Ingest run writes these to the runner and
+# hands them to the next stage; the durable state lives in Postgres.
+_data/staging_articles.json
+_data/deduped_articles.json
+_data/classified_articles.json
 _data/run_log.json
 _data/review_queue.json
 _data/backlog.json
 
-# Drafts
-_drafts/
-
-# Node (if Tailwind build step added later)
-node_modules/
-package-lock.json
-
 # OS
 .DS_Store
 Thumbs.db
-
-# ── Next.js ──────────────────────────────────────────────────────────────
-/.next/
-/out/
-next-env.d.ts
-node_modules/
-.vercel
-
-# Local environment (Supabase keys)
-.env
-.env.local
-.env*.local
-
-# Migration bundle — regenerate with scripts/migrate_extract.py
-_data/migration_bundle.json
-
-# TypeScript incremental build cache
-tsconfig.tsbuildinfo

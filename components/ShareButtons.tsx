@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 
 /**
- * Ported from _includes/share.html + assets/js/share.js.
- * Intent URLs only — no third-party scripts.
+ * Share buttons built on plain intent URLs — no third-party scripts, so
+ * nothing here loads a tracker on the reader's behalf.
  */
 
 type Props = {

@@ -4,8 +4,10 @@ name: Ingest
 # benchmarks and stocks workflows — everything that used to run on its own
 # schedule now runs here, in order.
 #
-# Every 4 hours on weekdays. Nothing is committed: feed config, dedupe state
-# and run history all live in Postgres, so the repo stays untouched.
+# Every 4 hours on weekdays. Feed config, dedupe state and run history live in
+# Postgres, so the article stages commit nothing. The market-data stages are
+# the one exception: the front end reads _data/*.json and *.yml from the repo,
+# so those four files are committed back to main at the end of the run.
 
 on:
   schedule:

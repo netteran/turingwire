@@ -2,7 +2,7 @@
 fetch_benchmarks.py
 -------------------
 Fetches state-of-the-art results from the Papers With Code API and updates
-_data/benchmarks.yml.  Runs weekly via .github/workflows/benchmarks.yml.
+_data/benchmarks.yml.  Runs as a step of the Ingest workflow.
 
 For each benchmark defined in the YAML, the script queries:
   GET https://paperswithcode.com/api/v1/sota/?task=<pwc_task>
