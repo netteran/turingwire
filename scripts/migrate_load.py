@@ -90,6 +90,27 @@ def load_stories(rows: list[dict], dry_run: bool) -> int:
     return len(rows)
 
 
+def preflight() -> None:
+    """Fail early and clearly when the schema has not been applied yet."""
+    missing = []
+    for table in ("articles", "companies", "stories", "company_article_counts"):
+        resp = requests.get(
+            _rest(table), headers=_headers(), params={"select": "*", "limit": 1}, timeout=30
+        )
+        if resp.status_code == 404 or (
+            resp.status_code >= 400 and "does not exist" in resp.text
+        ):
+            missing.append(table)
+
+    if missing:
+        raise SupabaseError(
+            "schema not found — missing: "
+            + ", ".join(missing)
+            + ".\nApply supabase/migrations/0001_create_content_schema.sql and "
+            "0002_content_views.sql in the Supabase SQL Editor first."
+        )
+
+
 def verify() -> None:
     """Read back counts so the migration can be checked at a glance."""
     for table, params in (
@@ -134,6 +155,7 @@ def main() -> int:
     )
 
     try:
+        preflight()
         # Companies first so article pages can resolve their links immediately.
         load_companies(companies, args.dry_run)
         load_articles(articles, args.dry_run)
