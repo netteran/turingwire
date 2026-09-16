@@ -199,6 +199,17 @@ export async function getCompany(slug: string): Promise<Company | null> {
   return (data as Company) ?? null;
 }
 
+/** Primary-coverage count for one company, to gate indexing of thin profiles. */
+export async function getCompanyPrimaryCount(slug: string): Promise<number> {
+  const { data, error } = await getSupabase()
+    .from("company_article_counts")
+    .select("primary_count")
+    .eq("slug", slug)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as { primary_count: number } | null)?.primary_count ?? 0;
+}
+
 export async function getStories(): Promise<Story[]> {
   const { data, error } = await getSupabase()
     .from("stories")
@@ -256,6 +267,30 @@ export async function getAllArticleAddresses(): Promise<
     if (error) throw error;
     if (!data || data.length === 0) break;
     all.push(...(data as typeof all));
+    if (data.length < pageSize) break;
+  }
+  return all;
+}
+
+/**
+ * Every legacy Jekyll permalink that now 301s to a current article, for the
+ * temporary redirect sitemap (see app/sitemap-legacy.xml). Paginated because
+ * there are ~5,200 of them — well past Supabase's 1,000-row default cap.
+ */
+export async function getAllLegacyPaths(): Promise<string[]> {
+  const pageSize = 1000;
+  const all: string[] = [];
+
+  for (let offset = 0; ; offset += pageSize) {
+    const { data, error } = await getSupabase()
+      .from("articles")
+      .select("legacy_path")
+      .not("legacy_path", "is", null)
+      .order("legacy_path", { ascending: true })
+      .range(offset, offset + pageSize - 1);
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+    all.push(...(data as { legacy_path: string }[]).map((r) => r.legacy_path));
     if (data.length < pageSize) break;
   }
   return all;

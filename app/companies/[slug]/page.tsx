@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 
 import { PostCard } from "@/components/PostCard";
 import { ShareButtons } from "@/components/ShareButtons";
-import { getArticlesForCompany, getCompany } from "@/lib/queries";
+import { getArticlesForCompany, getCompany, getCompanyPrimaryCount } from "@/lib/queries";
+import { robotsForCompany } from "@/lib/seo";
 import { site, absoluteUrl } from "@/lib/site";
 
 export const revalidate = 300;
@@ -16,12 +17,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const company = await getCompany(slug);
   if (!company) return { title: "Not found", robots: { index: false, follow: false } };
 
+  const primaryCount = await getCompanyPrimaryCount(slug);
+
   return {
     title: company.name,
     description:
       company.description ??
       `Turing Wire coverage of ${company.name}: AI news, research summaries, and analysis.`,
     alternates: { canonical: `/companies/${company.slug}/` },
+    robots: robotsForCompany({ primaryCount }),
   };
 }
 

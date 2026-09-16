@@ -46,3 +46,9 @@ Disallow: /llms-full.txt
 Disallow: /missions-index.json
 
 Sitemap: https://turingwire.com/sitemap.xml
+
+# Temporary: accelerates Google re-crawling the pre-migration Jekyll
+# permalinks so their 301s get processed. Remove once Search Console's
+# Page Indexing report shows the legacy backlog cleared (see
+# app/sitemap-legacy.xml/route.ts).
+Sitemap: https://turingwire.com/sitemap-legacy.xml
