@@ -8,6 +8,37 @@ import { isAdmin } from "@/lib/supabase-server";
  * re-checks admin status here rather than trusting the middleware redirect —
  * this is an API route, so it can be called directly.
  */
+
+const WORKFLOW = "ingest.yml";
+
+/** GitHub's status codes map to distinct, fixable causes. */
+function explain(status: number, repo: string): string {
+  switch (status) {
+    case 401:
+      return "GitHub rejected the token (401). It is expired or malformed — regenerate GITHUB_DISPATCH_TOKEN and update it in Vercel.";
+    case 403:
+      return (
+        "GitHub refused the dispatch (403) — the token is valid but lacks permission. Check, in order: " +
+        "(1) a fine-grained PAT needs Repository permissions → Actions → Read and write; " +
+        `(2) it must list ${repo} under Repository access; ` +
+        "(3) a classic PAT instead needs the 'workflow' scope; " +
+        "(4) if the repo is under an org with SSO, the token must be authorised for it."
+      );
+    case 404:
+      return (
+        `GitHub could not find the workflow (404). Either ${WORKFLOW} is not on the default branch, ` +
+        `or the token cannot see ${repo} at all — a fine-grained PAT that omits the repository reports 404 rather than 403.`
+      );
+    case 422:
+      return (
+        "GitHub rejected the inputs (422). The copy of ingest.yml on the default branch does not accept " +
+        "the inputs sent here — most likely it predates the 'trigger' input."
+      );
+    default:
+      return `GitHub returned ${status}.`;
+  }
+}
+
 export async function POST() {
   if (!(await isAdmin())) {
     return NextResponse.json({ error: "Not authorised" }, { status: 403 });
@@ -20,7 +51,7 @@ export async function POST() {
     return NextResponse.json(
       {
         error:
-          "GITHUB_DISPATCH_TOKEN is not set. Add a fine-grained PAT with Actions: write " +
+          "GITHUB_DISPATCH_TOKEN is not set. Add a fine-grained PAT with Actions: Read and write " +
           "for this repository to the Vercel project's environment variables.",
       },
       { status: 500 },
@@ -28,7 +59,7 @@ export async function POST() {
   }
 
   const res = await fetch(
-    `https://api.github.com/repos/${repo}/actions/workflows/ingest.yml/dispatches`,
+    `https://api.github.com/repos/${repo}/actions/workflows/${WORKFLOW}/dispatches`,
     {
       method: "POST",
       headers: {
@@ -45,9 +76,18 @@ export async function POST() {
   );
 
   if (res.status !== 204) {
-    const detail = await res.text();
+    // GitHub puts the specific reason in the body; without it a 403 is
+    // indistinguishable from any other permission problem.
+    let detail = "";
+    try {
+      const body = await res.json();
+      detail = body?.message ?? "";
+    } catch {
+      detail = (await res.text().catch(() => "")).slice(0, 300);
+    }
+
     return NextResponse.json(
-      { error: `GitHub returned ${res.status}`, detail: detail.slice(0, 500) },
+      { error: explain(res.status, repo), detail: detail.slice(0, 300) || undefined },
       { status: 502 },
     );
   }
