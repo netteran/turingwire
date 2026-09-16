@@ -17,7 +17,12 @@ const SUBCATEGORY_CHIPS = [
   { value: "funding_round", label: "Funding" },
   { value: "regulation_policy", label: "Policy" },
   { value: "safety_alignment", label: "Safety" },
+  { value: "safety_leadership_exits", label: "Safety Exodus" },
+  { value: "model_welfare_ethics", label: "Model Welfare" },
   { value: "infrastructure_compute", label: "Infrastructure" },
+  { value: "power_infrastructure", label: "Power & Grid" },
+  { value: "agi_timelines", label: "AGI Countdown" },
+  { value: "content_ecosystem", label: "AI Slop Watch" },
   { value: "partnership", label: "Partnerships" },
 ];
 
