@@ -4,7 +4,9 @@ fetch_feeds.py — Fetch all configured RSS/Atom/API feeds and write raw article
 to a staging JSON file for downstream processing.
 
 Honors ETag and If-Modified-Since headers to minimize bandwidth.
-Fetches full article text when requires_full_text_fetch is True.
+Fetches full article text when requires_full_text_fetch is True, or whenever
+the feed body looks like a short teaser rather than a real article (see
+TEASER_CHARS) — capped to genuinely new entries via the seen-articles cache.
 """
 from __future__ import annotations
 
@@ -26,7 +28,7 @@ from bs4 import BeautifulSoup
 from dateutil import parser as dateparser
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-from ingest_store import get_setting_int, load_sources, record_source_result
+from ingest_store import filter_unseen, get_setting_int, load_sources, record_source_result
 
 ROOT = Path(__file__).parent.parent
 DATA_DIR = ROOT / "_data"
@@ -71,6 +73,17 @@ FULL_TEXT_TIMEOUT = 15
 # is just the fallback if Supabase is unreachable.
 DEFAULT_MAX_BODY_CHARS = 24000
 MAX_BODY_CHARS = DEFAULT_MAX_BODY_CHARS
+# Below this, a captured feed body reads as a teaser paragraph, not the real
+# article — most publisher feeds (TechCrunch, The Verge, Ars Technica, and
+# nearly every other non-lab-blog source in ingest_sources) put only a
+# one-paragraph <description> in the feed itself, hundreds of chars, even
+# though the live page runs to several times that. Downstream, summarizer
+# length targets scale off however many words this body has (see
+# quality.scaled_word_target) — a short article isn't just possible here,
+# it's the deterministic result of feeding the writer a snippet. Checked
+# regardless of the per-source requires_full_text_fetch flag, which defaults
+# false and isn't exposed in /admin/sources, so it can't be relied on alone.
+TEASER_CHARS = 1500
 
 
 def canonical_url(url: str) -> str:
@@ -175,6 +188,22 @@ def fetch_rss_atom(source: dict, etag_cache: dict, dry_run: bool) -> list[dict]:
     articles = []
     cutoff = datetime.now(timezone.utc) - timedelta(hours=26)
 
+    # deduplicate.py drops anything already in seen_articles anyway, so an
+    # entry this pipeline ingested on a prior run doesn't need — and, now that
+    # TEASER_CHARS applies broadly, can't cheaply afford — a repeat live-page
+    # fetch: the 26h cutoff means most entries in this feed were already
+    # fetched (and possibly already full-text-fetched) on an earlier run
+    # today. Checked once per feed, up front, so the loop below only pays for
+    # a real page fetch on genuinely new entries. If this lookup fails, treat
+    # everything as unseen rather than silently skip real candidates.
+    try:
+        unseen_guids = filter_unseen(
+            [getattr(e, "id", "") or getattr(e, "link", "") for e in feed.entries]
+        )
+    except Exception as exc:
+        log.debug("unseen-guid prefetch failed for %s, assuming all unseen: %s", source["name"], exc)
+        unseen_guids = None
+
     for entry in feed.entries:
         pub = None
         for field in ("published_parsed", "updated_parsed"):
@@ -193,28 +222,40 @@ def fetch_rss_atom(source: dict, etag_cache: dict, dry_run: bool) -> list[dict]:
         if not link:
             continue
 
-        # For Google News sources, resolve the redirect to the real article URL
-        # so URL-based deduplication works against articles from direct feeds.
-        if source.get("resolve_redirect") and "news.google.com" in link:
+        guid = getattr(entry, "id", link) or link
+
+        # Google News links are redirect stubs, not the article itself —
+        # resolve them so URL-based dedup, the stored source_url, and any
+        # full-text fetch below all land on the real publisher page rather
+        # than a Google interstitial. (This used to be gated on a
+        # per-source `resolve_redirect` flag that was never an actual column
+        # on ingest_sources, so it was permanently false — every Google News
+        # link went unresolved regardless of source config.)
+        if "news.google.com" in link:
             link = resolve_redirect(link)
 
         body = ""
         body_truncated = False
         for field in ("summary", "content"):
             raw = getattr(entry, field, None)
-            if raw:
-                if isinstance(raw, list):
-                    raw = raw[0].get("value", "") if raw else ""
-                soup = BeautifulSoup(raw or "", "lxml")
-                full_text = soup.get_text(separator=" ", strip=True)
+            if not raw:
+                continue
+            if isinstance(raw, list):
+                raw = raw[0].get("value", "") if raw else ""
+            soup = BeautifulSoup(raw or "", "lxml")
+            full_text = soup.get_text(separator=" ", strip=True)
+            # A feed can carry both a short <description> and a fuller
+            # <content:encoded>; keep whichever field actually has more text
+            # instead of settling for the first one found.
+            if len(full_text) > len(body):
                 body = full_text[:MAX_BODY_CHARS]
                 body_truncated = len(full_text) > MAX_BODY_CHARS
-                if body:
-                    break
 
-        if source.get("requires_full_text_fetch") and len(body) < 200:
-            fetched_text, body_truncated = fetch_full_text(link)
-            body = fetched_text or body
+        is_unseen = unseen_guids is None or guid in unseen_guids
+        if is_unseen and (source.get("requires_full_text_fetch") or len(body) < TEASER_CHARS):
+            fetched_text, fetched_truncated = fetch_full_text(link)
+            if len(fetched_text) > len(body):
+                body, body_truncated = fetched_text, fetched_truncated
 
         title = getattr(entry, "title", "").strip()
         if _is_cyrillic_dominant(title):
@@ -222,7 +263,7 @@ def fetch_rss_atom(source: dict, etag_cache: dict, dry_run: bool) -> list[dict]:
             continue
 
         articles.append({
-            "guid": getattr(entry, "id", link) or link,
+            "guid": guid,
             "title": title,
             "url": canonical_url(link),
             "published": pub.isoformat() if pub else datetime.now(timezone.utc).isoformat(),
