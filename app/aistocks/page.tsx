@@ -57,8 +57,8 @@ export default async function AiStocksPage() {
         <div>
           <h1 className="text-3xl font-semibold tw-heading">AI Stocks</h1>
           <p className="text-sm tw-muted mt-1 font-mono">
-            {updatedAt ? `Updated ${updatedAt} UTC` : "Updating…"} · 15 min intervals
-            during market hours
+            {updatedAt ? `Updated ${updatedAt} UTC` : "Updating…"} · refreshed every 4
+            hours on weekdays
           </p>
           <div className="mt-2">
             <ShareButtons
