@@ -88,6 +88,23 @@ create table public.seen_articles (
 
 alter table public.seen_articles enable row level security;
 
+-- Novelty check as an RPC rather than a `guid=in.(…)` query string.
+-- With ~70-char GUIDs a 500-item batch builds a 36KB URL, well past the
+-- usual 8KB limit, and 118 of the existing GUIDs contain commas, which
+-- would corrupt the in.() list regardless of batch size. A POSTed array
+-- has neither problem.
+create function public.unseen_guids(candidates text[])
+returns setof text
+language sql
+stable
+security invoker
+set search_path = ''
+as $fn$
+  select c
+  from unnest(candidates) as c
+  where not exists (select 1 from public.seen_articles s where s.guid = c);
+$fn$;
+
 -- ── Run history ─────────────────────────────────────────────────
 
 create table public.ingest_runs (

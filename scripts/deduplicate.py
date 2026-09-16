@@ -24,7 +24,7 @@ import yaml
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-from ingest_store import filter_unseen
+from ingest_store import current_run_id, filter_unseen, update_run_stats
 
 ROOT = Path(__file__).parent.parent
 DATA_DIR = ROOT / "_data"
@@ -141,6 +141,7 @@ def main() -> int:
 
     deduped = deduplicate_batch(articles, unseen_guids)
     log.info("final batch size: %d articles", len(deduped))
+    update_run_stats(current_run_id(), fetched=len(articles), deduped=len(deduped))
 
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     with DEDUPED_FILE.open("w") as f:

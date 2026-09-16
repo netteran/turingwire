@@ -42,6 +42,9 @@ jobs:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      # scripts/ import each other directly, and the stage scripts attach
+      # their counters to the run opened by the first step.
+      PYTHONPATH: scripts
 
     steps:
       - uses: actions/checkout@v4
@@ -73,7 +76,6 @@ jobs:
           " >> "$GITHUB_OUTPUT"
         env:
           TRIGGER: ${{ inputs.trigger || 'schedule' }}
-          PYTHONPATH: scripts
 
       # ── Articles ────────────────────────────────────────────────
 
@@ -83,6 +85,8 @@ jobs:
       - name: Deduplicate
         if: ${{ !inputs.dry_run }}
         run: python scripts/deduplicate.py
+        env:
+          INGEST_RUN_ID: ${{ steps.run.outputs.run_id }}
 
       - name: Classify articles
         if: ${{ !inputs.dry_run }}
@@ -96,12 +100,14 @@ jobs:
         if: ${{ !inputs.dry_run }}
         run: python scripts/summarize_news.py
         env:
+          INGEST_RUN_ID: ${{ steps.run.outputs.run_id }}
           SUMMARIZER_MODEL: ${{ vars.SUMMARIZER_MODEL || 'gpt-4o-mini' }}
 
       - name: Summarize research
         if: ${{ !inputs.dry_run }}
         run: python scripts/summarize_research.py
         env:
+          INGEST_RUN_ID: ${{ steps.run.outputs.run_id }}
           SUMMARIZER_MODEL: ${{ vars.SUMMARIZER_MODEL || 'gpt-4o-mini' }}
 
       - name: Sync company records
@@ -161,7 +167,6 @@ jobs:
           finish_run(int(os.environ['RUN_ID']), os.environ['STATUS'], {}, os.environ.get('ERR') or None)
           "
         env:
-          PYTHONPATH: scripts
           RUN_ID: ${{ steps.run.outputs.run_id }}
           STATUS: ${{ job.status == 'success' && 'success' || 'failed' }}
           ERR: ${{ job.status != 'success' && format('Job finished with status {0}', job.status) || '' }}

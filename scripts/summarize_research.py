@@ -21,7 +21,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 
 from quality import parse_summary_output, passes_quality
 from supabase_store import recent_articles, write_post
-from ingest_store import mark_seen
+from ingest_store import current_run_id, mark_seen, update_run_stats
 
 ROOT = Path(__file__).parent.parent
 DATA_DIR = ROOT / "_data"
@@ -218,6 +218,7 @@ def main() -> int:
     log.info("quality gate skipped %d summaries", skipped)
 
     mark_seen(newly_seen)
+    update_run_stats(current_run_id(), research_published=new_posts, research_skipped=skipped)
 
     log.info("wrote %d new research posts", new_posts)
     return 0

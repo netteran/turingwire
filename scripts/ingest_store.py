@@ -26,8 +26,8 @@ from supabase_store import SupabaseError, _headers, _rest, TIMEOUT
 
 log = logging.getLogger("ingest_store")
 
-# Postgres rejects an `in.()` filter with an empty list, and a URL with
-# thousands of ids blows past header limits, so membership checks are chunked.
+# Batch size for GUID round-trips. These go in a POST body, so the limit is
+# payload size rather than URL length.
 CHUNK = 500
 
 
@@ -90,25 +90,33 @@ def record_source_result(
 # --------------------------------------------------------------------------
 
 def filter_unseen(guids: list[str]) -> set[str]:
-    """Return the subset of `guids` not already recorded."""
+    """Return the subset of `guids` not already recorded.
+
+    Posts the candidates to the unseen_guids RPC. An earlier version put them
+    in a `guid=in.(…)` query string, which at real batch sizes built a 36KB
+    URL and broke outright on the GUIDs containing commas.
+    """
     if not guids:
         return set()
 
-    seen: set[str] = set()
     unique = list({g for g in guids if g})
+    unseen: set[str] = set()
+
     for i in range(0, len(unique), CHUNK):
         batch = unique[i : i + CHUNK]
-        quoted = ",".join('"' + g.replace('"', '\\"') + '"' for g in batch)
-        resp = requests.get(
-            _rest("seen_articles"),
+        resp = requests.post(
+            _rest("rpc/unseen_guids"),
             headers=_headers(),
-            params={"select": "guid", "guid": f"in.({quoted})"},
+            json={"candidates": batch},
             timeout=TIMEOUT,
         )
-        resp.raise_for_status()
-        seen.update(r["guid"] for r in resp.json())
+        if resp.status_code >= 400:
+            raise SupabaseError(
+                f"unseen_guids failed ({resp.status_code}): {resp.text[:300]}"
+            )
+        unseen.update(resp.json())
 
-    return {g for g in unique if g not in seen}
+    return unseen
 
 
 def mark_seen(guids: list[str]) -> int:
@@ -159,15 +167,24 @@ def start_run(trigger: str = "schedule") -> int | None:
         return None
 
 
-def finish_run(run_id: int | None, status: str, stats: dict, error: str | None = None) -> None:
+def finish_run(
+    run_id: int | None, status: str, stats: dict | None = None, error: str | None = None
+) -> None:
+    """Close a run. Leaves `stats` alone unless given some.
+
+    The workflow's closing step has no counters of its own — those were
+    written by each stage via update_run_stats — so passing an empty dict
+    through to the row would erase them.
+    """
     if run_id is None:
         return
     payload = {
         "finished_at": datetime.now(timezone.utc).isoformat(),
         "status": status,
-        "stats": stats,
         "error": (error or "")[:4000] or None,
     }
+    if stats:
+        payload["stats"] = stats
     try:
         requests.patch(
             _rest("ingest_runs"),
@@ -178,6 +195,12 @@ def finish_run(run_id: int | None, status: str, stats: dict, error: str | None =
         )
     except requests.RequestException as exc:
         log.warning("could not close ingest run: %s", exc)
+
+
+def current_run_id() -> int | None:
+    """The run opened by the workflow's first step, passed down via env."""
+    raw = os.environ.get("INGEST_RUN_ID", "").strip()
+    return int(raw) if raw.isdigit() else None
 
 
 def update_run_stats(run_id: int | None, **stats) -> None:
