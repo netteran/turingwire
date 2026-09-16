@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-summarize_research.py — Generate research summaries using OpenAI gpt-4o-mini.
+summarize_research.py — Generate research summaries via OpenAI or Gemini (see llm.py).
 
 Processes articles classified as category=research from classified_articles.json.
 Uses structured headings: Problem, Method, Results, Limitations, Why it matters.
@@ -15,14 +15,13 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-from openai import OpenAI
 from slugify import slugify
-from tenacity import retry, stop_after_attempt, wait_exponential
 
 from quality import parse_summary_output, passes_quality, scaled_word_target
 from supabase_store import recent_articles, write_post
 from ingest_store import current_run_id, mark_seen, update_run_stats, get_setting, get_setting_int
 from prompts import get_prompt, render
+from llm import call_llm, required_env_var
 
 ROOT = Path(__file__).parent.parent
 DATA_DIR = ROOT / "_data"
@@ -66,23 +65,7 @@ logging.basicConfig(
 log = logging.getLogger("summarize_research")
 
 
-@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
-def _call(client: OpenAI, system: str, user: str, temperature: float = TEMPERATURE, json_mode: bool = False) -> str:
-    kwargs = {
-        "model": MODEL,
-        "temperature": temperature,
-        "messages": [
-            {"role": "system", "content": system},
-            {"role": "user", "content": user},
-        ],
-    }
-    if json_mode:
-        kwargs["response_format"] = {"type": "json_object"}
-    response = client.chat.completions.create(**kwargs)
-    return (response.choices[0].message.content or "").strip()
-
-
-def summarize_one(client: OpenAI, article: dict) -> tuple[str, str]:
+def summarize_one(article: dict) -> tuple[str, str]:
     """Two-stage pipeline: extract facts → write article. Returns (description, summary_body)."""
     body = article.get("body") or ""
     title = article.get("title", "")
@@ -100,8 +83,8 @@ def summarize_one(client: OpenAI, article: dict) -> tuple[str, str]:
 
     if is_real_paper(article):
         # Stage 1 — extract structured facts from the paper (temperature 0 for determinism)
-        extracted = _call(
-            client,
+        extracted = call_llm(
+            MODEL,
             get_prompt("prompt.research_extract.system"),
             render("prompt.research_extract.user", title=title, authors=authors_str or "unknown", body=body),
             temperature=0,
@@ -122,8 +105,8 @@ def summarize_one(client: OpenAI, article: dict) -> tuple[str, str]:
         # News about research — reuse the generic news extractor, then a
         # softer reporting prompt with no Method/Results template (avoids
         # fabricated metrics for a source that isn't the primary paper).
-        extracted = _call(
-            client,
+        extracted = call_llm(
+            MODEL,
             get_prompt("prompt.news_extract.system"),
             render("prompt.news_extract.user", title=title, body=body),
             temperature=0,
@@ -138,7 +121,7 @@ def summarize_one(client: OpenAI, article: dict) -> tuple[str, str]:
             url=article.get("url", ""),
         )
 
-    raw = _call(client, get_prompt("prompt.research_write.system"), prompt, json_mode=True)
+    raw = call_llm(MODEL, get_prompt("prompt.research_write.system"), prompt, temperature=TEMPERATURE, json_mode=True)
     _title, description, summary = parse_summary_output(raw)
     return description, summary
 
@@ -155,9 +138,9 @@ def main() -> int:
     global MODEL
     MODEL = get_setting("summarizer_model", MODEL)
 
-    api_key = os.environ.get("OPENAI_API_KEY")
-    if not api_key:
-        log.error("OPENAI_API_KEY not set")
+    required_key = required_env_var(MODEL)
+    if not os.environ.get(required_key):
+        log.error("%s not set (required for model %r)", required_key, MODEL)
         return 1
 
     if not CLASSIFIED_FILE.exists():
@@ -169,7 +152,6 @@ def main() -> int:
 
     newly_seen: list[str] = []
 
-    client = OpenAI(api_key=api_key)
     research_articles = [a for a in articles if "research" in a.get("categories", [])]
     log.info("summarizing %d research articles", len(research_articles))
 
@@ -178,7 +160,7 @@ def main() -> int:
     for article in research_articles:
         title = article.get("title", "")
         try:
-            description, summary = summarize_one(client, article)
+            description, summary = summarize_one(article)
         except Exception as exc:
             log.warning("summarization failed for '%s': %s", title, exc)
             continue

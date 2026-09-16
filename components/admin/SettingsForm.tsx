@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { updateSetting } from "@/app/admin/actions";
 import type { Setting } from "@/lib/admin";
+import { ModelPicker } from "./ModelPicker";
 
 export function SettingsForm({ settings }: { settings: Setting[] }) {
   const [values, setValues] = useState<Record<string, string>>(
@@ -31,11 +32,18 @@ export function SettingsForm({ settings }: { settings: Setting[] }) {
           <div className="flex flex-wrap items-end gap-3">
             <label className="flex-1 min-w-48 text-xs font-mono tw-muted">
               {s.key}
-              <input
-                value={values[s.key] ?? ""}
-                onChange={(e) => setValues((v) => ({ ...v, [s.key]: e.target.value }))}
-                className="tw-input w-full font-mono text-sm mt-1"
-              />
+              {s.key === "summarizer_model" ? (
+                <ModelPicker
+                  value={values[s.key] ?? ""}
+                  onChange={(v) => setValues((vals) => ({ ...vals, [s.key]: v }))}
+                />
+              ) : (
+                <input
+                  value={values[s.key] ?? ""}
+                  onChange={(e) => setValues((v) => ({ ...v, [s.key]: e.target.value }))}
+                  className="tw-input w-full font-mono text-sm mt-1"
+                />
+              )}
             </label>
             <button
               onClick={() => save(s.key)}
