@@ -26,3 +26,21 @@ export function robotsFor(
     ? { index: false, follow: true }
     : { index: true, follow: true };
 }
+
+/**
+ * Same gate for company pages: with no article where this company is the
+ * primary subject, the page is just a boilerplate header over "also
+ * mentioned" cards (or nothing at all) — a near-duplicate template repeated
+ * across every such slug. That pattern is exactly what got the thin-summary
+ * backlog excluded above, so it gets the same treatment instead of sitting
+ * in Search Console as "crawled/discovered — not indexed".
+ */
+export function shouldNoindexCompany(company: { primaryCount: number }): boolean {
+  return company.primaryCount <= 0;
+}
+
+export function robotsForCompany(company: { primaryCount: number }) {
+  return shouldNoindexCompany(company)
+    ? { index: false, follow: true }
+    : { index: true, follow: true };
+}
