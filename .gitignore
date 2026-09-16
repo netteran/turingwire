@@ -50,3 +50,6 @@ node_modules/
 
 # Migration bundle — regenerate with scripts/migrate_extract.py
 _data/migration_bundle.json
+
+# TypeScript incremental build cache
+tsconfig.tsbuildinfo

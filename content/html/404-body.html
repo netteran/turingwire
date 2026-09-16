@@ -1,0 +1,51 @@
+<div class="err-page">
+
+  <!-- Glitch 404 -->
+  <div class="glitch-wrap">
+    <span class="glitch" aria-label="404">404</span>
+  </div>
+
+  <p class="tw-muted" style="margin-top:0.75rem; font-size:1rem; max-width:30rem;">
+    This page wasn't in the training data — or it never existed.
+  </p>
+
+  <!-- Terminal simulation -->
+  <div class="terminal" role="region" aria-label="Model debug output">
+    <div class="terminal-bar">
+      <span class="dot dot-r"></span>
+      <span class="dot dot-y"></span>
+      <span class="dot dot-g"></span>
+      <span class="terminal-title">tw-retrieval-agent — bash</span>
+    </div>
+    <div class="terminal-body" id="terminal-output">
+      <div><span class="t-dim">$</span> <span class="t-acc">tw-agent</span> fetch --url "<span id="page-url" class="t-warn"></span>"</div>
+      <div id="tl-1" class="type-line t-dim" style="--chars:42;--dur:0.9s"></div>
+      <div id="tl-2" class="type-line t-dim" style="--chars:38;--dur:0.7s"></div>
+      <div id="tl-3" class="type-line t-err" style="--chars:44;--dur:0.8s"></div>
+      <div id="tl-4" class="type-line" style="--chars:48;--dur:0.85s; margin-top:0.25rem;"></div>
+      <div id="tl-5" class="type-line t-dim" style="--chars:36;--dur:0.65s"></div>
+      <div style="margin-top:0.25rem;"><span class="t-dim">$</span> <span class="cursor"></span></div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="err-nav" aria-label="Recovery links">
+    <a href="/" class="err-link err-link-primary">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      Home
+    </a>
+    <a href="/news/" class="err-link">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
+      News
+    </a>
+    <a href="/research/" class="err-link">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+      Research
+    </a>
+    <a href="/search/" class="err-link">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      Search
+    </a>
+  </nav>
+
+</div>

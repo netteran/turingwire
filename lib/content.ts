@@ -4,13 +4,20 @@ import matter from "gray-matter";
 import { marked } from "marked";
 
 /**
- * Static editorial pages (about, privacy, terms…).
+ * Static editorial pages.
  *
- * These were Jekyll pages with front matter and markdown bodies. They stay as
- * markdown files in the repo — they're hand-written, rarely change, and belong
- * in version control rather than in the articles table.
+ * Two kinds, both kept in the repo rather than the articles table because
+ * they're hand-written and rarely change:
+ *
+ *   content/*.md        prose pages (about, privacy, terms…), rendered via marked
+ *   content/html/*.html pages whose original markup was worth preserving
+ *                       verbatim (the Alan Turing profile, the contact form,
+ *                       the Missions tool). Their inline <script> blocks were
+ *                       extracted to public/assets/js/page-<name>.js, since
+ *                       markup injected as HTML never executes scripts.
  */
 const CONTENT_DIR = path.join(process.cwd(), "content");
+const HTML_DIR = path.join(CONTENT_DIR, "html");
 
 export interface ContentPage {
   /** URL path, from the original Jekyll `permalink`. */
@@ -23,13 +30,21 @@ export interface ContentPage {
   redirectTo?: string;
   sitemap: boolean;
   html: string;
+  /** Extracted script to load after hydration, if the page had one. */
+  script?: string | null;
+  /** True when the markup carries a share-button placeholder. */
+  hasShareSlot?: boolean;
+  /** HTML pages get the page chrome; prose pages get the heading block. */
+  raw?: boolean;
 }
+
+export const SHARE_SLOT = '<div data-share-slot="1"></div>';
 
 function toSegments(permalink: string): string[] {
   return permalink.split("/").filter(Boolean);
 }
 
-export function getContentPages(): ContentPage[] {
+function readMarkdownPages(): ContentPage[] {
   if (!fs.existsSync(CONTENT_DIR)) return [];
 
   return fs
@@ -48,13 +63,47 @@ export function getContentPages(): ContentPage[] {
         redirectTo: data.redirect_to,
         sitemap: data.sitemap !== false,
         html: marked.parse(content, { async: false }) as string,
+        raw: false,
       };
     });
 }
 
+interface HtmlManifestEntry {
+  permalink: string;
+  title: string;
+  description: string;
+  script: string | null;
+}
+
+function readHtmlPages(): ContentPage[] {
+  const manifestPath = path.join(HTML_DIR, "manifest.json");
+  if (!fs.existsSync(manifestPath)) return [];
+
+  const manifest = JSON.parse(
+    fs.readFileSync(manifestPath, "utf8"),
+  ) as Record<string, HtmlManifestEntry>;
+
+  return Object.entries(manifest).map(([name, entry]) => {
+    const html = fs.readFileSync(path.join(HTML_DIR, `${name}.html`), "utf8");
+    return {
+      permalink: entry.permalink,
+      segments: toSegments(entry.permalink),
+      title: entry.title,
+      description: entry.description,
+      sitemap: true,
+      html,
+      script: entry.script,
+      hasShareSlot: html.includes(SHARE_SLOT),
+      raw: true,
+    };
+  });
+}
+
+export function getContentPages(): ContentPage[] {
+  return [...readMarkdownPages(), ...readHtmlPages()];
+}
+
 export function getContentPage(segments: string[]): ContentPage | null {
   const target = segments.join("/");
-  return (
-    getContentPages().find((p) => p.segments.join("/") === target) ?? null
-  );
+  return getContentPages().find((p) => p.segments.join("/") === target) ?? null;
 }

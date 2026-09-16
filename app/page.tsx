@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Script from "next/script";
 
 import { PostCard } from "@/components/PostCard";
 import { BreakingStrip } from "@/components/BreakingStrip";
@@ -7,6 +8,7 @@ import { DayLabel } from "@/components/DayLabel";
 import { PartnerSpotlight } from "@/components/PartnerSpotlight";
 import { AiIndexCard } from "@/components/AiIndexCard";
 import { TopMovers } from "@/components/TopMovers";
+import { StocksBootstrap } from "@/components/StocksBootstrap";
 
 import {
   getRecentArticles,
@@ -81,6 +83,8 @@ export default async function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
       />
+
+      <StocksBootstrap snapshot={stocks} indexHistory={indexHistory} />
 
       {breaking && <BreakingStrip post={breaking} />}
 
@@ -243,6 +247,12 @@ export default async function HomePage() {
           </aside>
         </div>
       </div>
+
+      <Script
+        src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"
+        strategy="afterInteractive"
+      />
+      <Script src="/assets/js/stocks.js" strategy="afterInteractive" />
     </>
   );
 }

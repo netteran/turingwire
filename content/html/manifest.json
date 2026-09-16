@@ -1,0 +1,20 @@
+{
+  "alan-turing": {
+    "permalink": "/alan-turing/",
+    "title": "Alan Turing",
+    "description": "A comprehensive profile of Alan Turing (1912\u20131954): mathematician, cryptanalyst, computer scientist, and the foundational intellect behind modern computing and artificial intelligence.",
+    "script": null
+  },
+  "contact": {
+    "permalink": "/contact/",
+    "title": "Contact",
+    "description": "Get in touch with Turing Wire \u2014 sponsorship, source suggestions, bug reports, or general questions.",
+    "script": "/assets/js/page-contact.js"
+  },
+  "missions": {
+    "permalink": "/missions/",
+    "title": "Missions",
+    "description": "Standing AI-driven missions: tell Turing Wire what to track, how often to brief you, and in what format. Missions persist locally and rerun on every visit.",
+    "script": "/assets/js/page-missions.js"
+  }
+}
