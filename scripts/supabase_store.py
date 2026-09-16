@@ -150,6 +150,11 @@ def build_row(
     if isinstance(secondary, str):
         secondary = [secondary]
 
+    # Collapse casing variants onto one spelling per slug before storing.
+    raw_company = classification.get("company") or article.get("source_company") or None
+    company = canonical_company(raw_company) if raw_company else None
+    secondary_names = [canonical_company(str(c)) for c in secondary]
+
     return {
         "category": primary,
         "tags": tags,
@@ -160,8 +165,8 @@ def build_row(
         "published_at": pub_date.astimezone(timezone.utc).isoformat(),
         "subcategory": classification.get("subcategory", "other") or "other",
         "impact": impact,
-        "company": classification.get("company") or article.get("source_company") or None,
-        "secondary_companies": [str(c) for c in secondary],
+        "company": company,
+        "secondary_companies": secondary_names,
         "classification_confidence": confidence,
         "source_publisher": article.get("source_name", "") or "Unknown",
         "source_url": article.get("url", "") or "",
@@ -250,6 +255,35 @@ def recent_articles(limit: int = 400) -> list[dict]:
 # --------------------------------------------------------------------------
 # Companies / stories
 # --------------------------------------------------------------------------
+
+_canonical_cache: dict[str, str] | None = None
+
+
+def canonical_company(name: str) -> str:
+    """Map a company name onto the spelling already stored for its slug.
+
+    The classifier emits whatever casing the source used, so the same company
+    arrives as both "NVIDIA" and "Nvidia". Both slugify to `nvidia`, but the
+    company page resolves its articles by *name* — so the minority spelling's
+    coverage silently vanished from /companies/nvidia/. Collapsing on write
+    keeps one spelling per slug.
+    """
+    global _canonical_cache
+    if not name:
+        return name
+
+    if _canonical_cache is None:
+        resp = requests.get(
+            _rest("companies"),
+            headers=_headers(),
+            params={"select": "slug,name"},
+            timeout=TIMEOUT,
+        )
+        resp.raise_for_status()
+        _canonical_cache = {r["slug"]: r["name"] for r in resp.json()}
+
+    return _canonical_cache.get(slugify(name), name)
+
 
 def upsert_company(name: str, description: str | None = None) -> None:
     payload = {"slug": slugify(name), "name": name}
