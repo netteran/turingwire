@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase-server";
 import { isAdmin } from "@/lib/supabase-server";
+import type { ArticleCategory, ArticleImpact, ArticleStatus } from "@/lib/types";
 
 /**
  * Mutations for the admin pages.
@@ -73,5 +74,33 @@ export async function setArticleStatus(id: number, status: "published" | "archiv
   const { error } = await supabase.from("articles").update({ status }).eq("id", id);
   if (error) throw error;
   revalidatePath("/admin/articles");
+  revalidatePath("/");
+}
+
+export interface ArticleEdit {
+  title: string;
+  description: string | null;
+  body: string | null;
+  category: ArticleCategory;
+  subcategory: string;
+  company: string | null;
+  impact: ArticleImpact;
+  status: ArticleStatus;
+  tags: string[];
+}
+
+/**
+ * Full content edit, as opposed to setArticleStatus's publish/unpublish
+ * toggle. `slug` isn't part of the patch (it's URL identity and legacy
+ * redirect bookkeeping, so it stays immutable here) but is needed to
+ * revalidate the live page.
+ */
+export async function updateArticle(id: number, slug: string, patch: ArticleEdit) {
+  const supabase = await guard();
+  const { error } = await supabase.from("articles").update(patch).eq("id", id);
+  if (error) throw error;
+  revalidatePath("/admin/articles");
+  revalidatePath(`/admin/articles/${id}`);
+  revalidatePath(`/${patch.category}/${slug}/`);
   revalidatePath("/");
 }

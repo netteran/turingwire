@@ -1,4 +1,5 @@
 import { createClient } from "./supabase-server";
+import type { Article } from "./types";
 
 /**
  * Admin data access. Every query runs through the caller's session, so RLS
@@ -69,6 +70,23 @@ export async function getSettings(): Promise<Setting[]> {
   const { data, error } = await supabase.from("settings").select("*").order("key");
   if (error) throw error;
   return (data ?? []) as Setting[];
+}
+
+/**
+ * Fetches an article by id for editing, regardless of status. The public
+ * lib/queries.ts getArticle() runs on the anon client and can only ever see
+ * published rows, so drafts and archived articles need this session-scoped
+ * read instead (covered by the "admins read all articles" RLS policy).
+ */
+export async function getArticleById(id: number): Promise<Article | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("articles")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  return data as Article | null;
 }
 
 export interface AdminStats {
