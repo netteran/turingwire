@@ -259,6 +259,49 @@ Source: {source_name}
 URL: {url}"""
 
 # --------------------------------------------------------------------------
+# Story synthesis — stage: cross-reference claims across a cluster of
+# already-published articles (build_stories.py)
+# --------------------------------------------------------------------------
+
+STORY_SYNTHESIZE_SYSTEM = (
+    "You are a cross-referencing analyst for an AI industry publication. You are given "
+    "several already-published, already-fact-checked articles about the same developing "
+    "topic. Your only job is to find claims that appear across them and report, for each "
+    "claim, exactly which numbered articles state it and which (if any) contradict it. "
+    "You never introduce a claim, number, or fact that is not explicitly present in the "
+    "provided article text, and you never cite an article index that isn't given to you."
+)
+
+STORY_SYNTHESIZE_USER = """Below are {count} already-published articles about the same developing topic, each numbered [0], [1], etc.
+
+{articles}
+
+Return ONLY a JSON object with these exact fields:
+
+{{
+  "title": "<a specific, accurate headline for the overall thread, no marketing superlatives, ≤ 90 chars>",
+  "lead": "<one or two sentences summarizing the current state of the thread, grounded only in the claims below>",
+  "claims": [
+    {{
+      "text": "<one specific, checkable claim>",
+      "supporting": [<article indices that explicitly state this>],
+      "contradicting": [<article indices that explicitly contradict this, or empty>],
+      "confidence": <float 0.0-1.0, how clearly the source text states this>,
+      "note": "<optional one-clause note on the disagreement, only if contradicting is non-empty>"
+    }}
+  ]
+}}
+
+Rules:
+- Extract 3-8 of the most substantive, specific claims — named figures, dates, decisions, numbers, direct quotes. Skip vague or scene-setting statements.
+- Every claim's "supporting" and "contradicting" arrays must point ONLY at article indices actually provided above. Do not invent an index.
+- A claim must have at least one entry in "supporting" or "contradicting" — do not include a claim traceable to nothing.
+- Two articles merely both mentioning the same event does not mean they corroborate a specific claim — only mark an article as supporting a claim if it actually states that specific fact.
+- Do NOT invent numbers, quotes, or figures not present verbatim (or as a clear paraphrase of an explicit statement) in the source text.
+- If the articles disagree on a fact, include it as a claim with both "supporting" and "contradicting" filled in, and explain the disagreement in one clause in "note" — do not resolve the disagreement yourself.
+- "title" and "lead" must be grounded only in the claims you extracted, not in outside knowledge."""
+
+# --------------------------------------------------------------------------
 # Registry
 # --------------------------------------------------------------------------
 
@@ -275,6 +318,8 @@ DEFAULTS: dict[str, str] = {
     "prompt.research_write.system": RESEARCH_WRITE_SYSTEM,
     "prompt.research_write.user": RESEARCH_WRITE_USER,
     "prompt.research_reporting_write.user": RESEARCH_REPORTING_WRITE_USER,
+    "prompt.story_synthesize.system": STORY_SYNTHESIZE_SYSTEM,
+    "prompt.story_synthesize.user": STORY_SYNTHESIZE_USER,
 }
 
 
