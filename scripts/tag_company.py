@@ -22,6 +22,8 @@ import yaml
 from openai import OpenAI
 from tenacity import retry, stop_after_attempt, wait_exponential
 
+from prompts import render
+
 ROOT = Path(__file__).parent.parent
 DATA_DIR = ROOT / "_data"
 FEEDS_DIR = ROOT / "feeds"
@@ -35,19 +37,6 @@ logging.basicConfig(
 log = logging.getLogger("tag_company")
 
 MODEL = "gpt-4o-mini"
-
-LLM_PROMPT = """Which company or companies are PRIMARILY featured in this article?
-Return ONLY a JSON object: {{"primary": "<name or null>", "secondary": ["<name>"]}}
-
-Use only these canonical names (null if none apply):
-OpenAI, Anthropic, Google DeepMind, Google, Microsoft, Meta, NVIDIA, AMD, Intel, TSMC,
-Apple, Amazon, Mistral, Hugging Face, Cohere, Stability AI, Runway, ElevenLabs, Perplexity,
-Databricks, Cognition, Suno, Alibaba, Palantir, Snowflake, Salesforce, ServiceNow, Oracle,
-IBM, UiPath, xAI, DeepSeek, Cerebras, Scale AI, Character.AI, ASML, Applied Materials,
-Lam Research, Micron, ARM, Broadcom, Super Micro, Baidu
-
-Title: {title}
-Text: {text}"""
 
 
 def load_aliases() -> dict[str, list[str]]:
@@ -81,7 +70,7 @@ def find_companies_deterministic(
 
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
 def llm_tag(client: OpenAI, title: str, text: str) -> dict:
-    prompt = LLM_PROMPT.format(title=title, text=text[:1500])
+    prompt = render("prompt.tag_company.user", title=title, text=text[:1500])
     response = client.chat.completions.create(
         model=MODEL,
         temperature=0.0,

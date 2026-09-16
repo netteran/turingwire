@@ -19,9 +19,10 @@ from openai import OpenAI
 from slugify import slugify
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-from quality import parse_summary_output, passes_quality
+from quality import parse_summary_output, passes_quality, scaled_word_target
 from supabase_store import recent_articles, write_post
-from ingest_store import current_run_id, mark_seen, update_run_stats
+from ingest_store import current_run_id, mark_seen, update_run_stats, get_setting_int
+from prompts import get_prompt, render
 
 ROOT = Path(__file__).parent.parent
 DATA_DIR = ROOT / "_data"
@@ -29,9 +30,12 @@ CLASSIFIED_FILE = DATA_DIR / "classified_articles.json"
 
 MODEL = os.environ.get("SUMMARIZER_MODEL", "gpt-4o-mini")
 TEMPERATURE = 0.0
-# No floor that forces padding; ceiling allows real depth for genuine papers.
-MIN_WORDS = 200
-MAX_WORDS = 750
+# Length follows substance, not a fixed target: scaled_word_target() grows the
+# ceiling with how much source material there is, up to the
+# `research_max_words` setting. These are just its floors.
+MIN_WORDS_FLOOR = 200
+MAX_WORDS_FLOOR = 700
+DEFAULT_MAX_WORDS_CAP = 2200
 
 # Source venues that genuinely host primary research (papers), beyond arXiv.
 PAPER_VENUES = (
@@ -57,98 +61,80 @@ logging.basicConfig(
 )
 log = logging.getLogger("summarize_research")
 
-SYSTEM_PROMPT = (
-    "You are an ML research engineer with strong technical writing skills. "
-    "Summarize papers for engineers and researchers deciding whether to read the full work. "
-    "Use precise terminology. Do not soften jargon for a general audience."
-)
-
-USER_PROMPT = """Summarize the following AI research paper.
-
-Return ONLY a single JSON object with exactly these keys:
-- "meta": one sentence, 120–155 characters, describing the paper's contribution for search snippets. No quotes.
-- "body": Markdown using these exact headings:
-  **Problem** — what gap in capability or literature does this address?
-  **Method** — the core technical contribution. Be specific: architecture, loss, data, training compute if disclosed.
-  **Results** — headline numbers vs named baselines on named benchmarks, ONLY where the source provides them.
-  **Limitations** — what the authors flag, plus any obvious ones they don't.
-  **Why it matters** — implications for downstream work. This section MUST include a natural contextual citation linking to the source: e.g. "as published in [{source_name}]({url})" or "available on [arXiv]({url})".
-
-Constraints for "body":
-- Length follows substance: up to {min_words}–{max_words} words, but never pad. A dense, shorter summary is better than a long one.
-- Use precise ML terminology. This is for an expert audience.
-- CRITICAL — do not fabricate. Cite ONLY numbers, baselines, benchmarks, and method details that appear in the provided text. If the text gives no quantitative results, write "the available text does not report quantitative results" in the Results section. Never estimate, infer, or supply plausible-sounding figures or model names that are not in the source.
-- If the work is preprint and unreviewed, state that in the Problem section.
-- Do not add a standalone Authors/Source footer block — author names belong in the Method or Problem section if relevant.
-
-Paper title: {title}
-Authors: {authors}
-Abstract / body:
-{body}
-Source: {source_name}
-URL: {url}
-arXiv ID: {arxiv_id}"""
-
-# Used when the item is news *about* research (no primary paper). Avoids the
-# Method/Results template that induces fabricated metrics.
-REPORTING_PROMPT = """Summarize the following article, which reports on AI research but is NOT the primary paper.
-
-Return ONLY a single JSON object with exactly these keys:
-- "meta": one sentence, 120–155 characters, for search snippets. No quotes.
-- "body": 2–4 tight Markdown paragraphs covering what the research claims, who did it, and any concrete findings the article actually states. Treat this as secondary reporting.
-
-Hard rules for "body":
-- Length follows substance ({min_words}–{max_words} words max); never pad.
-- Do NOT fabricate. Use only figures, model names, and benchmarks explicitly present in the text below. Do not produce a Method/Results breakdown or invent metrics.
-- Make clear this is reporting on research, not a primary paper.
-- Reference the source once as a markdown link: "[{source_name}]({url})".
-
-Article title: {title}
-Article body:
-{body}
-Source: {source_name}
-URL: {url}"""
-
 
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
+def _call(client: OpenAI, system: str, user: str, temperature: float = TEMPERATURE, json_mode: bool = False) -> str:
+    kwargs = {
+        "model": MODEL,
+        "temperature": temperature,
+        "messages": [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ],
+    }
+    if json_mode:
+        kwargs["response_format"] = {"type": "json_object"}
+    response = client.chat.completions.create(**kwargs)
+    return (response.choices[0].message.content or "").strip()
+
+
 def summarize_one(client: OpenAI, article: dict) -> tuple[str, str]:
-    """Returns (description, summary_body)."""
-    body = (article.get("body") or "")[:10000]
+    """Two-stage pipeline: extract facts → write article. Returns (description, summary_body)."""
+    body = article.get("body") or ""
+    title = article.get("title", "")
     authors_str = ", ".join(article.get("authors", [])[:8])
     if len(article.get("authors", [])) > 8:
         authors_str += " et al."
 
+    max_words_cap = get_setting_int("research_max_words", DEFAULT_MAX_WORDS_CAP)
+    min_words, max_words = scaled_word_target(
+        len(body.split()),
+        min_floor=MIN_WORDS_FLOOR,
+        max_floor=MAX_WORDS_FLOOR,
+        max_cap=max_words_cap,
+    )
+
     if is_real_paper(article):
-        prompt = USER_PROMPT.format(
-            min_words=MIN_WORDS,
-            max_words=MAX_WORDS,
-            title=article.get("title", ""),
+        # Stage 1 — extract structured facts from the paper (temperature 0 for determinism)
+        extracted = _call(
+            client,
+            get_prompt("prompt.research_extract.system"),
+            render("prompt.research_extract.user", title=title, authors=authors_str or "unknown", body=body),
+            temperature=0,
+        )
+        # Stage 2 — write the article from the extracted facts
+        prompt = render(
+            "prompt.research_write.user",
+            min_words=min_words,
+            max_words=max_words,
+            title=title,
             authors=authors_str or "unknown",
-            body=body,
+            body=extracted,
             source_name=article.get("source_name", ""),
             url=article.get("url", ""),
             arxiv_id=article.get("arxiv_id", ""),
         )
     else:
-        # News about research — softer prompt, no Method/Results template.
-        prompt = REPORTING_PROMPT.format(
-            min_words=MIN_WORDS,
-            max_words=MAX_WORDS,
-            title=article.get("title", ""),
-            body=body,
+        # News about research — reuse the generic news extractor, then a
+        # softer reporting prompt with no Method/Results template (avoids
+        # fabricated metrics for a source that isn't the primary paper).
+        extracted = _call(
+            client,
+            get_prompt("prompt.news_extract.system"),
+            render("prompt.news_extract.user", title=title, body=body),
+            temperature=0,
+        )
+        prompt = render(
+            "prompt.research_reporting_write.user",
+            min_words=min_words,
+            max_words=max_words,
+            title=title,
+            body=extracted,
             source_name=article.get("source_name", ""),
             url=article.get("url", ""),
         )
-    response = client.chat.completions.create(
-        model=MODEL,
-        temperature=TEMPERATURE,
-        response_format={"type": "json_object"},
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": prompt},
-        ],
-    )
-    raw = (response.choices[0].message.content or "").strip()
+
+    raw = _call(client, get_prompt("prompt.research_write.system"), prompt, json_mode=True)
     _title, description, summary = parse_summary_output(raw)
     return description, summary
 

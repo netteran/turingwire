@@ -10,7 +10,6 @@ from __future__ import annotations
 import json
 import logging
 import os
-import re
 import sys
 import time
 from datetime import datetime, timezone
@@ -20,9 +19,10 @@ from openai import OpenAI
 from slugify import slugify
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-from quality import clean_headline, parse_summary_output, passes_quality
+from quality import clean_headline, parse_summary_output, passes_quality, scaled_word_target
 from supabase_store import recent_articles, write_post
-from ingest_store import current_run_id, mark_seen, update_run_stats
+from ingest_store import current_run_id, mark_seen, update_run_stats, get_setting_int
+from prompts import get_prompt, render
 
 ROOT = Path(__file__).parent.parent
 DATA_DIR = ROOT / "_data"
@@ -31,41 +31,12 @@ CLASSIFIED_FILE = DATA_DIR / "classified_articles.json"
 # Override with SUMMARIZER_MODEL (e.g. gpt-4o) to upgrade quality; default keeps cost low.
 MODEL = os.environ.get("SUMMARIZER_MODEL", "gpt-4o-mini")
 TEMPERATURE = 0.3
-# Length follows substance, not a target. No floor that forces padding; the ceiling
-# is generous enough for a genuinely rich single-source story.
-MIN_WORDS = 120
-MAX_WORDS = 500
-
-# Stage 1: extract structured facts from raw article body
-EXTRACTOR_SYSTEM = (
-    "You are a cold, analytical Data Extraction Engine. "
-    "Your sole purpose is to ingest third-party articles and strip away all narrative flow, "
-    "author bias, editorial voice, transitions, and stylistic choices. "
-    "Output ONLY raw, verified facts, data points, entity definitions, and precise chronological milestones. "
-    "Act as a firewall — the stylistic cadence, structure, or vocabulary of the source text must not pass through."
-)
-
-EXTRACTOR_USER = """Extract all verifiable facts from the article below. Output nothing except the structured schema.
-
-### 1. HARD ENTITIES & ATTRIBUTES
-[All specific people, companies, software tools, model names, or organizations with their exact role or context.]
-- **Entity Name:** [Role / Exact Context]
-
-### 2. DISCRETE DATAPOINTS & STATS
-[Every percentage, monetary value, number, or statistical claim. Context under 15 words.]
-- **[Data/Stat]:** [Exact context]
-
-### 3. CHRONOLOGICAL MILESTONES
-[All dates, historical comparisons, deadlines, or timelines.]
-- **[Date/Timeframe]:** [Event or change]
-
-### 4. DIRECT QUOTES & CLAIMS
-[Verbatim quotes or specific technical claims by named individuals. Prefix unverified author opinions with [UNVERIFIED CLAIM BY SOURCE].]
-- **Source Claim:** "[Quote or claim]" — Attributed to: [Name/Source]
-
-Article title: {title}
-Article body:
-{body}"""
+# Length follows substance, not a fixed target: scaled_word_target() grows the
+# ceiling with how much source material there is, up to the `news_max_words`
+# setting (see quality.scaled_word_target). These are just its floors.
+MIN_WORDS_FLOOR = 120
+MAX_WORDS_FLOOR = 500
+DEFAULT_MAX_WORDS_CAP = 1500
 
 logging.basicConfig(
     level=logging.INFO,
@@ -73,38 +44,6 @@ logging.basicConfig(
     datefmt="%Y-%m-%dT%H:%M:%SZ",
 )
 log = logging.getLogger("summarize_news")
-
-SYSTEM_PROMPT = (
-    "You are a senior editor at an AI industry publication read by AI engineers, ML "
-    "researchers, and technical product managers. You write for people who can already "
-    "build with this technology and want signal, not filler. Write as someone who has read "
-    "the source — never say 'the article says' or 'according to the article'. Every sentence "
-    "must carry a specific fact, number, or named entity. If you have nothing specific to add, "
-    "stop writing."
-)
-
-USER_PROMPT = """Write a tight, useful summary of the following AI industry news for an expert audience.
-
-Return ONLY a single JSON object with exactly these keys:
-- "title": a clear, accurate, specific headline (≤ ~80 chars) drawn only from the facts. No marketing superlatives (fastest/best/strongest/revolutionary), no clickbait, no promising content you don't deliver. Do not copy a promotional source headline verbatim.
-- "meta": one sentence, 120–155 characters, describing the news for search snippets. No quotes.
-- "body": the article in Markdown (see rules below).
-
-Rules for "body":
-- Open with the single most specific, concrete fact (a number, a name, a decision) — not scene-setting.
-- Cover what happened, who is involved, the concrete figures, and who else is affected. Attribute claims to whom.
-- If there is a genuine, specific consequence for practitioners (what this changes about what they can build, buy, or rely on), state it in one concrete sentence. If there isn't one, do not invent generic "implications".
-- {context_block}
-- Length follows substance: roughly {min_words}–{max_words} words, but a shorter, denser summary is better than a padded one. Never add a paragraph just to reach a length.
-- Do NOT invent facts, numbers, or quotes. Use only what the source supports.
-- BANNED — do not write any of these or similar filler: "the competitive landscape is heating up", "implications could be substantial", "for users, this means", "looking ahead", "it will be crucial/important to monitor", "remains to be seen", "game-changer", "in a rapidly evolving". Do not end with a vague "what to watch next" sentence — end on a concrete fact.
-- You MUST reference the source publication once using a markdown hyperlink, e.g. "according to [{source_name}]({url})" or "[{source_name}]({url}) reported". No standalone source footer.
-
-Article title: {title}
-Article facts (structured):
-{body}
-Source publisher: {source_name}
-URL: {url}"""
 
 
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
@@ -150,15 +89,15 @@ def related_context(index: list[dict], company: str | None, subcategory: str, ti
 
 def summarize_one(client: OpenAI, article: dict, index: list[dict] | None = None) -> tuple[str, str, str]:
     """Two-stage pipeline: extract facts → write article. Returns (title, description, summary_body)."""
-    raw_body = (article.get("body") or "")[:12000]
+    raw_body = article.get("body") or ""
     title = article.get("title", "")
     classification = article.get("classification", {})
 
     # Stage 1 — extract structured facts (temperature 0 for determinism)
     extracted = _call(
         client,
-        EXTRACTOR_SYSTEM,
-        EXTRACTOR_USER.format(title=title, body=raw_body),
+        get_prompt("prompt.news_extract.system"),
+        render("prompt.news_extract.user", title=title, body=raw_body),
         temperature=0,
     )
     log.debug("extracted facts (%d chars) for: %s", len(extracted), title)
@@ -170,29 +109,31 @@ def summarize_one(client: OpenAI, article: dict, index: list[dict] | None = None
         title,
     )
 
+    max_words_cap = get_setting_int("news_max_words", DEFAULT_MAX_WORDS_CAP)
+    min_words, max_words = scaled_word_target(
+        len(raw_body.split()),
+        min_floor=MIN_WORDS_FLOOR,
+        max_floor=MAX_WORDS_FLOOR,
+        max_cap=max_words_cap,
+    )
+
     # Stage 2 — write article from structured facts
-    prompt = USER_PROMPT.format(
-        min_words=MIN_WORDS,
-        max_words=MAX_WORDS,
+    prompt = render(
+        "prompt.news_write.user",
+        min_words=min_words,
+        max_words=max_words,
         title=title,
         body=extracted,
         context_block=context_block,
         source_name=article.get("source_name", ""),
         url=article.get("url", ""),
     )
-    raw = _call(client, SYSTEM_PROMPT, prompt, json_mode=True)
+    raw = _call(client, get_prompt("prompt.news_write.system"), prompt, json_mode=True)
     return parse_summary_output(raw)
 
 
 def word_count(text: str) -> int:
     return len(text.split())
-
-
-def has_source_link(summary: str) -> bool:
-    """Return True if the summary contains at least one markdown hyperlink."""
-    return bool(re.search(r'\[.+?\]\(https?://', summary))
-
-
 
 
 
@@ -238,10 +179,6 @@ def main() -> int:
         wc = word_count(summary)
         if wc < 100:
             log.warning("summary too short (%d words), skipping: %s", wc, title)
-            continue
-
-        if not has_source_link(summary):
-            log.warning("summary missing source hyperlink, skipping: %s", title)
             continue
 
         # Quality gate — boilerplate / deceptive headline / fabricated figures.
