@@ -40,6 +40,7 @@ jobs:
       - name: Mask secrets
         run: |
           echo "::add-mask::${{ secrets.OPENAI_API_KEY }}"
+          echo "::add-mask::${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
 
       - name: Fetch feeds
         run: python scripts/fetch_feeds.py ${{ github.event.inputs.dry_run == 'true' && '--dry-run' || '' }}
@@ -67,6 +68,8 @@ jobs:
         run: python scripts/summarize_news.py
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           SUMMARIZER_MODEL: ${{ vars.SUMMARIZER_MODEL || 'gpt-4o-mini' }}
 
       - name: Summarize research
@@ -75,10 +78,15 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           SUMMARIZER_MODEL: ${{ vars.SUMMARIZER_MODEL || 'gpt-4o-mini' }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
-      - name: Generate company pages
+      - name: Sync company records
         if: github.event.inputs.dry_run != 'true'
         run: python scripts/generate_company_pages.py
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
       - name: Upload operational artifacts
         if: always()
@@ -93,22 +101,15 @@ jobs:
           retention-days: 30
           if-no-files-found: ignore
 
-      - name: Count new posts
-        if: github.event.inputs.dry_run != 'true'
-        id: count
-        run: |
-          COUNT=$(git status --short _posts/ | grep "^?" | wc -l || echo 0)
-          echo "new_posts=$COUNT" >> $GITHUB_OUTPUT
-
-      - name: Commit new posts and updated data
+      - name: Commit pipeline state
         if: github.event.inputs.dry_run != 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add _posts/ _companies/ _data/seen_articles.json _data/etag_cache.json || true
+          # Articles now live in Supabase; only dedupe/ETag caches are versioned.
+          git add _data/seen_articles.json _data/etag_cache.json || true
           git diff --cached --quiet && echo "nothing to commit" && exit 0
-          git commit -m "chore(ingest): ${{ steps.count.outputs.new_posts }} new posts [skip ci]"
-          # Retry push up to 4 times with rebase to handle concurrent pipeline runs
+          git commit -m "chore(ingest): update pipeline state [skip ci]"
           for attempt in 1 2 3 4; do
             git pull --rebase origin main && git push origin main && break
             echo "push attempt $attempt failed, retrying..."

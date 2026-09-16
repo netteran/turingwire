@@ -1,4 +1,0 @@
----
-title: "Mistral"
-layout: company
----

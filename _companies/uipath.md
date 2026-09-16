@@ -1,4 +1,0 @@
----
-title: "UiPath"
-layout: company
----

@@ -1,4 +1,0 @@
----
-title: "DeepSeek"
-layout: company
----

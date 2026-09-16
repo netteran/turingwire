@@ -1,4 +1,0 @@
----
-title: "ASML"
-layout: company
----

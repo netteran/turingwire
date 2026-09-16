@@ -1,4 +1,0 @@
----
-title: "Starcloud"
-layout: company
----

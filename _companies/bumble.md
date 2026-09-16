@@ -1,4 +1,0 @@
----
-title: "Bumble"
-layout: company
----

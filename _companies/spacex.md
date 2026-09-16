@@ -1,4 +1,0 @@
----
-title: "SpaceX"
-layout: company
----

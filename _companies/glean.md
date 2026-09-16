@@ -1,4 +1,0 @@
----
-title: "Glean"
-layout: company
----

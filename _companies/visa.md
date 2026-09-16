@@ -1,4 +1,0 @@
----
-title: "Visa"
-layout: company
----

@@ -1,4 +1,0 @@
----
-title: "Krutrim"
-layout: company
----

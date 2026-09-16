@@ -1,4 +1,0 @@
----
-title: "AMD"
-layout: company
----

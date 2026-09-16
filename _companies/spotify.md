@@ -1,4 +1,0 @@
----
-title: "Spotify"
-layout: company
----

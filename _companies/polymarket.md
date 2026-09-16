@@ -1,4 +1,0 @@
----
-title: "Polymarket"
-layout: company
----

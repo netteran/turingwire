@@ -1,4 +1,0 @@
----
-title: "OpenRouter"
-layout: company
----

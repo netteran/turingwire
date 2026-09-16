@@ -1,4 +1,0 @@
----
-title: "HIVE"
-layout: company
----

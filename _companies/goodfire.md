@@ -1,4 +1,0 @@
----
-title: "Goodfire"
-layout: company
----

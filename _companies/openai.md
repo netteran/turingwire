@@ -1,4 +1,0 @@
----
-title: "OpenAI"
-layout: company
----

@@ -1,4 +1,0 @@
----
-title: "Uber"
-layout: company
----

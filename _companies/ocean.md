@@ -1,4 +1,0 @@
----
-title: "Ocean"
-layout: company
----

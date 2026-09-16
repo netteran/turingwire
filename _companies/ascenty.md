@@ -1,4 +1,0 @@
----
-title: "Ascenty"
-layout: company
----

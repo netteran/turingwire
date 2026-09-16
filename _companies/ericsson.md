@@ -1,4 +1,0 @@
----
-title: "Ericsson"
-layout: company
----

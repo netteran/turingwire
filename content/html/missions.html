@@ -1,0 +1,98 @@
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-[25px] pb-10">
+
+  <header class="mb-8 flex items-start justify-between gap-4">
+    <div class="min-w-0">
+      <h1 class="text-2xl sm:text-3xl font-semibold tw-heading mb-2">Missions</h1>
+      <p class="text-sm tw-muted leading-relaxed max-w-2xl">
+        Define what you want to keep tracking — companies, keywords, impact level — and Turing
+        Wire treats each mission as a standing goal: the index reruns on every visit, surfaces
+        only items new since you last checked, and lets you export the result as JSON or a
+        pinnable RSS-style URL.
+      </p>
+    </div>
+    <div class="flex-shrink-0 mt-1">
+      <div data-share-slot="1"></div>
+    </div>
+  </header>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+    <!-- ── Mission editor ────────────────────────────────────────────────── -->
+    <section class="lg:col-span-1">
+      <div class="tw-mission-card">
+        <h2 class="text-xs font-mono uppercase tracking-widest tw-muted mb-4">New mission</h2>
+
+        <label class="block text-xs font-mono tw-muted mb-1">Mission name</label>
+        <input id="m-name" class="tw-mission-input mb-3" placeholder="e.g. Track Anthropic enterprise deals">
+
+        <label class="block text-xs font-mono tw-muted mb-1">Companies (comma-separated)</label>
+        <input id="m-companies" class="tw-mission-input mb-3" placeholder="OpenAI, Anthropic">
+
+        <label class="block text-xs font-mono tw-muted mb-1">Keywords (comma-separated)</label>
+        <input id="m-keywords" class="tw-mission-input mb-3" placeholder="enterprise, contract, regulator">
+
+        <label class="block text-xs font-mono tw-muted mb-1">Minimum impact</label>
+        <select id="m-impact" class="tw-mission-input mb-3">
+          <option value="">any</option>
+          <option value="notable">notable+</option>
+          <option value="major">major+</option>
+          <option value="critical">critical only</option>
+        </select>
+
+        <label class="block text-xs font-mono tw-muted mb-1">Type</label>
+        <select id="m-type" class="tw-mission-input mb-3">
+          <option value="">posts &amp; stories</option>
+          <option value="post">posts only</option>
+          <option value="story">stories only</option>
+        </select>
+
+        <label class="block text-xs font-mono tw-muted mb-1">Output format</label>
+        <select id="m-format" class="tw-mission-input mb-4">
+          <option value="cards">card list</option>
+          <option value="brief">90-second brief</option>
+          <option value="json">JSON export</option>
+        </select>
+
+        <div class="flex flex-wrap gap-2">
+          <button id="m-save" class="tw-mission-btn tw-mission-btn--primary">Save mission</button>
+          <button id="m-notify" class="tw-mission-btn" title="Get a browser notification when new items match this mission">Enable alerts</button>
+        </div>
+
+        <p class="mt-3 text-[11px] font-mono tw-muted">
+          Missions are stored locally in your browser. Export below to sync.
+        </p>
+      </div>
+
+      <div class="tw-mission-card mt-4">
+        <h2 class="text-xs font-mono uppercase tracking-widest tw-muted mb-3">Sync</h2>
+        <div class="flex flex-wrap gap-2">
+          <button id="m-export" class="tw-mission-btn">Export missions</button>
+          <button id="m-import" class="tw-mission-btn">Import</button>
+        </div>
+        <textarea id="m-iobox" class="tw-mission-input mt-3" rows="3" placeholder="paste/copy mission JSON here"></textarea>
+      </div>
+    </section>
+
+    <!-- ── Mission list + results ────────────────────────────────────────── -->
+    <section class="lg:col-span-2 space-y-6">
+
+      <div id="m-empty" class="tw-mission-card text-sm tw-muted hidden">
+        No missions yet. Define one on the left to start tracking.
+      </div>
+
+      <div id="m-list" class="space-y-6"></div>
+
+      <div class="tw-mission-card">
+        <h3 class="text-xs font-mono uppercase tracking-widest tw-muted mb-2">How matching works</h3>
+        <ul class="text-xs tw-muted leading-relaxed list-disc pl-5 space-y-1">
+          <li>An item matches if <strong>any</strong> company filter matches AND <strong>any</strong> keyword filter matches (or filters are empty).</li>
+          <li>Impact is hierarchical: <code>major+</code> includes <code>major</code> and <code>critical</code>.</li>
+          <li>"Since you last checked" uses the timestamp of your previous visit to this page; new items are highlighted.</li>
+          <li>The 90-second brief format renders the top 5 matches as a contiguous read.</li>
+        </ul>
+      </div>
+
+    </section>
+  </div>
+
+</div>

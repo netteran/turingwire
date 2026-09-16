@@ -1,4 +1,0 @@
----
-title: "GlobalFoundries"
-layout: company
----

@@ -1,6 +1,4 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "jekyll",
-  "buildCommand": "JEKYLL_ENV=production bundle exec jekyll build && npx -y pagefind --site _site",
-  "outputDirectory": "_site"
+  "framework": "nextjs"
 }

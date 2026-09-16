@@ -1,4 +1,0 @@
----
-title: "CoreWeave"
-layout: company
----

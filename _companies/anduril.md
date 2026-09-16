@@ -1,4 +1,0 @@
----
-title: "Anduril"
-layout: company
----

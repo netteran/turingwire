@@ -1,4 +1,0 @@
----
-title: "Cisco"
-layout: company
----

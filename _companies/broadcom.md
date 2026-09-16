@@ -1,4 +1,0 @@
----
-title: "Broadcom"
-layout: company
----

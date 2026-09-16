@@ -1,4 +1,0 @@
----
-title: "Alibaba"
-layout: company
----

@@ -1,4 +1,0 @@
----
-title: "Bitwise"
-layout: company
----

@@ -1,4 +1,0 @@
----
-title: "BioticsAI"
-layout: company
----

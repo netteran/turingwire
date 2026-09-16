@@ -1,4 +1,0 @@
----
-title: "Poppy"
-layout: company
----

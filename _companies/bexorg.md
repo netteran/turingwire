@@ -1,4 +1,0 @@
----
-title: "Bexorg"
-layout: company
----

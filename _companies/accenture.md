@@ -1,4 +1,0 @@
----
-title: "Accenture"
-layout: company
----

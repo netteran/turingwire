@@ -1,4 +1,0 @@
----
-title: "Google"
-layout: company
----

@@ -1,4 +1,0 @@
----
-title: "ClickUp"
-layout: company
----

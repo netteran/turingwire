@@ -1,4 +1,0 @@
----
-title: "Clouted"
-layout: company
----

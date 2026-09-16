@@ -5,7 +5,7 @@ Checks the model pricing data in _data/models.yml for staleness and flags
 any models whose providers have published pricing changes in recent news.
 
 Provider pricing pages do not expose public APIs, so this script:
-  1. Checks whether any news posts in the last 30 days mention pricing changes
+  1. Checks whether any articles in the last 30 days mention pricing changes
      for tracked providers and logs a warning for manual review.
   2. Attempts to fetch the OpenAI models list via their API and flags any
      model IDs in the YAML that are no longer listed (may be deprecated).
@@ -19,20 +19,19 @@ Set OPENAI_API_KEY in the environment to enable OpenAI model-list checks.
 
 import os
 import sys
-import glob
 import logging
-import re
-from datetime import date, datetime, timedelta, timezone
+from datetime import date
 from pathlib import Path
 
 import requests
 import yaml
 
+from supabase_store import SupabaseError, recent_article_texts
+
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 log = logging.getLogger(__name__)
 
 MODELS_FILE = Path("_data/models.yml")
-POSTS_GLOB  = "_posts/**/*.md"
 STALE_DAYS  = 30
 REQUEST_TIMEOUT = 15
 
@@ -51,36 +50,32 @@ PROVIDER_KEYWORDS = {
 
 
 def check_news_for_pricing_changes(providers: list[str]) -> dict[str, list[str]]:
-    """Scan recent posts for pricing-related content per provider."""
-    cutoff = datetime.now(timezone.utc) - timedelta(days=STALE_DAYS)
+    """Scan recent articles for pricing-related content per provider.
+
+    Reads from Supabase rather than globbing _posts/**/*.md; the date filter
+    is now part of the query instead of being parsed out of a filename.
+    """
     flagged: dict[str, list[str]] = {p: [] for p in providers}
 
-    for path in glob.glob(POSTS_GLOB, recursive=True):
-        try:
-            content = Path(path).read_text(encoding="utf-8", errors="replace").lower()
-        except OSError:
-            continue
+    try:
+        articles = recent_article_texts(days=STALE_DAYS)
+    except (SupabaseError, requests.RequestException) as exc:
+        log.warning("could not read recent articles for pricing scan: %s", exc)
+        return flagged
+
+    for article in articles:
+        content = f"{article.get('title', '')}\n{article.get('body') or ''}".lower()
 
         # Quick filter: must mention pricing
         if not any(kw in content for kw in PRICING_KEYWORDS):
             continue
 
-        # Check post date from filename (YYYY-MM-DD-slug.md)
-        fname = Path(path).name
-        m = re.match(r"(\d{4}-\d{2}-\d{2})", fname)
-        if m:
-            try:
-                post_date = datetime.fromisoformat(m.group(1)).replace(tzinfo=timezone.utc)
-                if post_date < cutoff:
-                    continue
-            except ValueError:
-                pass
-
+        label = f"/{article.get('category')}/{article.get('slug')}/"
         for provider, keywords in PROVIDER_KEYWORDS.items():
             if provider not in providers:
                 continue
             if any(kw in content for kw in keywords):
-                flagged[provider].append(Path(path).name)
+                flagged[provider].append(label)
 
     return flagged
 

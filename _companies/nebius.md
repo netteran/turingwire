@@ -1,4 +1,0 @@
----
-title: "Nebius"
-layout: company
----

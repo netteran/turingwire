@@ -1,4 +1,0 @@
----
-title: "Persistent"
-layout: company
----

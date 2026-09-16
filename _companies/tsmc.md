@@ -1,4 +1,0 @@
----
-title: "TSMC"
-layout: company
----

@@ -1,4 +1,0 @@
----
-title: "Intel"
-layout: company
----

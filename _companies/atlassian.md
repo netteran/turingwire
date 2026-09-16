@@ -1,4 +1,0 @@
----
-title: "Atlassian"
-layout: company
----

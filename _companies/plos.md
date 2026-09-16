@@ -1,4 +1,0 @@
----
-title: "PLOS"
-layout: company
----

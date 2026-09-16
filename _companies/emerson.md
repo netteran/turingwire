@@ -1,4 +1,0 @@
----
-title: "Emerson"
-layout: company
----

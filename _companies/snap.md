@@ -1,4 +1,0 @@
----
-title: "Snap"
-layout: company
----

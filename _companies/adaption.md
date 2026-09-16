@@ -1,4 +1,0 @@
----
-title: "Adaption"
-layout: company
----

@@ -1,4 +1,0 @@
----
-title: "ByteDance"
-layout: company
----

@@ -1,4 +1,0 @@
----
-title: "Vertu"
-layout: company
----
