@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import { setArticleStatus } from "@/app/admin/actions";
 
@@ -63,7 +64,14 @@ export function ArticleRow({ article }: { article: Row }) {
           {status}
         </span>
       </td>
-      <td className="px-3 py-2 text-right">
+      <td className="px-3 py-2 text-right whitespace-nowrap">
+        <Link
+          href={`/admin/articles/${article.id}`}
+          className="text-xs font-mono tw-muted hover:tw-accent transition-colors"
+        >
+          edit
+        </Link>
+        <span className="mx-2 tw-muted">·</span>
         <button
           onClick={toggle}
           disabled={pending}

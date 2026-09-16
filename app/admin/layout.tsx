@@ -27,20 +27,20 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-[25px] pb-10">
-      <header className="mb-6">
-        <div className="flex flex-wrap items-baseline justify-between gap-3 mb-4">
+    <>
+      <AdminNav />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-[25px] pb-10">
+        <header className="mb-6 flex flex-wrap items-baseline justify-between gap-3">
           <h1 className="text-2xl font-semibold tw-heading font-mono">Admin</h1>
           <p className="text-xs font-mono tw-muted">{user.email}</p>
-        </div>
-        <AdminNav />
-      </header>
-      {children}
-      <p className="mt-10 pt-6 border-t tw-border text-xs font-mono tw-muted">
-        <Link href="/" className="hover:tw-accent transition-colors">
-          ← Back to site
-        </Link>
-      </p>
-    </div>
+        </header>
+        {children}
+        <p className="mt-10 pt-6 border-t tw-border text-xs font-mono tw-muted">
+          <Link href="/" className="hover:tw-accent transition-colors">
+            ← Back to site
+          </Link>
+        </p>
+      </div>
+    </>
   );
 }
