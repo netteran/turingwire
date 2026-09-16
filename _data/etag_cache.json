@@ -4,7 +4,7 @@
     "last_modified": ""
   },
   "https://deepmind.google/blog/rss.xml": {
-    "etag": "\"VN_uCQ\"",
+    "etag": "\"IbbXtw\"",
     "last_modified": ""
   },
   "https://blog.research.google/feeds/posts/default": {
@@ -12,8 +12,8 @@
     "last_modified": "Sun, 6 Sep 2026 01:36:33 GMT"
   },
   "https://blogs.nvidia.com/feed/": {
-    "etag": "\"64610563cdd3b47085757403f3c76d64-gzip\"",
-    "last_modified": "Tue, 15 Sep 2026 20:22:07 GMT"
+    "etag": "\"184956bb1d58c7b0221c5d84cd947432-gzip\"",
+    "last_modified": "Wed, 16 Sep 2026 05:00:42 GMT"
   },
   "https://newsroom.intel.com/feed/": {
     "etag": "\"7bcff39f91ba4cc32fefc8c4579f13ac838e3b2397095fbf473dd0a3ed7dccb7-gzip\"",
@@ -32,12 +32,12 @@
     "last_modified": ""
   },
   "https://techcrunch.com/category/artificial-intelligence/feed/": {
-    "etag": "W/\"3634b56f8278c664630e5c8c43f1a121\"",
-    "last_modified": "Tue, 15 Sep 2026 20:39:15 GMT"
+    "etag": "W/\"b94cdee3d86730bf89b43574b749654f\"",
+    "last_modified": "Wed, 16 Sep 2026 01:02:42 GMT"
   },
   "https://feeds.arstechnica.com/arstechnica/technology-lab": {
     "etag": "",
-    "last_modified": "Tue, 15 Sep 2026 21:14:03 GMT"
+    "last_modified": "Wed, 16 Sep 2026 04:21:28 GMT"
   },
   "https://www.technologyreview.com/feed/": {
     "etag": "W/\"e66252ae1332916c285c7910eaf7643e\"",
@@ -64,7 +64,7 @@
     "last_modified": "Thu, 03 Sep 2026 05:09:05 GMT"
   },
   "https://paperswithcode.com/latest/rss": {
-    "etag": "W/\"17f624-RDDxLVuvZig057LM7gqtKMF7MBQ\"",
+    "etag": "W/\"17fb2f-xn8QYGJrSE/o5Jf1IE7JS43U8TQ\"",
     "last_modified": ""
   },
   "https://hnrss.org/newest?q=artificial+intelligence+OR+LLM+OR+machine+learning&points=100": {
@@ -88,7 +88,7 @@
     "last_modified": "Tue, 15 Sep 2026 18:24:25 GMT"
   },
   "https://www.404media.co/rss": {
-    "etag": "W/\"22042-H5ac4VvXIxV0T+qVkVkb0r02v6Y\"",
+    "etag": "W/\"22042-DcIhmWIRceQNI+WNufYFcjcVuFY\"",
     "last_modified": ""
   },
   "https://news.google.com/rss/search?q=%22Scale+AI%22+%28model+OR+data+OR+labeling+OR+enterprise+OR+contract+OR+funding+OR+release%29&hl=en-US&gl=US&ceid=US:en": {
@@ -100,7 +100,7 @@
     "last_modified": ""
   },
   "https://mistral.ai/news/rss": {
-    "etag": "W/\"81325e5d022440a17c7e323b83c05517-ssl-df\"",
+    "etag": "W/\"e60b7374fed0d1b8f6c0aba7d765b0e3-ssl-df\"",
     "last_modified": ""
   }
 }
