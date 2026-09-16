@@ -336,8 +336,10 @@ body.tw-body {
 
 /* ── Icon buttons ────────────────────────────────────────────────────────── */
 
+/* display comes from a `flex` utility at each call site (not from this
+   class), so it can coexist with a responsive variant like `md:hidden` on
+   the same element without losing the cascade tie to plain CSS. */
 .tw-icon-btn {
-  display: flex;
   align-items: center;
   justify-content: center;
   width: 2rem;

@@ -186,7 +186,7 @@ export function Header() {
             id="theme-toggle"
             onClick={toggleTheme}
             aria-label="Toggle dark mode"
-            className="tw-icon-btn opacity-40 hover:opacity-80 transition-opacity"
+            className="tw-icon-btn flex opacity-40 hover:opacity-80 transition-opacity"
           >
             <svg
               className={`w-3.5 h-3.5${theme === "dark" ? "" : " hidden"}`}
@@ -222,7 +222,7 @@ export function Header() {
             onClick={() => setMobileOpen((v) => !v)}
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
             aria-expanded={mobileOpen}
-            className="tw-icon-btn md:hidden"
+            className="tw-icon-btn flex md:hidden"
           >
             <svg
               className={`w-5 h-5${mobileOpen ? " hidden" : ""}`}

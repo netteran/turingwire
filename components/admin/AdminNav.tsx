@@ -51,7 +51,7 @@ export function AdminNav() {
             aria-label={open ? "Close admin menu" : "Open admin menu"}
             aria-expanded={open}
             aria-controls="admin-mobile-nav"
-            className="tw-icon-btn"
+            className="tw-icon-btn flex"
           >
             <svg
               className={`w-5 h-5${open ? " hidden" : ""}`}
