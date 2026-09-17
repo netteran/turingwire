@@ -261,6 +261,19 @@ def scrape_target(name: str, cfg: dict) -> list[dict]:
         "%s: %d links on page -> %d items extracted (%d dropped, no date found anywhere)",
         name, len(all_links), len(dated_items), dropped,
     )
+    # Aggregate counts alone can't tell "this blog is genuinely busy" apart
+    # from "every item latched onto the same page-level timestamp instead
+    # of a real per-article date" (a generic class="date" or <meta
+    # name="date"> match can easily be a page-render time, not a publish
+    # time). A tight cluster in a small span with many items is the tell;
+    # logging every item's own resolved date makes that checkable straight
+    # from the Action log, without needing a DB read.
+    if dated_items:
+        dates = sorted(i["date"] for i in dated_items)
+        span = dates[-1] - dates[0]
+        log.info("%s: date range %s to %s (span %s)", name, dates[0].isoformat(), dates[-1].isoformat(), span)
+        for item in dated_items:
+            log.info("%s: item date=%s title=%r", name, item["date"].isoformat(), item["title"][:80])
     if not dated_items:
         log.warning(
             "%s: 0 dated items from %s — link_pattern %r likely needs tuning, "
