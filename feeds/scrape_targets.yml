@@ -24,7 +24,13 @@
 
 Anthropic News:
   listing_url: https://www.anthropic.com/news
-  link_pattern: '^/news/.+'
+  # The /news listing also cross-posts content actually hosted under
+  # /institute/ (e.g. Anthropic Institute research pieces) — confirmed
+  # directly (https://www.anthropic.com/institute/measuring-pace-of-ai-development
+  # appeared on the listing but its own URL isn't under /news/, so the
+  # original /news/.+-only pattern silently dropped it). If another
+  # cross-posted section turns up missing, add its prefix here the same way.
+  link_pattern: '^/(news|institute)/.+'
 
 Meta AI Blog:
   listing_url: https://ai.meta.com/blog/
