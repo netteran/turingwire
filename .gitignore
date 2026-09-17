@@ -34,6 +34,9 @@ _data/classified_articles.json
 _data/run_log.json
 _data/review_queue.json
 _data/backlog.json
+# Regenerated every run by generate_scraped_feeds.py, consumed by
+# fetch_feeds.py in the same run — never a durable artifact.
+_data/scraped_feeds/
 
 # OS
 .DS_Store
