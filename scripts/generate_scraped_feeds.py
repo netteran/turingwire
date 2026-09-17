@@ -63,6 +63,37 @@ NAV_TEXT_DENYLIST = {
 }
 
 _DATE_CLASS_RE = re.compile(r"date|publish|posted", re.I)
+_JSONLD_DATE_RE = re.compile(r'"datePublished"\s*:\s*"([^"]+)"')
+_META_DATE_ATTRS = [
+    {"property": "article:published_time"},
+    {"property": "og:article:published_time"},
+    {"name": "publish-date"},
+    {"name": "publication_date"},
+    {"name": "date"},
+    {"itemprop": "datePublished"},
+]
+
+
+def _card_scopes(link_tag, max_levels: int = 4):
+    """Yield ancestors of link_tag that are still safe to search for
+    card-scoped metadata (heading, date).
+
+    Stops as soon as an ancestor contains more than one <a href> — that
+    means the walk has stepped out of this link's own "card" and into a
+    container it shares with sibling cards in the same grid/list. Searching
+    there with .find() would return the *first* matching element in
+    document order, which is frequently a sibling card's heading or date,
+    not this one's — e.g. every card in a grid silently inheriting the
+    first card's publish date.
+    """
+    node = link_tag
+    for _ in range(max_levels):
+        node = node.parent
+        if node is None or node.name in ("body", "html"):
+            return
+        if len(node.find_all("a", href=True)) > 1:
+            return
+        yield node
 
 
 def _find_title(link_tag) -> str:
@@ -85,11 +116,7 @@ def _find_title(link_tag) -> str:
     if len(text) >= 10 and text.lower() not in NAV_TEXT_DENYLIST:
         return text
 
-    node = link_tag
-    for _ in range(4):
-        node = node.parent
-        if node is None or node.name in ("body", "html"):
-            break
+    for node in _card_scopes(link_tag):
         heading = node.find(["h1", "h2", "h3", "h4"])
         if heading:
             heading_text = re.sub(r"\s+", " ", heading.get_text(strip=True))
@@ -116,24 +143,65 @@ def _try_parse_date(raw: str) -> datetime | None:
 
 def _find_date(link_tag) -> datetime | None:
     """Best-effort publish date from a <time> element, or a date-ish class
-    name (very common on non-semantic markup), in the same card."""
-    node = link_tag
-    for _ in range(4):
-        node = node.parent
-        if node is None or node.name in ("body", "html"):
-            break
+    name (very common on non-semantic markup), inside the link itself or a
+    close, single-card ancestor.
 
-        time_tag = node.find("time")
+    Checks link_tag's own descendants first — safe, since that can't cross
+    into a sibling card — before falling back to _card_scopes for the
+    "date sits next to, not inside, the link" layout.
+    """
+    for scope in (link_tag, *_card_scopes(link_tag)):
+        time_tag = scope.find("time")
         if time_tag:
             dt = _try_parse_date(time_tag.get("datetime") or time_tag.get_text(strip=True))
             if dt:
                 return dt
 
-        date_el = node.find(class_=_DATE_CLASS_RE)
+        date_el = scope.find(class_=_DATE_CLASS_RE)
         if date_el:
             dt = _try_parse_date(date_el.get_text(strip=True))
             if dt:
                 return dt
+    return None
+
+
+def _fetch_article_date(url: str) -> datetime | None:
+    """Last-resort date lookup: fetch the article's own page and check the
+    metadata publishers put there almost universally, for when the listing
+    page's card had nothing usable — no <time>, no date-ish class, or a
+    relative string like "3 days ago" that _try_parse_date can't resolve.
+    Checked in order: standard meta tags, JSON-LD datePublished, a <time>
+    anywhere on the page.
+    """
+    try:
+        resp = requests.get(url, headers={"User-Agent": USER_AGENT}, timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
+    except Exception as exc:
+        log.debug("article-page date fetch failed for %s: %s", url, exc)
+        return None
+
+    soup = BeautifulSoup(resp.text, "lxml")
+
+    for attrs in _META_DATE_ATTRS:
+        tag = soup.find("meta", attrs=attrs)
+        if tag and tag.get("content"):
+            dt = _try_parse_date(tag["content"])
+            if dt:
+                return dt
+
+    for script in soup.find_all("script", type="application/ld+json"):
+        m = _JSONLD_DATE_RE.search(script.get_text())
+        if m:
+            dt = _try_parse_date(m.group(1))
+            if dt:
+                return dt
+
+    time_tag = soup.find("time")
+    if time_tag:
+        dt = _try_parse_date(time_tag.get("datetime") or time_tag.get_text(strip=True))
+        if dt:
+            return dt
+
     return None
 
 
@@ -174,14 +242,33 @@ def scrape_target(name: str, cfg: dict) -> list[dict]:
         if len(items) >= MAX_ITEMS:
             break
 
-    log.info("%s: %d links on page -> %d items extracted", name, len(all_links), len(items))
-    if not items:
+    # The listing-page card is often missing a usable date (a relative
+    # "3 days ago" string outside any <time>, a byline instead of a date,
+    # a JS-rendered date absent from the static HTML, ...). Fall back to
+    # the article's own page, which almost always carries real date
+    # metadata, rather than publish it undated. Undated items are dropped,
+    # never stamped "now" — a first scrape of a listing page is mostly
+    # *old* content, and stamping it "now" used to mean it sailed straight
+    # past fetch_feeds.py's freshness cutoff as if it were breaking news.
+    for item in items:
+        if item["date"] is None:
+            item["date"] = _fetch_article_date(item["url"])
+
+    dated_items = [i for i in items if i["date"] is not None]
+    dropped = len(items) - len(dated_items)
+
+    log.info(
+        "%s: %d links on page -> %d items extracted (%d dropped, no date found anywhere)",
+        name, len(all_links), len(dated_items), dropped,
+    )
+    if not dated_items:
         log.warning(
-            "%s: 0 items extracted from %s — link_pattern %r likely needs "
-            "tuning against the real page",
+            "%s: 0 dated items from %s — link_pattern %r likely needs tuning, "
+            "or this site's date markup isn't one _find_date/_fetch_article_date "
+            "recognizes yet",
             name, listing_url, cfg["link_pattern"],
         )
-    return items
+    return dated_items
 
 
 def to_rss(name: str, listing_url: str, items: list[dict]) -> str:
@@ -195,6 +282,10 @@ def to_rss(name: str, listing_url: str, items: list[dict]) -> str:
         f"<lastBuildDate>{now}</lastBuildDate>",
     ]
     for item in items:
+        # scrape_target() already drops anything it couldn't find a real
+        # date for, so `item["date"]` should always be set here — this is
+        # just a defensive fallback against a caller passing undated items
+        # directly, not the normal path.
         pub = item["date"].strftime("%a, %d %b %Y %H:%M:%S %z") if item["date"] else now
         parts.append(
             "<item>"
