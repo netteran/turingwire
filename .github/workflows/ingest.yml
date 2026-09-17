@@ -89,6 +89,15 @@ jobs:
 
       # ── Articles ────────────────────────────────────────────────
 
+      # For sources whose official RSS/Atom feed is dead (see
+      # feeds/scrape_targets.yml), synthesizes a feed by scraping the blog's
+      # listing page. Must run before "Fetch feeds", which reads its output
+      # for any source configured with type='scrape'. Never blocks the real
+      # ingest behind it.
+      - name: Generate scraped feeds
+        run: python scripts/generate_scraped_feeds.py ${{ inputs.dry_run && '--dry-run' || '' }}
+        continue-on-error: true
+
       - name: Fetch feeds
         run: python scripts/fetch_feeds.py ${{ inputs.dry_run && '--dry-run' || '' }}
 

@@ -26,6 +26,7 @@ import feedparser
 import requests
 from bs4 import BeautifulSoup
 from dateutil import parser as dateparser
+from slugify import slugify
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ingest_store import filter_unseen, get_setting_int, load_sources, record_source_result
@@ -33,6 +34,9 @@ from ingest_store import filter_unseen, get_setting_int, load_sources, record_so
 ROOT = Path(__file__).parent.parent
 DATA_DIR = ROOT / "_data"
 STAGING_FILE = DATA_DIR / "staging_articles.json"
+# Written by generate_scraped_feeds.py, which runs as the workflow step
+# immediately before this script, for any source with type='scrape'.
+SCRAPED_FEEDS_DIR = DATA_DIR / "scraped_feeds"
 
 logging.basicConfig(
     level=logging.INFO,
@@ -151,40 +155,56 @@ def fetch_full_text(url: str) -> tuple[str, bool]:
 
 def fetch_rss_atom(source: dict, etag_cache: dict, dry_run: bool) -> list[dict]:
     url = source["url"]
-    headers: dict[str, str] = {}
-    cache_key = url
-
-    if cache_key in etag_cache:
-        entry = etag_cache[cache_key]
-        if entry.get("etag"):
-            headers["If-None-Match"] = entry["etag"]
-        if entry.get("last_modified"):
-            headers["If-Modified-Since"] = entry["last_modified"]
 
     if dry_run:
         log.info("[DRY RUN] would fetch %s", url)
         return []
 
-    try:
-        resp = fetch_url(url, headers)
-    except Exception as exc:
-        log.warning("failed to fetch %s: %s", url, exc)
-        return []
+    if source.get("type") == "scrape":
+        # generate_scraped_feeds.py already turned this source's listing
+        # page into a local RSS file, in the workflow step just before this
+        # one — no HTTP fetch or conditional-GET applies here.
+        scraped_path = SCRAPED_FEEDS_DIR / f"{slugify(source['name'])}.xml"
+        if not scraped_path.exists():
+            log.warning(
+                "no scraped feed file for %s (expected %s) — did the "
+                "'Generate scraped feeds' step run first?",
+                source["name"], scraped_path,
+            )
+            return []
+        raw_text = scraped_path.read_text(encoding="utf-8")
+    else:
+        headers: dict[str, str] = {}
+        cache_key = url
 
-    if resp.status_code == 304:
-        log.info("304 not modified: %s", url)
-        return []
+        if cache_key in etag_cache:
+            entry = etag_cache[cache_key]
+            if entry.get("etag"):
+                headers["If-None-Match"] = entry["etag"]
+            if entry.get("last_modified"):
+                headers["If-Modified-Since"] = entry["last_modified"]
 
-    if resp.status_code != 200:
-        log.warning("HTTP %d for %s", resp.status_code, url)
-        return []
+        try:
+            resp = fetch_url(url, headers)
+        except Exception as exc:
+            log.warning("failed to fetch %s: %s", url, exc)
+            return []
 
-    etag_cache[cache_key] = {
-        "etag": resp.headers.get("ETag", ""),
-        "last_modified": resp.headers.get("Last-Modified", ""),
-    }
+        if resp.status_code == 304:
+            log.info("304 not modified: %s", url)
+            return []
 
-    feed = feedparser.parse(resp.text)
+        if resp.status_code != 200:
+            log.warning("HTTP %d for %s", resp.status_code, url)
+            return []
+
+        etag_cache[cache_key] = {
+            "etag": resp.headers.get("ETag", ""),
+            "last_modified": resp.headers.get("Last-Modified", ""),
+        }
+        raw_text = resp.text
+
+    feed = feedparser.parse(raw_text)
     articles = []
     cutoff = datetime.now(timezone.utc) - timedelta(hours=26)
 

@@ -1,0 +1,85 @@
+# Per-source scraping rules for sources whose official RSS/Atom feed is
+# dead (404/timeout on every check) but whose blog/news listing page is
+# still live. generate_scraped_feeds.py reads this file, keyed by the exact
+# ingest_sources.name, and only acts on sources the database currently has
+# marked type='scrape' — this file supplies *how* to scrape a target,
+# ingest_sources remains the single source of truth for *which* sources are
+# active, same as every other source type.
+#
+# listing_url     — page to fetch and scrape.
+# link_pattern    — regex an article link's URL *path* must fully match
+#                    (re.match). Required: there's no safe generic default
+#                    for "what counts as an article link" across arbitrary
+#                    sites.
+# exclude_pattern — optional regex to drop false positives that also match
+#                    link_pattern (pagination, tag/category index pages).
+#
+# IMPORTANT: none of the listing_url / link_pattern values below have been
+# verified against live markup — inferred only from each source's dead feed
+# URL, since the environment that authored this file has no general
+# internet access. Check the "Generate scraped feeds" step's log after the
+# first real run: it logs candidate-link and item counts per target, and
+# warns loudly on any target that yields 0 items. Tune link_pattern (or
+# exclude_pattern) for those before trusting them.
+
+Anthropic News:
+  listing_url: https://www.anthropic.com/news
+  link_pattern: '^/news/.+'
+
+Meta AI Blog:
+  listing_url: https://ai.meta.com/blog/
+  link_pattern: '^/blog/.+'
+
+Alibaba Qwen Blog:
+  listing_url: https://qwenlm.github.io/
+  link_pattern: '^/\d{4}/.+'
+
+Cognition Labs Blog:
+  listing_url: https://cognition.ai/blog
+  link_pattern: '^/blog/.+'
+
+Databricks Blog:
+  listing_url: https://www.databricks.com/blog
+  link_pattern: '^/blog/.+'
+
+ElevenLabs Blog:
+  listing_url: https://elevenlabs.io/blog
+  link_pattern: '^/blog/.+'
+
+Perplexity Blog:
+  listing_url: https://blog.perplexity.ai/
+  link_pattern: '^/[^/]+/?$'
+  exclude_pattern: '^/(tag|tags|author|page|category)/'
+
+Runway Blog:
+  listing_url: https://runwayml.com/blog
+  link_pattern: '^/blog/.+'
+
+Stability AI News:
+  listing_url: https://stability.ai/news
+  link_pattern: '^/news/.+'
+
+Suno Blog:
+  listing_url: https://suno.com/blog
+  link_pattern: '^/blog/.+'
+
+TSMC News:
+  listing_url: https://pr.tsmc.com/english/news
+  link_pattern: '^/english/news/.+'
+
+# Lower confidence: Semafor's section URL structure is a guess, not derived
+# from the dead feed path the way the others are.
+Semafor Tech:
+  listing_url: https://www.semafor.com/technology
+  link_pattern: '^/article/.+'
+
+The Verge AI:
+  listing_url: https://www.theverge.com/ai-artificial-intelligence
+  link_pattern: '^/\d{4}/.+'
+
+# AMD's feed failed with a timeout, not a 404 — if that's bot-blocking at
+# the domain/WAF level rather than a moved feed, scraping this page will
+# likely hit the same wall. Included on a try-it-and-see basis.
+AMD Newsroom:
+  listing_url: https://www.amd.com/en/newsroom.html
+  link_pattern: '^/en/newsroom/.+'
