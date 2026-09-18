@@ -31,6 +31,7 @@ export async function updateSource(id: number, patch: Record<string, unknown>) {
   const { error } = await supabase.from("ingest_sources").update(patch).eq("id", id);
   if (error) throw error;
   revalidatePath("/admin/sources");
+  revalidatePath(`/admin/sources/${id}`);
 }
 
 export async function addSource(formData: FormData) {
@@ -46,13 +47,6 @@ export async function addSource(formData: FormData) {
     company: String(formData.get("company") ?? "").trim() || null,
     active: true,
   });
-  if (error) throw error;
-  revalidatePath("/admin/sources");
-}
-
-export async function deleteSource(id: number) {
-  const supabase = await guard();
-  const { error } = await supabase.from("ingest_sources").delete().eq("id", id);
   if (error) throw error;
   revalidatePath("/admin/sources");
 }

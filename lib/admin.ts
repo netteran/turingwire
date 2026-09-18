@@ -42,6 +42,17 @@ export interface Setting {
   description: string | null;
 }
 
+export async function getSourceById(id: number): Promise<IngestSource | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("ingest_sources")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  return data as IngestSource | null;
+}
+
 export async function getSources(): Promise<IngestSource[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
