@@ -5,6 +5,7 @@ import { PostCard } from "@/components/PostCard";
 import { ShareButtons } from "@/components/ShareButtons";
 import { StocksBootstrap } from "@/components/StocksBootstrap";
 import { StocksScripts } from "@/components/StocksScripts";
+import { StocksTable, type Ticker } from "@/components/StocksTable";
 import { getArticlesByTag } from "@/lib/queries";
 import { getAiIndexHistory, getStocksSnapshot, getTickers } from "@/lib/data";
 import { absoluteUrl, site } from "@/lib/site";
@@ -18,11 +19,6 @@ export const metadata: Metadata = {
   alternates: { canonical: "/aistocks/" },
 };
 
-interface Ticker {
-  symbol: string;
-  name: string;
-  sector?: string;
-}
 interface TickersData {
   tickers?: Ticker[];
 }
@@ -170,70 +166,7 @@ export default async function AiStocksPage() {
       </section>
 
       <section className="tw-card rounded-lg border tw-border p-5 mb-6 overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b tw-border text-left text-xs font-mono tw-muted">
-              <th className="pb-2 font-medium">Symbol</th>
-              <th className="pb-2 font-medium">Name</th>
-              <th className="pb-2 font-medium">Sector</th>
-              <th className="pb-2 font-medium text-right">Price</th>
-              <th className="pb-2 font-medium text-right">Change</th>
-              <th className="pb-2 font-medium text-right">%</th>
-              <th className="pb-2 font-medium text-right hidden sm:table-cell">High</th>
-              <th className="pb-2 font-medium text-right hidden sm:table-cell">Low</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tickers.map((ticker) => {
-              const q = quotes[ticker.symbol];
-              return (
-                <tr
-                  key={ticker.symbol}
-                  className="border-b tw-border hover:bg-cyan-500/5 transition-colors"
-                >
-                  <td className="py-2 font-semibold tw-heading">{ticker.symbol}</td>
-                  <td className="py-2 tw-muted text-xs truncate max-w-32">
-                    {ticker.name}
-                  </td>
-                  <td className="py-2 tw-muted text-xs">
-                    {ticker.sector?.replace(/_/g, " ")}
-                  </td>
-                  {q ? (
-                    <>
-                      <td className="py-2 text-right tw-heading">${q.price}</td>
-                      <td
-                        className={`py-2 text-right ${
-                          Number(q.change) >= 0 ? "tw-change-pos" : "tw-change-neg"
-                        }`}
-                      >
-                        {Number(q.change) >= 0 && "+"}
-                        {String(q.change)}
-                      </td>
-                      <td
-                        className={`py-2 text-right ${
-                          q.change_pct >= 0 ? "tw-change-pos" : "tw-change-neg"
-                        }`}
-                      >
-                        {q.change_pct >= 0 && "+"}
-                        {q.change_pct}%
-                      </td>
-                      <td className="py-2 text-right tw-muted hidden sm:table-cell">
-                        ${String(q.high)}
-                      </td>
-                      <td className="py-2 text-right tw-muted hidden sm:table-cell">
-                        ${String(q.low)}
-                      </td>
-                    </>
-                  ) : (
-                    <td className="py-2 text-right tw-muted" colSpan={5}>
-                      —
-                    </td>
-                  )}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <StocksTable tickers={tickers} quotes={quotes} />
       </section>
 
       <section>

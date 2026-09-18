@@ -485,6 +485,31 @@ body.tw-body {
 .tw-change-neg { color: #dc2626; }
 .tw-change-neu { color: var(--fg-muted); }
 
+.tw-sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.tw-sort-btn-right { justify-content: flex-end; }
+.tw-sort-btn:hover,
+.tw-sort-btn:focus-visible,
+.tw-sort-btn.active {
+  color: var(--accent);
+  outline: none;
+}
+.tw-sort-arrow {
+  font-size: 0.65em;
+  width: 0.8em;
+  display: inline-block;
+}
+
 /* ── Pagefind search overrides ───────────────────────────────────────────── */
 
 .pagefind-ui {
