@@ -82,7 +82,7 @@ export default async function HomePage() {
           <div className="lg:col-span-2">
             <div className="mb-6">
               <h1 className="text-xs font-mono tw-muted">
-                AI news &amp; research for practitioners
+                {site.tagline}
               </h1>
             </div>
 
