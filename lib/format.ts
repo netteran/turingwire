@@ -1,4 +1,5 @@
 import { slugify } from "./slugify";
+import type { ArticleCard } from "./types";
 
 /** "Sep 15, 2026" — matches Jekyll's `date: "%b %-d, %Y"`. */
 export function formatDate(iso: string): string {
@@ -44,6 +45,18 @@ export function truncateWords(text: string, count: number, suffix = "…"): stri
 export function excerpt(body: string | null, words = 30): string {
   if (!body) return "";
   return truncateWords(stripMarkdown(body), words);
+}
+
+/** Group articles by their UTC calendar day, preserving order. */
+export function groupByDay(posts: ArticleCard[]): { date: string; items: ArticleCard[] }[] {
+  const groups: { date: string; items: ArticleCard[] }[] = [];
+  for (const post of posts) {
+    const date = post.published_at.slice(0, 10);
+    const last = groups[groups.length - 1];
+    if (last && last.date === date) last.items.push(post);
+    else groups.push({ date, items: [post] });
+  }
+  return groups;
 }
 
 export { slugify };

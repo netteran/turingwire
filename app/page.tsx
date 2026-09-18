@@ -1,16 +1,22 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { PostCard } from "@/components/PostCard";
 import { BreakingStrip } from "@/components/BreakingStrip";
+import { DayLabel } from "@/components/DayLabel";
 import { PartnerSpotlight } from "@/components/PartnerSpotlight";
-import { HomeFeed } from "@/components/HomeFeed";
 import { AiIndexCard } from "@/components/AiIndexCard";
 import { TopMovers } from "@/components/TopMovers";
 import { StocksBootstrap } from "@/components/StocksBootstrap";
 import { StocksScripts } from "@/components/StocksScripts";
 
-import { getArticlesByCategory, getCompaniesWithCounts } from "@/lib/queries";
+import {
+  getRecentArticles,
+  getArticlesByCategory,
+  getCompaniesWithCounts,
+} from "@/lib/queries";
 import { getAiIndexHistory, getStocksSnapshot } from "@/lib/data";
+import { groupByDay } from "@/lib/format";
 import { articleUrl } from "@/lib/types";
 import { site } from "@/lib/site";
 
@@ -42,25 +48,22 @@ const websiteSchema = {
 };
 
 export default async function HomePage() {
-  const [news, research, companies] = await Promise.all([
-    getArticlesByCategory("news", { limit: 60 }),
-    getArticlesByCategory("research", { limit: 60 }),
+  const [recent, researchSpotlight, companies] = await Promise.all([
+    getRecentArticles(120),
+    getArticlesByCategory("research", { limit: 1 }),
     getCompaniesWithCounts(),
   ]);
 
   const indexHistory = getAiIndexHistory();
   const stocks = getStocksSnapshot();
 
-  const recent = [...news, ...research]
-    .filter((p) => p.title?.trim())
-    .sort((a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime());
-
   const sixHoursAgo = Date.now() - 6 * 60 * 60 * 1000;
   const breaking = recent.find(
     (p) => p.impact === "critical" && new Date(p.published_at).getTime() >= sixHoursAgo,
   );
 
-  const spotlight = research[0];
+  const spotlight = researchSpotlight[0];
+  const groups = groupByDay(recent.filter((p) => p.title?.trim())).slice(0, 3);
   const todayUtc = new Date().toISOString().slice(0, 10);
 
   return (
@@ -91,8 +94,42 @@ export default async function HomePage() {
                 </p>
               </div>
             ) : (
-              <HomeFeed posts={recent} todayUtc={todayUtc} />
+              groups.map((group, groupIndex) => (
+                <div className="mb-8" key={group.date}>
+                  <h2
+                    className="text-xs font-mono uppercase tracking-widest tw-muted mb-3 flex items-center gap-3"
+                    data-day-group={group.date}
+                  >
+                    <DayLabel
+                      date={group.date}
+                      initialLabel={group.date === todayUtc ? "Today" : group.date}
+                    />
+                    <span
+                      className="flex-1 h-px tw-border"
+                      style={{ background: "var(--border)" }}
+                    />
+                  </h2>
+                  <div className="space-y-3">
+                    {group.items.map((post, postIndex) => (
+                      <div key={post.id}>
+                        <PostCard post={post} />
+                        {groupIndex === 0 && postIndex === 0 && (
+                          <div className="block lg:hidden mt-3">
+                            <PartnerSpotlight />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))
             )}
+
+            <div className="mt-4 flex flex-wrap gap-4 text-sm font-mono">
+              <Link href="/publications/" className="tw-filter-chip">
+                All publications →
+              </Link>
+            </div>
           </div>
 
           <aside className="mt-10 lg:mt-0 space-y-6">
@@ -160,7 +197,7 @@ export default async function HomePage() {
                   )}
                 </div>
                 <Link
-                  href="/?section=research"
+                  href="/publications/?section=research"
                   className="block mt-3 text-xs font-mono text-cyan-600 hover:text-cyan-500 transition-colors"
                 >
                   All research →
@@ -184,7 +221,7 @@ export default async function HomePage() {
                 ))}
               </div>
               <Link
-                href="/companies/"
+                href="/publications/"
                 className="block mt-3 text-xs font-mono tw-muted hover:text-cyan-600 transition-colors"
               >
                 All companies →
