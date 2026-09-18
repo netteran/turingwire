@@ -8,8 +8,8 @@ import yaml from "js-yaml";
  * Only *articles* moved to Supabase. These files are small and versioned
  * alongside the code: `models.yml`, `benchmarks.yml` and the market-data JSON
  * are refreshed by the Ingest workflow, which commits them back to main;
- * `conferences.yml` and `tickers.yml` are hand-maintained. Reading them from
- * disk at render time is enough — none of them change within a deployment.
+ * `tickers.yml` is hand-maintained. Reading them from disk at render time is
+ * enough — none of them change within a deployment.
  */
 const DATA_DIR = path.join(process.cwd(), "_data");
 
@@ -64,5 +64,4 @@ export const getAiIndexHistory = (): AiIndexHistory =>
 
 export const getModels = <T = unknown>(): T => readYaml<T>("models.yml", [] as T);
 export const getBenchmarks = <T = unknown>(): T => readYaml<T>("benchmarks.yml", [] as T);
-export const getConferences = <T = unknown>(): T => readYaml<T>("conferences.yml", [] as T);
 export const getTickers = <T = unknown>(): T => readYaml<T>("tickers.yml", [] as T);

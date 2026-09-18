@@ -36,8 +36,7 @@ Always preserve the linked primary source publisher — Turing Wire articles car
 
 ## Content surfaces
 
-- News: ${site.url}/news/
-- Research: ${site.url}/research/
+- Homepage (filterable by section, impact, and category): ${site.url}/
 - Stories (multi-source synthesis): ${site.url}/stories/
 - Companies: ${site.url}/companies/
 - AI Stocks: ${site.url}/aistocks/
