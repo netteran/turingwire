@@ -7,6 +7,11 @@ import { isAdmin } from "@/lib/supabase-server";
  * Runs server-side so GITHUB_DISPATCH_TOKEN never reaches the browser, and
  * re-checks admin status here rather than trusting the middleware redirect —
  * this is an API route, so it can be called directly.
+ *
+ * An optional {sourceId} JSON body restricts the run to that one
+ * ingest_sources row (the per-source "run" button in Admin / Sources); the
+ * body is read defensively since the plain "run everything" button sends no
+ * body at all.
  */
 
 const WORKFLOW = "ingest.yml";
@@ -39,7 +44,7 @@ function explain(status: number, repo: string): string {
   }
 }
 
-export async function POST() {
+export async function POST(request: Request) {
   if (!(await isAdmin())) {
     return NextResponse.json({ error: "Not authorised" }, { status: 403 });
   }
@@ -58,6 +63,12 @@ export async function POST() {
     );
   }
 
+  const body: unknown = await request.json().catch(() => ({}));
+  const sourceId =
+    typeof body === "object" && body !== null && "sourceId" in body
+      ? Number((body as { sourceId: unknown }).sourceId)
+      : undefined;
+
   const res = await fetch(
     `https://api.github.com/repos/${repo}/actions/workflows/${WORKFLOW}/dispatches`,
     {
@@ -70,7 +81,11 @@ export async function POST() {
       },
       body: JSON.stringify({
         ref: "main",
-        inputs: { dry_run: false, trigger: "admin" },
+        inputs: {
+          dry_run: false,
+          trigger: "admin",
+          ...(Number.isFinite(sourceId) ? { source_id: String(sourceId) } : {}),
+        },
       }),
     },
   );

@@ -312,17 +312,31 @@ def to_rss(name: str, listing_url: str, items: list[dict]) -> str:
     return "\n".join(parts)
 
 
-def main(dry_run: bool = False) -> int:
+def main(dry_run: bool = False, source_id: int | None = None) -> int:
     if not TARGETS_FILE.exists():
         log.info("no %s, nothing to scrape", TARGETS_FILE)
         return 0
 
     targets = yaml.safe_load(TARGETS_FILE.read_text()) or {}
-    scrape_sources = [s for s in load_sources(active_only=True) if s.get("type") == "scrape"]
 
-    if not scrape_sources:
-        log.info("no active sources with type='scrape', nothing to do")
-        return 0
+    if source_id is not None:
+        # Matches fetch_feeds.py's --source-id: an explicit single-source
+        # request overrides the active flag, and it's simply a no-op (not
+        # an error) if that source isn't a scrape-type one — fetch_feeds.py
+        # is still the one doing the actual fetch for it either way.
+        all_sources = [s for s in load_sources(active_only=False) if s["id"] == source_id]
+        if not all_sources:
+            log.error("no source with id=%d", source_id)
+            return 1
+        scrape_sources = [s for s in all_sources if s.get("type") == "scrape"]
+        if not scrape_sources:
+            log.info("source id=%d (%s) is not type='scrape', nothing to do", source_id, all_sources[0]["name"])
+            return 0
+    else:
+        scrape_sources = [s for s in load_sources(active_only=True) if s.get("type") == "scrape"]
+        if not scrape_sources:
+            log.info("no active sources with type='scrape', nothing to do")
+            return 0
 
     if dry_run:
         log.info("[DRY RUN] would scrape %d target(s): %s", len(scrape_sources),
@@ -357,5 +371,9 @@ def main(dry_run: bool = False) -> int:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--dry-run", action="store_true", help="skip scraping without writing output")
+    parser.add_argument(
+        "--source-id", type=int, default=None,
+        help="Only scrape this one ingest_sources.id (no-op if it isn't type='scrape')",
+    )
     args = parser.parse_args()
-    sys.exit(main(dry_run=args.dry_run))
+    sys.exit(main(dry_run=args.dry_run, source_id=args.source_id))

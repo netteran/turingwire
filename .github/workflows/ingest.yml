@@ -8,6 +8,13 @@ name: Ingest
 # Postgres, so the article stages commit nothing. The market-data stages are
 # the one exception: the front end reads _data/*.json and *.yml from the repo,
 # so those four files are committed back to main at the end of the run.
+#
+# A manual dispatch with `source_id` set restricts the whole article pipeline
+# to that one ingest_sources row (bypassing its active/active_months gate,
+# since asking for it by id is itself the override) and skips build_stories
+# and the market-data stages entirely — neither is about any one source, so
+# there's nothing there worth the run time. See the per-source "run" button
+# in Admin / Sources.
 
 on:
   schedule:
@@ -23,6 +30,10 @@ on:
         description: "Who started this run (set to 'admin' by the admin page)"
         type: string
         default: manual
+      source_id:
+        description: "Only ingest this one ingest_sources.id (blank = every active source, the normal sweep)"
+        type: string
+        default: ""
 
 permissions:
   # the market-data step pushes _data/*.json back to main
@@ -95,11 +106,17 @@ jobs:
       # for any source configured with type='scrape'. Never blocks the real
       # ingest behind it.
       - name: Generate scraped feeds
-        run: python scripts/generate_scraped_feeds.py ${{ inputs.dry_run && '--dry-run' || '' }}
+        run: >
+          python scripts/generate_scraped_feeds.py
+          ${{ inputs.dry_run && '--dry-run' || '' }}
+          ${{ inputs.source_id && format('--source-id {0}', inputs.source_id) || '' }}
         continue-on-error: true
 
       - name: Fetch feeds
-        run: python scripts/fetch_feeds.py ${{ inputs.dry_run && '--dry-run' || '' }}
+        run: >
+          python scripts/fetch_feeds.py
+          ${{ inputs.dry_run && '--dry-run' || '' }}
+          ${{ inputs.source_id && format('--source-id {0}', inputs.source_id) || '' }}
 
       - name: Deduplicate
         if: ${{ !inputs.dry_run }}
@@ -133,8 +150,10 @@ jobs:
         if: ${{ !inputs.dry_run }}
         run: python scripts/generate_company_pages.py
 
+      # Cross-source clustering — irrelevant to verifying one source, and it
+      # spends its own LLM budget doing it, so a single-source run skips it.
       - name: Build stories
-        if: ${{ !inputs.dry_run }}
+        if: ${{ !inputs.dry_run && !inputs.source_id }}
         run: python scripts/build_stories.py
         env:
           INGEST_RUN_ID: ${{ steps.run.outputs.run_id }}
@@ -144,34 +163,35 @@ jobs:
       # ── Market data and reference tables ────────────────────────
       # Folded in from the retired stocks / models / benchmarks workflows.
       # These write _data/*.json and *.yml, which are committed below because
-      # the front end still reads them from the repo.
+      # the front end still reads them from the repo. Unrelated to any one
+      # article source, so a single-source run skips these too.
 
       - name: Fetch stocks
-        if: ${{ !inputs.dry_run }}
+        if: ${{ !inputs.dry_run && !inputs.source_id }}
         run: python scripts/fetch_stocks.py
         env:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
         continue-on-error: true
 
       - name: Compute AI index
-        if: ${{ !inputs.dry_run }}
+        if: ${{ !inputs.dry_run && !inputs.source_id }}
         run: python scripts/compute_ai_index.py
         continue-on-error: true
 
       - name: Refresh benchmarks
-        if: ${{ !inputs.dry_run }}
+        if: ${{ !inputs.dry_run && !inputs.source_id }}
         run: python scripts/fetch_benchmarks.py
         continue-on-error: true
 
       - name: Check model pricing
-        if: ${{ !inputs.dry_run }}
+        if: ${{ !inputs.dry_run && !inputs.source_id }}
         run: python scripts/fetch_models.py
         continue-on-error: true
 
       # ── Persist the data files the site still reads from git ────
 
       - name: Commit market data
-        if: ${{ !inputs.dry_run }}
+        if: ${{ !inputs.dry_run && !inputs.source_id }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
