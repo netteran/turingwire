@@ -138,7 +138,7 @@ export default async function HomePage() {
                 About
               </h2>
               <p className="text-xs tw-muted leading-relaxed">
-                Turing Wire has ambition to be AI practitioners&apos; go-to platform
+                Turing Wire has ambition to be the AI-aware reader&apos;s go-to platform
                 to trace all the leading AI sources in one place, convenient and
                 edited to get to the very gist of what&apos;s happening in the AI and
                 technology world.
