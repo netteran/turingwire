@@ -63,8 +63,8 @@ export default async function CompanyPage({ params }: Props) {
             Home
           </Link>
           <span className="mx-2">/</span>
-          <Link href="/companies/" className="hover:tw-accent transition-colors">
-            Companies
+          <Link href="/publications/" className="hover:tw-accent transition-colors">
+            Publications
           </Link>
           <span className="mx-2">/</span>
           <span>{company.name}</span>

@@ -3,14 +3,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { PostCard } from "./PostCard";
 import { DayLabel } from "./DayLabel";
-import { PartnerSpotlight } from "./PartnerSpotlight";
+import { groupByDay, slugify } from "@/lib/format";
 import type { ArticleCard } from "@/lib/types";
 
 /**
- * Homepage filter bar + day-grouped feed.
+ * Filter bar + day-grouped feed for /publications/.
  *
- * Replaces the old dedicated /news/ and /research/ listing pages: picking a
- * section here surfaces the same subcategory chips those pages used to show.
+ * Replaces the old dedicated /news/, /research/ and /companies/ listing
+ * pages: section + subcategory chips are what those news/research pages
+ * used to show, and the company picker is what the companies index used to
+ * offer, now as one more filter dimension instead of a separate browse page.
  */
 
 type Chip = { value: string; label: string };
@@ -54,33 +56,22 @@ const RESEARCH_SUBCATEGORY_CHIPS: Chip[] = [
   { value: "training_methods", label: "Training" },
 ];
 
-/** Group articles by their UTC calendar day, preserving order. */
-function groupByDay(posts: ArticleCard[]): { date: string; items: ArticleCard[] }[] {
-  const groups: { date: string; items: ArticleCard[] }[] = [];
-  for (const post of posts) {
-    const date = post.published_at.slice(0, 10);
-    const last = groups[groups.length - 1];
-    if (last && last.date === date) last.items.push(post);
-    else groups.push({ date, items: [post] });
-  }
-  return groups;
-}
-
-export function HomeFeed({
+export function PublicationsFeed({
   posts,
+  companies,
   todayUtc,
 }: {
   posts: ArticleCard[];
+  companies: { slug: string; name: string }[];
   todayUtc: string;
 }) {
   const [section, setSection] = useState<Section>("all");
   const [impact, setImpact] = useState("all");
   const [subcategory, setSubcategory] = useState("all");
+  const [company, setCompany] = useState("all");
 
-  // The old /news/ and /research/ pages now 301 to /?section=<value>. Reading
-  // that here (rather than via useSearchParams, which would force this feed
-  // behind a Suspense fallback during static rendering) keeps the homepage
-  // statically served while still honoring the deep link once mounted.
+  // Old /news/ and /research/ links now 301 to /publications/?section=...,
+  // so pick that up here once mounted, the same way the homepage used to.
   useEffect(() => {
     const s = new URLSearchParams(window.location.search).get("section");
     if (s === "news" || s === "research") setSection(s);
@@ -107,18 +98,15 @@ export function HomeFeed({
           (impact === "major+" && (p.impact === "critical" || p.impact === "major")) ||
           (impact === "critical" && p.impact === "critical");
         const subOk = subcategory === "all" || p.subcategory === subcategory;
-        return sectionOk && impactOk && subOk;
+        const companyOk = company === "all" || (!!p.company && slugify(p.company) === company);
+        return sectionOk && impactOk && subOk && companyOk;
       }),
-    [posts, section, impact, subcategory],
+    [posts, section, impact, subcategory, company],
   );
 
-  // The default mixed view stays short, matching the old homepage. Picking a
-  // specific section is a deliberate request for the depth the dedicated
-  // /news/ and /research/ pages used to give, so the day-cap lifts.
-  const groups = useMemo(() => {
-    const byDay = groupByDay(visible);
-    return section === "all" ? byDay.slice(0, 3) : byDay;
-  }, [visible, section]);
+  // Unlike the homepage's default view, this page's whole point is full
+  // history — no day-cap here regardless of which filters are active.
+  const groups = useMemo(() => groupByDay(visible), [visible]);
 
   return (
     <>
@@ -150,17 +138,37 @@ export function HomeFeed({
         </div>
       )}
 
-      <div className="flex flex-wrap gap-2 mb-6">
-        {IMPACT_CHIPS.map((chip) => (
-          <button
-            key={chip.value}
-            type="button"
-            className={`tw-filter-chip text-xs${impact === chip.value ? " active" : ""}`}
-            onClick={() => setImpact(chip.value)}
-          >
-            {chip.label}
-          </button>
-        ))}
+      <div className="flex flex-wrap items-center gap-3 mb-6">
+        <div className="flex flex-wrap gap-2">
+          {IMPACT_CHIPS.map((chip) => (
+            <button
+              key={chip.value}
+              type="button"
+              className={`tw-filter-chip text-xs${impact === chip.value ? " active" : ""}`}
+              onClick={() => setImpact(chip.value)}
+            >
+              {chip.label}
+            </button>
+          ))}
+        </div>
+
+        {companies.length > 0 && (
+          <label className="flex items-center gap-2 text-xs font-mono tw-muted">
+            Company
+            <select
+              className="tw-input font-mono text-xs py-1"
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+            >
+              <option value="all">All companies</option>
+              {companies.map((co) => (
+                <option key={co.slug} value={co.slug}>
+                  {co.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
       </div>
 
       {groups.length === 0 ? (
@@ -168,7 +176,7 @@ export function HomeFeed({
           <p className="tw-muted text-sm font-mono">No articles match these filters.</p>
         </div>
       ) : (
-        groups.map((group, groupIndex) => (
+        groups.map((group) => (
           <div className="mb-8" key={group.date}>
             <h2
               className="text-xs font-mono uppercase tracking-widest tw-muted mb-3 flex items-center gap-3"
@@ -184,15 +192,8 @@ export function HomeFeed({
               />
             </h2>
             <div className="space-y-3">
-              {group.items.map((post, postIndex) => (
-                <div key={post.id}>
-                  <PostCard post={post} />
-                  {groupIndex === 0 && postIndex === 0 && (
-                    <div className="block lg:hidden mt-3">
-                      <PartnerSpotlight />
-                    </div>
-                  )}
-                </div>
+              {group.items.map((post) => (
+                <PostCard key={post.id} post={post} />
               ))}
             </div>
           </div>

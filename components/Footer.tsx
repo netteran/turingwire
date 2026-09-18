@@ -2,10 +2,11 @@ import Link from "next/link";
 import { site } from "@/lib/site";
 
 const SECTIONS = [
-  ["/aistocks/", "AIStocks"],
-  ["/companies/", "Companies"],
+  ["/publications/", "All publications"],
+  ["/stories/", "Stories"],
   ["/models/", "Models"],
   ["/benchmarks/", "Benchmarks"],
+  ["/aistocks/", "AI Stocks"],
 ] as const;
 
 const SITE_LINKS = [

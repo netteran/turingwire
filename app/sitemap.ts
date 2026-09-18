@@ -9,8 +9,8 @@ export const revalidate = 3600;
 /** Static routes that were Jekyll pages. */
 const STATIC_PATHS = [
   "/",
+  "/publications/",
   "/aistocks/",
-  "/companies/",
   "/stories/",
   "/models/",
   "/benchmarks/",

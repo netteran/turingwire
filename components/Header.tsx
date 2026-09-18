@@ -12,23 +12,16 @@ import { createBrowserClient } from "@supabase/ssr";
  * owns, so mutating it directly would fight the render tree.
  */
 
-const NAV_GROUPS = [
+const NAV_LINKS = [
   {
-    label: "Markets",
-    match: ["/aistocks", "/companies"],
-    items: [
-      ["/aistocks/", "AI Stocks"],
-      ["/companies/", "Companies"],
-    ],
+    href: "/publications/",
+    label: "All publications",
+    match: ["/publications", "/news", "/research", "/companies"],
   },
-  {
-    label: "Technical",
-    match: ["/models", "/benchmarks"],
-    items: [
-      ["/models/", "Models"],
-      ["/benchmarks/", "Benchmarks"],
-    ],
-  },
+  { href: "/stories/", label: "Stories", match: ["/stor"] },
+  { href: "/models/", label: "Models", match: ["/models"] },
+  { href: "/benchmarks/", label: "Benchmarks", match: ["/benchmarks"] },
+  { href: "/aistocks/", label: "AI Stocks", match: ["/aistocks"] },
 ] as const;
 
 export function Header() {
@@ -158,44 +151,17 @@ export function Header() {
           className="hidden md:flex items-center gap-1 text-sm font-medium"
           aria-label="Main navigation"
         >
-          {NAV_GROUPS.map((group) => (
-            <div className="tw-nav-group" key={group.label}>
-              <button
-                type="button"
-                className={`tw-nav-link tw-nav-trigger${
-                  isActive(group.match) ? " tw-nav-active" : ""
-                }`}
-                aria-haspopup="true"
-                aria-expanded="false"
-              >
-                {group.label}{" "}
-                <span aria-hidden="true" className="tw-nav-caret">
-                  ▾
-                </span>
-              </button>
-              <div className="tw-nav-dropdown" role="menu">
-                {group.items.map(([href, label]) => (
-                  <Link
-                    key={href}
-                    href={href}
-                    className="tw-dropdown-item"
-                    role="menuitem"
-                  >
-                    {label}
-                  </Link>
-                ))}
-              </div>
-            </div>
+          {NAV_LINKS.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`tw-nav-link${
+                isActive(link.match) ? " tw-nav-active" : ""
+              }`}
+            >
+              {link.label}
+            </Link>
           ))}
-
-          <Link
-            href="/stories/"
-            className={`tw-nav-link${
-              isActive(["/stor"]) ? " tw-nav-active" : ""
-            }`}
-          >
-            Stories
-          </Link>
         </nav>
 
         <div className="flex items-center gap-2">
@@ -318,35 +284,17 @@ export function Header() {
         }`}
       >
         <nav className="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-1 text-sm font-medium">
-          {NAV_GROUPS.map((group) => (
-            <details
-              className="tw-mobile-group"
-              key={group.label}
-              open={isActive(group.match)}
+          {NAV_LINKS.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`tw-nav-link py-2${
+                isActive(link.match) ? " tw-nav-active" : ""
+              }`}
             >
-              <summary className="tw-nav-link py-2">{group.label}</summary>
-              {group.items.map(([href, label]) => (
-                <Link
-                  key={href}
-                  href={href}
-                  className={`py-2${
-                    pathname.startsWith(href) ? " tw-nav-active" : ""
-                  }`}
-                >
-                  {label}
-                </Link>
-              ))}
-            </details>
+              {link.label}
+            </Link>
           ))}
-
-          <Link
-            href="/stories/"
-            className={`tw-nav-link py-2${
-              isActive(["/stor"]) ? " tw-nav-active" : ""
-            }`}
-          >
-            Stories
-          </Link>
 
           <form action="/search/" method="get" className="mt-2">
             <input
