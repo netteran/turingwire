@@ -41,6 +41,30 @@ export async function getArticlesByCategory(
   return (data ?? []) as unknown as ArticleCard[];
 }
 
+/**
+ * Every article in one section, paginated past Supabase's 1,000-row default
+ * cap. Backs /publications/, which filters client-side and so needs the
+ * complete corpus up front rather than a bounded page.
+ */
+export async function getAllArticlesByCategory(
+  category: ArticleCategory,
+): Promise<ArticleCard[]> {
+  const pageSize = 1000;
+  const all: ArticleCard[] = [];
+
+  for (let offset = 0; ; offset += pageSize) {
+    const { data, error } = await cards()
+      .eq("category", category)
+      .order("published_at", { ascending: false })
+      .range(offset, offset + pageSize - 1);
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+    all.push(...(data as unknown as ArticleCard[]));
+    if (data.length < pageSize) break;
+  }
+  return all;
+}
+
 export async function countArticlesByCategory(
   category: ArticleCategory,
 ): Promise<number> {
