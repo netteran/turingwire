@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PostCard } from "./PostCard";
 import { DayLabel } from "./DayLabel";
 import { groupByDay, slugify } from "@/lib/format";
 import type { ArticleCard } from "@/lib/types";
+
+/** Cards revealed per scroll step. */
+const BATCH_SIZE = 30;
 
 /**
  * Filter bar + day-grouped feed for /publications/.
@@ -69,6 +72,18 @@ export function PublicationsFeed({
   const [impact, setImpact] = useState("all");
   const [subcategory, setSubcategory] = useState("all");
   const [company, setCompany] = useState("all");
+  const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  const hasActiveFilters =
+    section !== "all" || impact !== "all" || subcategory !== "all" || company !== "all";
+
+  function resetFilters() {
+    setSection("all");
+    setImpact("all");
+    setSubcategory("all");
+    setCompany("all");
+  }
 
   // Old /news/ and /research/ links now 301 to /publications/?section=...,
   // so pick that up here once mounted, the same way the homepage used to.
@@ -104,9 +119,37 @@ export function PublicationsFeed({
     [posts, section, impact, subcategory, company],
   );
 
+  // A filter change invalidates whatever was scrolled into view under the
+  // old filters, so start the reveal over from the first batch.
+  useEffect(() => {
+    setVisibleCount(BATCH_SIZE);
+  }, [section, impact, subcategory, company]);
+
+  const shown = visible.slice(0, visibleCount);
+  const hasMore = visibleCount < visible.length;
+
+  // Infinite scroll: reveal another batch of the already-fetched, already-
+  // filtered list as the sentinel nears the viewport. Nothing to fetch — the
+  // full corpus loaded with the page — so this is just progressive reveal.
+  useEffect(() => {
+    if (!hasMore) return;
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setVisibleCount((v) => v + BATCH_SIZE);
+        }
+      },
+      { rootMargin: "600px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore]);
+
   // Unlike the homepage's default view, this page's whole point is full
-  // history — no day-cap here regardless of which filters are active.
-  const groups = useMemo(() => groupByDay(visible), [visible]);
+  // history — no day-cap on the filtered set, just the scroll-driven reveal.
+  const groups = useMemo(() => groupByDay(shown), [shown]);
 
   return (
     <>
@@ -169,6 +212,15 @@ export function PublicationsFeed({
             </select>
           </label>
         )}
+
+        <button
+          type="button"
+          onClick={resetFilters}
+          disabled={!hasActiveFilters}
+          className="text-xs font-mono tw-muted hover:text-cyan-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-inherit"
+        >
+          Reset filters ×
+        </button>
       </div>
 
       {groups.length === 0 ? (
@@ -198,6 +250,16 @@ export function PublicationsFeed({
             </div>
           </div>
         ))
+      )}
+
+      {hasMore ? (
+        <div ref={sentinelRef} className="h-1" aria-hidden="true" />
+      ) : (
+        visible.length > 0 && (
+          <p className="text-center text-xs font-mono tw-muted py-4">
+            {visible.length} article{visible.length !== 1 && "s"} — you&apos;ve reached the end
+          </p>
+        )
       )}
     </>
   );

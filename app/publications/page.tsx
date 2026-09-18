@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { PublicationsFeed } from "@/components/PublicationsFeed";
-import { getArticlesByCategory, getCompaniesWithCounts } from "@/lib/queries";
+import { getAllArticlesByCategory, getCompaniesWithCounts } from "@/lib/queries";
 
 export const revalidate = 300;
 
@@ -11,14 +11,10 @@ export const metadata: Metadata = {
   alternates: { canonical: "/publications/" },
 };
 
-// Generous, bounded window rather than true pagination: comfortably deeper
-// than any single filter combination needs, without an unbounded query.
-const FETCH_LIMIT = 150;
-
 export default async function PublicationsPage() {
   const [news, research, companies] = await Promise.all([
-    getArticlesByCategory("news", { limit: FETCH_LIMIT }),
-    getArticlesByCategory("research", { limit: FETCH_LIMIT }),
+    getAllArticlesByCategory("news"),
+    getAllArticlesByCategory("research"),
     getCompaniesWithCounts(),
   ]);
 
