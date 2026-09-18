@@ -7,6 +7,10 @@ Honors ETag and If-Modified-Since headers to minimize bandwidth.
 Fetches full article text when requires_full_text_fetch is True, or whenever
 the feed body looks like a short teaser rather than a real article (see
 TEASER_CHARS) — capped to genuinely new entries via the seen-articles cache.
+
+--source-id restricts the run to one ingest_sources row, for verifying a
+single source end-to-end (e.g. from the "run" button per source in
+Admin / Sources) without waiting on or paying for the full sweep.
 """
 from __future__ import annotations
 
@@ -382,22 +386,36 @@ def fetch_arxiv(source: dict, dry_run: bool) -> list[dict]:
     return articles
 
 
-def main(dry_run: bool = False) -> int:
+def main(dry_run: bool = False, source_id: int | None = None) -> int:
     global MAX_BODY_CHARS
     MAX_BODY_CHARS = max(2000, get_setting_int("max_source_chars", DEFAULT_MAX_BODY_CHARS))
 
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-    sources = load_sources(active_only=True)
-    log.info("loaded %d active sources from the database", len(sources))
+    if source_id is not None:
+        # An explicit "run this one source" request overrides both the
+        # active flag and the active_months gate below — it's a deliberate
+        # test of that source, not the scheduled sweep, so a deactivated or
+        # currently-out-of-season source should still run when asked for by
+        # id rather than silently doing nothing.
+        sources = [s for s in load_sources(active_only=False) if s["id"] == source_id]
+        if not sources:
+            log.error("no source with id=%d", source_id)
+            return 1
+        log.info("single-source run: %s (id=%d)", sources[0]["name"], source_id)
+    else:
+        sources = load_sources(active_only=True)
+        log.info("loaded %d active sources from the database", len(sources))
 
     all_articles: list[dict] = []
     current_month = datetime.now(timezone.utc).month
 
     for source in sources:
-        # Some research venues only publish around their conference dates.
+        # Some research venues only publish around their conference dates —
+        # skipped for the scheduled sweep, never for an explicit single-
+        # source run.
         months = source.get("active_months") or []
-        if months and current_month not in months:
+        if source_id is None and months and current_month not in months:
             log.debug("skipping %s (inactive month %d)", source["name"], current_month)
             record_source_result(source["id"], "skipped", 0)
             continue
@@ -445,5 +463,9 @@ def main(dry_run: bool = False) -> int:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--dry-run", action="store_true", help="fetch without writing output")
+    parser.add_argument(
+        "--source-id", type=int, default=None,
+        help="Only fetch this one ingest_sources.id, ignoring active/active_months",
+    )
     args = parser.parse_args()
-    sys.exit(main(dry_run=args.dry_run))
+    sys.exit(main(dry_run=args.dry_run, source_id=args.source_id))

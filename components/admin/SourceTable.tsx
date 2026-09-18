@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { setSourceActive, deleteSource } from "@/app/admin/actions";
+import { RunSourceButton } from "./RunSourceButton";
 import type { IngestSource } from "@/lib/admin";
 
 const STATUS_COLOR: Record<string, string> = {
@@ -112,17 +113,20 @@ export function SourceTable({ sources }: { sources: IngestSource[] }) {
                     </span>
                   </td>
                   <td className="px-3 py-2 text-right">
-                    <button
-                      onClick={() => {
-                        if (confirm(`Delete source "${s.name}"? Its articles are kept.`)) {
-                          act(() => deleteSource(s.id));
-                        }
-                      }}
-                      disabled={pending}
-                      className="text-xs font-mono tw-muted hover:text-red-500 transition-colors"
-                    >
-                      delete
-                    </button>
+                    <div className="flex items-center justify-end gap-3">
+                      <RunSourceButton id={s.id} name={s.name} />
+                      <button
+                        onClick={() => {
+                          if (confirm(`Delete source "${s.name}"? Its articles are kept.`)) {
+                            act(() => deleteSource(s.id));
+                          }
+                        }}
+                        disabled={pending}
+                        className="text-xs font-mono tw-muted hover:text-red-500 transition-colors"
+                      >
+                        delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
