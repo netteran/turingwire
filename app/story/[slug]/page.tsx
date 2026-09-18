@@ -134,6 +134,9 @@ export default async function StoryPage({ params }: Props) {
         >
           Multi-source analysis
         </span>
+        <span className="font-mono text-[10px] uppercase tracking-widest tw-muted border tw-border rounded px-2 py-1">
+          {story.scope === "theme" ? "Cross-company trend" : "Company thread"}
+        </span>
         <span className="font-mono text-xs tw-muted">{sources.length} sources</span>
       </div>
 
@@ -307,10 +310,13 @@ export default async function StoryPage({ params }: Props) {
         </summary>
         <div className="mt-3 text-sm tw-muted leading-relaxed space-y-2">
           <p>
-            This story tracks a developing topic across multiple sources. Each key
-            finding is cross-referenced against the listed sources and labelled by
-            how many independent outlets corroborate or contest it. Disputed
-            findings are surfaced explicitly rather than resolved editorially.
+            {story.scope === "theme"
+              ? "This story tracks a cross-company trend or signal, not a single company's news cycle — it clusters by the pattern itself, regardless of which lab is involved."
+              : "This story tracks one company's developing thread across multiple sources."}{" "}
+            Each key finding is cross-referenced against the listed sources and
+            labelled by how many independent outlets corroborate or contest it.
+            Disputed findings are surfaced explicitly rather than resolved
+            editorially.
           </p>
           <p>
             All source articles are linked directly.{" "}
