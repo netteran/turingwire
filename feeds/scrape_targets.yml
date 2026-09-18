@@ -90,19 +90,36 @@ AMD Newsroom:
   listing_url: https://www.amd.com/en/newsroom.html
   link_pattern: '^/en/newsroom/.+'
 
-# No RSS/Atom feed was given for this one — added straight to scrape from
-# the blog listing, so there was never a "was it verified against the live
-# feed" baseline the way the entries above had. Stricter than the plain
-# '^/blog/.+' most other company blogs above use: matches exactly one path
-# segment under /blog/ (so /blog/tag/x or /blog/author/x are rejected by
-# construction, not just by exclude_pattern), plus an explicit deny-list for
-# the common single-segment utility paths a blog listing tends to link to
-# (archive, rss, subscribe, ...). A false positive here (a tag/index page
-# misread as an article) is worse than a false negative, and a false
-# negative is self-detecting: generate_scraped_feeds.py logs a loud warning
-# on 0 extracted items, so check that log after the first real run and
-# loosen this if it fired.
+# Now verified against the page's real markup (a 0-item run surfaced two
+# things a blind guess got wrong):
+#
+# 1. The listing is mostly third-party press coverage (WSJ, Forbes, AWS,
+#    TechCrunch, YouTube, ...) with target="_blank" links to those sites'
+#    own domains — correctly excluded already by generate_scraped_feeds.py's
+#    same-origin check, before link_pattern even runs. That was never the
+#    gap; leaving this note so a future "0 items" doesn't re-litigate it.
+# 2. Pathway's *own* posts are split across two prefixes, /blog/<slug> and
+#    /research/<slug> (their research write-ups, e.g. "The Equations of
+#    Reasoning", are a real, sizeable category) — the original pattern only
+#    matched /blog/ and silently dropped every /research/ post. Fixed below.
+#    (One further one-off, /framework/blog/<slug>, appeared exactly once on
+#    the live page and isn't matched here — not chasing a single historical
+#    outlier; if it recurs, the usual 0-items warning will flag it.)
+#
+# Still matches exactly one path segment under either prefix (so .../tag/x
+# or .../author/x are rejected by construction), plus the same deny-list for
+# single-segment utility paths (archive, rss, subscribe, ...) under both.
+#
+# Separately: the listing cards have no <time> element and no date-ish
+# class name (plain Tailwind-utility <span>s), so _find_date() will miss on
+# every item here and fall back to fetching each article's own page for its
+# publish-date metadata — the fallback generate_scraped_feeds.py already has
+# for exactly this. And Pathway's own posting cadence is sparse (their own
+# most recent post at the time of writing was ~8 months old) — 0 fetched on
+# any given run is expected most of the time, not necessarily a sign this
+# still needs tuning; only a fresh Pathway post landing and *still* not
+# showing up would indicate a real problem.
 Pathway Blog:
   listing_url: https://pathway.com/blog
-  link_pattern: '^/blog/[^/]+/?$'
-  exclude_pattern: '^/blog/(tag|tags|category|categories|topic|topics|author|authors|page|archive|rss|feed|subscribe|newsletter|search|all)(/|$)'
+  link_pattern: '^/(blog|research)/[^/]+/?$'
+  exclude_pattern: '^/(blog|research)/(tag|tags|category|categories|topic|topics|author|authors|page|archive|rss|feed|subscribe|newsletter|search|all)(/|$)'
