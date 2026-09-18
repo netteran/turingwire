@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Script from "next/script";
 
 import { PostCard } from "@/components/PostCard";
 import { BreakingStrip } from "@/components/BreakingStrip";
@@ -9,6 +8,7 @@ import { PartnerSpotlight } from "@/components/PartnerSpotlight";
 import { AiIndexCard } from "@/components/AiIndexCard";
 import { TopMovers } from "@/components/TopMovers";
 import { StocksBootstrap } from "@/components/StocksBootstrap";
+import { StocksScripts } from "@/components/StocksScripts";
 
 import {
   getRecentArticles,
@@ -248,8 +248,7 @@ export default async function HomePage() {
         </div>
       </div>
 
-      <Script src="/assets/js/echarts.min.js" strategy="afterInteractive" />
-      <Script src="/assets/js/stocks.js?v=2" strategy="afterInteractive" />
+      <StocksScripts />
     </>
   );
 }
