@@ -1,22 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { PostCard } from "@/components/PostCard";
 import { BreakingStrip } from "@/components/BreakingStrip";
-import { DayLabel } from "@/components/DayLabel";
 import { PartnerSpotlight } from "@/components/PartnerSpotlight";
+import { HomeFeed } from "@/components/HomeFeed";
 import { AiIndexCard } from "@/components/AiIndexCard";
 import { TopMovers } from "@/components/TopMovers";
 import { StocksBootstrap } from "@/components/StocksBootstrap";
 import { StocksScripts } from "@/components/StocksScripts";
 
-import {
-  getRecentArticles,
-  getArticlesByCategory,
-  getCompaniesWithCounts,
-} from "@/lib/queries";
+import { getArticlesByCategory, getCompaniesWithCounts } from "@/lib/queries";
 import { getAiIndexHistory, getStocksSnapshot } from "@/lib/data";
-import { articleUrl, type ArticleCard } from "@/lib/types";
+import { articleUrl } from "@/lib/types";
 import { site } from "@/lib/site";
 
 export const revalidate = 300;
@@ -46,35 +41,26 @@ const websiteSchema = {
   },
 };
 
-/** Group articles by their UTC calendar day, preserving order. */
-function groupByDay(posts: ArticleCard[]): { date: string; items: ArticleCard[] }[] {
-  const groups: { date: string; items: ArticleCard[] }[] = [];
-  for (const post of posts) {
-    const date = post.published_at.slice(0, 10);
-    const last = groups[groups.length - 1];
-    if (last && last.date === date) last.items.push(post);
-    else groups.push({ date, items: [post] });
-  }
-  return groups;
-}
-
 export default async function HomePage() {
-  const [recent, researchSpotlight, companies] = await Promise.all([
-    getRecentArticles(120),
-    getArticlesByCategory("research", { limit: 1 }),
+  const [news, research, companies] = await Promise.all([
+    getArticlesByCategory("news", { limit: 60 }),
+    getArticlesByCategory("research", { limit: 60 }),
     getCompaniesWithCounts(),
   ]);
 
   const indexHistory = getAiIndexHistory();
   const stocks = getStocksSnapshot();
 
+  const recent = [...news, ...research]
+    .filter((p) => p.title?.trim())
+    .sort((a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime());
+
   const sixHoursAgo = Date.now() - 6 * 60 * 60 * 1000;
   const breaking = recent.find(
     (p) => p.impact === "critical" && new Date(p.published_at).getTime() >= sixHoursAgo,
   );
 
-  const spotlight = researchSpotlight[0];
-  const groups = groupByDay(recent.filter((p) => p.title?.trim())).slice(0, 3);
+  const spotlight = research[0];
   const todayUtc = new Date().toISOString().slice(0, 10);
 
   return (
@@ -105,45 +91,8 @@ export default async function HomePage() {
                 </p>
               </div>
             ) : (
-              groups.map((group, groupIndex) => (
-                <div className="mb-8" key={group.date}>
-                  <h2
-                    className="text-xs font-mono uppercase tracking-widest tw-muted mb-3 flex items-center gap-3"
-                    data-day-group={group.date}
-                  >
-                    <DayLabel
-                      date={group.date}
-                      initialLabel={group.date === todayUtc ? "Today" : group.date}
-                    />
-                    <span
-                      className="flex-1 h-px tw-border"
-                      style={{ background: "var(--border)" }}
-                    />
-                  </h2>
-                  <div className="space-y-3">
-                    {group.items.map((post, postIndex) => (
-                      <div key={post.id}>
-                        <PostCard post={post} />
-                        {groupIndex === 0 && postIndex === 0 && (
-                          <div className="block lg:hidden mt-3">
-                            <PartnerSpotlight />
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))
+              <HomeFeed posts={recent} todayUtc={todayUtc} />
             )}
-
-            <div className="mt-4 flex flex-wrap gap-4 text-sm font-mono">
-              <Link href="/news/" className="tw-filter-chip">
-                All news →
-              </Link>
-              <Link href="/research/" className="tw-filter-chip">
-                All research →
-              </Link>
-            </div>
           </div>
 
           <aside className="mt-10 lg:mt-0 space-y-6">
@@ -211,7 +160,7 @@ export default async function HomePage() {
                   )}
                 </div>
                 <Link
-                  href="/research/"
+                  href="/?section=research"
                   className="block mt-3 text-xs font-mono text-cyan-600 hover:text-cyan-500 transition-colors"
                 >
                   All research →

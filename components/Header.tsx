@@ -14,14 +14,6 @@ import { createBrowserClient } from "@supabase/ssr";
 
 const NAV_GROUPS = [
   {
-    label: "The Wire",
-    match: ["/news", "/research"],
-    items: [
-      ["/news/", "News"],
-      ["/research/", "Research"],
-    ],
-  },
-  {
     label: "Markets",
     match: ["/aistocks", "/companies"],
     items: [
@@ -204,15 +196,6 @@ export function Header() {
           >
             Stories
           </Link>
-
-          <Link
-            href="/calendar/"
-            className={`tw-nav-link${
-              isActive(["/calendar"]) ? " tw-nav-active" : ""
-            }`}
-          >
-            Events
-          </Link>
         </nav>
 
         <div className="flex items-center gap-2">
@@ -363,15 +346,6 @@ export function Header() {
             }`}
           >
             Stories
-          </Link>
-
-          <Link
-            href="/calendar/"
-            className={`tw-nav-link py-2${
-              isActive(["/calendar"]) ? " tw-nav-active" : ""
-            }`}
-          >
-            Events
           </Link>
 
           <form action="/search/" method="get" className="mt-2">
