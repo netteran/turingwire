@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Script from "next/script";
 
 import { PostCard } from "@/components/PostCard";
 import { ShareButtons } from "@/components/ShareButtons";
 import { StocksBootstrap } from "@/components/StocksBootstrap";
+import { StocksScripts } from "@/components/StocksScripts";
 import { getArticlesByTag } from "@/lib/queries";
 import { getAiIndexHistory, getStocksSnapshot, getTickers } from "@/lib/data";
 import { absoluteUrl, site } from "@/lib/site";
@@ -262,8 +262,7 @@ export default async function AiStocksPage() {
         </p>
       </div>
 
-      <Script src="/assets/js/echarts.min.js" strategy="afterInteractive" />
-      <Script src="/assets/js/stocks.js?v=2" strategy="afterInteractive" />
+      <StocksScripts />
     </div>
   );
 }

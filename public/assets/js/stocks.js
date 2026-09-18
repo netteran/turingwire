@@ -244,10 +244,22 @@
 
   // ── Initialize ─────────────────────────────────────────────────────────────
 
+  // App Router navigation to another page that already loaded these same
+  // <Script> srcs (the homepage carries the same pair) doesn't re-run this
+  // file — next/script loads a given src once per browser session — so
+  // init() can legitimately be asked to (re)bind to a DOM node echarts
+  // already owns from a previous mount. Dispose first, echarts' own
+  // documented pattern for reusing a container element.
+  function freshInstance(el) {
+    var existing = echarts.getInstanceByDom(el);
+    if (existing) existing.dispose();
+    return echarts.init(el, null, { renderer: 'canvas' });
+  }
+
   function initHeatmap(stockData) {
     var el = document.getElementById('tw-heatmap');
     if (!el || typeof echarts === 'undefined') return;
-    heatmapChart = echarts.init(el, null, { renderer: 'canvas' });
+    heatmapChart = freshInstance(el);
     var quotes = Object.values(stockData.quotes || {});
     heatmapChart.setOption(buildHeatmapOption(quotes, getThemeColors()));
     window.addEventListener('resize', function () { heatmapChart.resize(); });
@@ -257,7 +269,7 @@
     var el = document.getElementById('tw-index-chart');
     if (!el || typeof echarts === 'undefined') return;
 
-    indexChart = echarts.init(el, null, { renderer: 'canvas' });
+    indexChart = freshInstance(el);
     var currentRange = '3M';
 
     // Set initial option — show empty axes if no data yet
@@ -292,7 +304,7 @@
     if (!el || typeof echarts === 'undefined') return;
     var opt = buildSparklineOption(historyData.series || [], getThemeColors());
     if (!opt) return;
-    var chart = echarts.init(el, null, { renderer: 'canvas' });
+    var chart = freshInstance(el);
     chart.setOption(opt);
     window.addEventListener('resize', function () { chart.resize(); });
   }
@@ -332,15 +344,26 @@
 
   // ── Bootstrap ──────────────────────────────────────────────────────────────
 
-  ready(function () {
-    var stockData   = window._twStockData   || {};
-    var historyData = window._twIndexHistory || {};
-    whenEchartsReady(function () {
-      initHeatmap(stockData);
-      initIndexChart(historyData);
-      initSparkline(historyData);
+  // Exposed on window rather than run once at the bottom of this file:
+  // next/script loads a given src only once per browser session, so an App
+  // Router client-side navigation to another page carrying the same
+  // <Script src> (the homepage uses this same pair) never re-executes this
+  // file — even though the newly-mounted page has its own #tw-heatmap /
+  // #tw-index-chart to fill, which left them permanently blank until a full
+  // reload. components/StocksScripts.tsx calls this from each <Script>'s
+  // onReady prop, which — unlike onLoad — fires on every mount regardless
+  // of whether the script itself was already loaded.
+  window.__twInitStocks = function () {
+    ready(function () {
+      var stockData   = window._twStockData   || {};
+      var historyData = window._twIndexHistory || {};
+      whenEchartsReady(function () {
+        initHeatmap(stockData);
+        initIndexChart(historyData);
+        initSparkline(historyData);
+      });
+      initRefreshButton();
     });
-    initRefreshButton();
-  });
+  };
 
 })();
