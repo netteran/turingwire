@@ -248,11 +248,8 @@ export default async function HomePage() {
         </div>
       </div>
 
-      <Script
-        src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"
-        strategy="afterInteractive"
-      />
-      <Script src="/assets/js/stocks.js" strategy="afterInteractive" />
+      <Script src="/assets/js/echarts.min.js" strategy="afterInteractive" />
+      <Script src="/assets/js/stocks.js?v=2" strategy="afterInteractive" />
     </>
   );
 }
