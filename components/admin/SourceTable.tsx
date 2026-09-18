@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
-import { setSourceActive, deleteSource } from "@/app/admin/actions";
+import { setSourceActive } from "@/app/admin/actions";
 import { RunSourceButton } from "./RunSourceButton";
 import type { IngestSource } from "@/lib/admin";
 
@@ -57,9 +58,9 @@ export function SourceTable({ sources }: { sources: IngestSource[] }) {
                 className="border-b tw-border"
                 style={{ background: "color-mix(in srgb, var(--border) 30%, transparent)" }}
               >
-                {["", "Source", "Pri", "Last run", "Items", "Status", ""].map((h, i) => (
+                {["Source", "Kind", "Pri", "Last run", "Items", "Status", ""].map((h) => (
                   <th
-                    key={i}
+                    key={h}
                     className="text-left px-3 py-2 text-xs font-mono uppercase tracking-widest tw-muted font-semibold"
                   >
                     {h}
@@ -70,19 +71,8 @@ export function SourceTable({ sources }: { sources: IngestSource[] }) {
             <tbody>
               {sources.map((s) => (
                 <tr key={s.id} className="border-b tw-border last:border-0">
-                  <td className="px-3 py-2">
-                    <input
-                      type="checkbox"
-                      checked={s.active}
-                      aria-label={`${s.active ? "Deactivate" : "Activate"} ${s.name}`}
-                      onChange={(e) => act(() => setSourceActive(s.id, e.target.checked))}
-                      disabled={pending}
-                    />
-                  </td>
                   <td className="px-3 py-2 min-w-0">
-                    <div className={`font-medium text-sm ${s.active ? "tw-heading" : "tw-muted"}`}>
-                      {s.name}
-                    </div>
+                    <div className="font-medium text-sm tw-heading">{s.name}</div>
                     <a
                       href={s.url}
                       target="_blank"
@@ -96,6 +86,10 @@ export function SourceTable({ sources }: { sources: IngestSource[] }) {
                         {s.last_error.slice(0, 160)}
                       </div>
                     )}
+                  </td>
+                  <td className="px-3 py-2 font-mono text-xs tw-muted whitespace-nowrap">
+                    {s.kind}
+                    {s.type !== "rss" && s.type !== "atom" && ` · ${s.type}`}
                   </td>
                   <td className="px-3 py-2 font-mono text-xs tw-muted">{s.priority}</td>
                   <td className="px-3 py-2 font-mono text-xs tw-muted whitespace-nowrap">
@@ -112,19 +106,23 @@ export function SourceTable({ sources }: { sources: IngestSource[] }) {
                       {s.last_status ?? "—"}
                     </span>
                   </td>
-                  <td className="px-3 py-2 text-right">
-                    <div className="flex items-center justify-end gap-3">
-                      <RunSourceButton id={s.id} name={s.name} />
-                      <button
-                        onClick={() => {
-                          if (confirm(`Delete source "${s.name}"? Its articles are kept.`)) {
-                            act(() => deleteSource(s.id));
-                          }
-                        }}
-                        disabled={pending}
-                        className="text-xs font-mono tw-muted hover:text-red-500 transition-colors"
+                  <td className="px-3 py-2 text-right whitespace-nowrap">
+                    <div className="flex items-center justify-end gap-2">
+                      <Link
+                        href={`/admin/sources/${s.id}`}
+                        className="text-xs font-mono tw-muted hover:tw-accent transition-colors"
                       >
-                        delete
+                        edit
+                      </Link>
+                      <span className="tw-muted">·</span>
+                      <RunSourceButton id={s.id} name={s.name} />
+                      <span className="tw-muted">·</span>
+                      <button
+                        onClick={() => act(() => setSourceActive(s.id, !s.active))}
+                        disabled={pending}
+                        className="text-xs font-mono tw-muted hover:tw-accent transition-colors"
+                      >
+                        {s.active ? "deactivate" : "activate"}
                       </button>
                     </div>
                   </td>

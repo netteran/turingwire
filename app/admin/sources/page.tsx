@@ -6,8 +6,8 @@ export const dynamic = "force-dynamic";
 
 export default async function SourcesPage() {
   const sources = await getSources();
-  const news = sources.filter((s) => s.kind === "news");
-  const research = sources.filter((s) => s.kind === "research");
+  const active = sources.filter((s) => s.active);
+  const deactivated = sources.filter((s) => !s.active);
 
   return (
     <>
@@ -17,14 +17,14 @@ export default async function SourcesPage() {
       </p>
 
       <h2 className="text-xs font-mono uppercase tracking-widest tw-muted mb-3">
-        News ({news.filter((s) => s.active).length}/{news.length} active)
+        Active ({active.length})
       </h2>
-      <SourceTable sources={news} />
+      <SourceTable sources={active} />
 
       <h2 className="text-xs font-mono uppercase tracking-widest tw-muted mb-3 mt-8">
-        Research ({research.filter((s) => s.active).length}/{research.length} active)
+        Deactivated ({deactivated.length})
       </h2>
-      <SourceTable sources={research} />
+      <SourceTable sources={deactivated} />
 
       <h2 className="text-xs font-mono uppercase tracking-widest tw-muted mb-3 mt-8">
         Add a source
