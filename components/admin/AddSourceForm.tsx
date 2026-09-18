@@ -45,6 +45,7 @@ export function AddSourceForm() {
           <option value="rss">rss</option>
           <option value="atom">atom</option>
           <option value="api">api</option>
+          <option value="scrape">scrape (needs a feeds/scrape_targets.yml entry)</option>
         </select>
       </label>
       <label className="text-xs font-mono tw-muted">

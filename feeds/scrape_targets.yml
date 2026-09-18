@@ -89,3 +89,20 @@ The Verge AI:
 AMD Newsroom:
   listing_url: https://www.amd.com/en/newsroom.html
   link_pattern: '^/en/newsroom/.+'
+
+# No RSS/Atom feed was given for this one — added straight to scrape from
+# the blog listing, so there was never a "was it verified against the live
+# feed" baseline the way the entries above had. Stricter than the plain
+# '^/blog/.+' most other company blogs above use: matches exactly one path
+# segment under /blog/ (so /blog/tag/x or /blog/author/x are rejected by
+# construction, not just by exclude_pattern), plus an explicit deny-list for
+# the common single-segment utility paths a blog listing tends to link to
+# (archive, rss, subscribe, ...). A false positive here (a tag/index page
+# misread as an article) is worse than a false negative, and a false
+# negative is self-detecting: generate_scraped_feeds.py logs a loud warning
+# on 0 extracted items, so check that log after the first real run and
+# loosen this if it fired.
+Pathway Blog:
+  listing_url: https://pathway.com/blog
+  link_pattern: '^/blog/[^/]+/?$'
+  exclude_pattern: '^/blog/(tag|tags|category|categories|topic|topics|author|authors|page|archive|rss|feed|subscribe|newsletter|search|all)(/|$)'
