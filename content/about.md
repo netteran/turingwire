@@ -9,12 +9,12 @@ Turing Wire is an independent AI industry publication covering the AI ecosystem 
 
 ## Who it's for
 
-**The AI-aware practitioner.** If you're an engineer, ML researcher, or technical PM working in or adjacent to AI, Turing Wire is built for your daily rhythm. You follow lab releases because they change what you can build. You scan arXiv selectively but can't read 30 abstracts a day. You care about whether TSMC's yield issues will affect GPU availability in Q3. You want signal, not volume.
+**The AI-aware reader.** Whether you're an engineer, a researcher, an investor, or just someone who wants to actually keep up with AI instead of skimming headlines about it, Turing Wire is built for your daily rhythm. You follow lab releases because they change what's possible. You scan arXiv selectively but can't read 30 abstracts a day. You care about whether TSMC's yield issues will affect GPU availability in Q3. You want signal, not noise.
 
 The feeds and tools serve distinct needs:
 
 - **News** — What shipped, who got funded, what policy is coming. Organised by impact (Critical → Minor) so you can triage at a glance. Subscribe to the [Major+ RSS feed](/feed-major.xml) to get only the stuff worth stopping for.
-- **Research** — Paper summaries structured for practitioners: problem, method, results, and *why it matters for what you're building*. Covers arXiv, Nature Machine Intelligence, JMLR, and major conference proceedings. Each summary links directly to the original and, where available, to the arXiv abstract.
+- **Research** — Paper summaries structured for clarity, not jargon: problem, method, results, and *why it matters*. Covers arXiv, Nature Machine Intelligence, JMLR, and major conference proceedings. Each summary links directly to the original and, where available, to the arXiv abstract.
 - **AIStocks** — Semiconductor supply, hyperscaler capex, and enterprise AI deployment health — framed as ecosystem signals, not trading tips. When NVDA earnings disappoint or TSMC cuts guidance, it tells you something about where the compute supply chain is heading.
 - **Stories** — In-depth coverage of developing events. When a topic evolves across multiple articles over days, a Story brings all the threads together: each key finding is cross-referenced against independent sources, with links to every supporting or contradicting article. Contested findings are surfaced explicitly.
 - **TW AI Index** — A standing, daily answer to the question the whole industry keeps arguing about: is the AI trade overheating, or just getting started? An equal-weighted basket of chipmakers, hyperscalers, and AI pure-plays, indexed to 100 at launch. Watch the line, not the hot takes.
