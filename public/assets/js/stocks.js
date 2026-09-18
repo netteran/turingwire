@@ -19,12 +19,12 @@
     }
   }
 
-  // Both this file and the echarts CDN bundle load via separate next/script
+  // Both this file and echarts.min.js load via separate next/script
   // afterInteractive tags, which inject plain async <script> elements — so
-  // whichever finishes downloading first runs first. This file is small and
-  // same-origin, so it usually wins the race against the ~1MB CDN bundle,
-  // which left `echarts` undefined and made every init() below a silent
-  // no-op. Poll instead of assuming load order.
+  // whichever finishes downloading and parsing first runs first, and this
+  // file is much smaller than the ~1MB echarts bundle. When stocks.js won
+  // that race, `echarts` was still undefined and every init() below was a
+  // silent no-op with no retry. Poll instead of assuming load order.
   function whenEchartsReady(callback) {
     var attempts = 0;
     var maxAttempts = 200; // ~20s at 100ms
