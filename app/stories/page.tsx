@@ -8,7 +8,7 @@ export const revalidate = 300;
 export const metadata: Metadata = {
   title: "Stories",
   description:
-    "General trends and signals across the AI industry, synthesized from multiple sources with claim-level provenance.",
+    "General cross-company trends and signals in AI, synthesized from multiple independent sources with claim-level provenance — not single-company event tracking.",
   alternates: { canonical: "/stories/" },
 };
 
@@ -76,13 +76,14 @@ export default async function StoriesPage() {
           Stories
         </h1>
         <p className="text-sm tw-muted leading-relaxed max-w-2xl">
-          General trends and signals across the AI industry — cross-company
-          patterns synthesized from multiple sources, not single-event
-          tracking. Every claim is mapped to the articles that support or
-          contradict it, so you see disagreement rather than a smoothed
-          single-tone summary. Company- and event-specific threads are
-          listed separately below, once they build up enough independent
-          coverage to be worth following.
+          Stories track general trends and signals across the AI industry —
+          cross-company patterns synthesized from multiple independent
+          sources, not a blow-by-blow of any one company&apos;s news cycle.
+          Every claim is mapped to the articles that support or contradict
+          it, so you see disagreement rather than a smoothed single-tone
+          summary. A single company&apos;s own thread appears separately,
+          below, only on the rare occasion one builds up enough independent,
+          multi-publisher coverage to be worth tracking on its own.
         </p>
       </header>
 
@@ -106,7 +107,7 @@ export default async function StoriesPage() {
           {events.length > 0 && (
             <section>
               <h2 className="text-xs font-mono uppercase tracking-widest tw-muted mb-4">
-                Company &amp; event coverage
+                Individual company threads (occasional)
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {events.map((story) => (
