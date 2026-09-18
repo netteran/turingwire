@@ -117,7 +117,7 @@ export default async function AiStocksPage() {
       <section className="tw-card rounded-lg border tw-border p-5 mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <h2 className="text-sm font-mono font-semibold tw-heading">TW AI Index</h2>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">
             {RANGES.map((r) => (
               <button
                 key={r}
@@ -127,6 +127,29 @@ export default async function AiStocksPage() {
                 {r}
               </button>
             ))}
+            <button
+              type="button"
+              id="tw-refresh-btn"
+              className="tw-icon-btn flex"
+              aria-label="Refresh chart data"
+              title="Refresh"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+              </svg>
+            </button>
           </div>
         </div>
         <div id="tw-index-chart" className="tw-index-chart" />

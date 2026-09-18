@@ -357,6 +357,17 @@ body.tw-body {
   background-color: color-mix(in srgb, var(--border) 60%, transparent);
 }
 
+.tw-icon-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.tw-icon-btn.is-refreshing svg { animation: tw-spin 0.7s linear infinite; }
+
+@keyframes tw-spin {
+  to { transform: rotate(360deg); }
+}
+
 /* ── Cards ───────────────────────────────────────────────────────────────── */
 
 .tw-card {

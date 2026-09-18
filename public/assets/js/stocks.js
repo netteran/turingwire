@@ -19,6 +19,24 @@
     }
   }
 
+  // Both this file and the echarts CDN bundle load via separate next/script
+  // afterInteractive tags, which inject plain async <script> elements — so
+  // whichever finishes downloading first runs first. This file is small and
+  // same-origin, so it usually wins the race against the ~1MB CDN bundle,
+  // which left `echarts` undefined and made every init() below a silent
+  // no-op. Poll instead of assuming load order.
+  function whenEchartsReady(callback) {
+    var attempts = 0;
+    var maxAttempts = 200; // ~20s at 100ms
+    (function poll() {
+      if (typeof echarts !== 'undefined') {
+        callback();
+      } else if (attempts++ < maxAttempts) {
+        setTimeout(poll, 100);
+      }
+    })();
+  }
+
   // ── Theme-aware colors ─────────────────────────────────────────────────────
 
   function getThemeColors() {
@@ -279,6 +297,23 @@
     window.addEventListener('resize', function () { chart.resize(); });
   }
 
+  // ── Refresh button ─────────────────────────────────────────────────────────
+
+  // Market data is static JSON baked in at render time (revalidated every 5
+  // min, refreshed by the ingest workflow independently of that). There's no
+  // client-side data endpoint to poll, so "refresh" means: get whatever the
+  // server has now and re-render from scratch, which also gives readers a
+  // manual retry if a chart ever fails to come up.
+  function initRefreshButton() {
+    var btn = document.getElementById('tw-refresh-btn');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      btn.disabled = true;
+      btn.classList.add('is-refreshing');
+      window.location.reload();
+    });
+  }
+
   // ── Theme change observer ──────────────────────────────────────────────────
 
   var observer = new MutationObserver(function () {
@@ -300,9 +335,12 @@
   ready(function () {
     var stockData   = window._twStockData   || {};
     var historyData = window._twIndexHistory || {};
-    initHeatmap(stockData);
-    initIndexChart(historyData);
-    initSparkline(historyData);
+    whenEchartsReady(function () {
+      initHeatmap(stockData);
+      initIndexChart(historyData);
+      initSparkline(historyData);
+    });
+    initRefreshButton();
   });
 
 })();
