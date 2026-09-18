@@ -213,13 +213,35 @@ export function PublicationsFeed({
           </label>
         )}
 
+        <span
+          className="hidden sm:block self-stretch w-px"
+          style={{ background: "var(--border)" }}
+          aria-hidden="true"
+        />
+
         <button
           type="button"
           onClick={resetFilters}
           disabled={!hasActiveFilters}
-          className="text-xs font-mono tw-muted hover:text-cyan-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-inherit"
+          className={`tw-filter-chip text-xs inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed${
+            hasActiveFilters ? " active" : ""
+          }`}
         >
-          Reset filters ×
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M3 12a9 9 0 1 0 2.6-6.4L3 8" />
+            <path d="M3 3v5h5" />
+          </svg>
+          Reset filters
         </button>
       </div>
 

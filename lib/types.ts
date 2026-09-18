@@ -91,6 +91,8 @@ export interface Story {
   slug: string;
   title: string;
   lead: string | null;
+  /** 'theme': cross-company trend (fixed set of 5). 'event': one company's own thread. */
+  scope: "theme" | "event";
   trust_score: number | null;
   companies: string[];
   sources: StorySource[];

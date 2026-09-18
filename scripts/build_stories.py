@@ -14,10 +14,17 @@ Two clustering strategies:
 - Event clusters: everything else clusters by (company, subcategory) — a
   single company's model launch, funding round, etc. evolving over days.
 
-Either way a cluster only qualifies once it has at least MIN_ARTICLES
-articles from at least MIN_PUBLISHERS distinct source publishers in the
-lookback window. The site's whole premise is multi-source corroboration, so
-one outlet's coverage — however much of it — is not a Story.
+Either way a cluster only qualifies once it has enough articles from enough
+distinct source publishers in the lookback window — the site's whole
+premise is multi-source corroboration, so one outlet's coverage, however
+much of it, is not a Story. Theme clusters qualify at 2 articles / 2
+publishers, since there are only 5 possible ones and each is a meaningful
+cross-lab pattern by construction. Event clusters need 3 / 3: unlike theme
+clusters, any company can spawn one, so the bar is higher to keep them
+rare and clearly newsworthy rather than routine. Each written row records
+which kind it is in `scope` ('theme' or 'event'), so the front end can lead
+with trend stories ahead of company-specific ones, and every run processes
+all qualifying theme clusters before spending its event-cluster budget.
 
 For a qualifying cluster, one LLM call cross-references claims across the
 member articles' own bodies (already-published, already-fact-checked text —
@@ -66,8 +73,16 @@ MODEL_DEFAULT = os.environ.get("SUMMARIZER_MODEL", "gpt-4o-mini")
 TEMPERATURE = 0.2
 
 LOOKBACK_DAYS = 14
-MIN_ARTICLES = 2
-MIN_PUBLISHERS = 2
+# Theme clusters are the cross-company trend signal this site should lead
+# with, and there are only ever 5 possible ones, so the low bar is fine.
+# Event clusters (one company's own subcategory) are unbounded in number,
+# so they need sustained coverage to qualify — a stricter bar keeps them
+# rarer and clearly newsworthy instead of "any company, any two articles"
+# noise crowding out the trend stories.
+MIN_ARTICLES_THEME = 2
+MIN_PUBLISHERS_THEME = 2
+MIN_ARTICLES_EVENT = 3
+MIN_PUBLISHERS_EVENT = 3
 MAX_CLUSTER_ARTICLES = 12  # newest N per cluster, keeps the prompt bounded
 MAX_BODY_CHARS = 2500  # per article, same reasoning
 MAX_CLUSTERS_PER_RUN = 20  # cost ceiling for one 4-hourly run
@@ -135,11 +150,14 @@ def build_clusters(articles: list[dict]) -> dict[str, list[dict]]:
     return clusters
 
 
-def qualifies(members: list[dict]) -> bool:
-    if len(members) < MIN_ARTICLES:
+def qualifies(key: str, members: list[dict]) -> bool:
+    is_theme = key.startswith("theme:")
+    min_articles = MIN_ARTICLES_THEME if is_theme else MIN_ARTICLES_EVENT
+    min_publishers = MIN_PUBLISHERS_THEME if is_theme else MIN_PUBLISHERS_EVENT
+    if len(members) < min_articles:
         return False
     publishers = {m.get("source_publisher") for m in members if m.get("source_publisher")}
-    return len(publishers) >= MIN_PUBLISHERS
+    return len(publishers) >= min_publishers
 
 
 def cluster_identity(key: str, members: list[dict]) -> tuple[str, str | None]:
@@ -306,12 +324,21 @@ def main() -> int:
     log.info("%d published articles in the last %d days", len(articles), LOOKBACK_DAYS)
 
     clusters = build_clusters(articles)
-    qualifying = {k: v for k, v in clusters.items() if qualifies(v)}
-    log.info("%d candidate clusters, %d qualify (>=%d articles, >=%d publishers)",
-              len(clusters), len(qualifying), MIN_ARTICLES, MIN_PUBLISHERS)
+    qualifying = {k: v for k, v in clusters.items() if qualifies(k, v)}
+    log.info(
+        "%d candidate clusters, %d qualify (themes: >=%d articles/>=%d publishers; "
+        "events: >=%d articles/>=%d publishers)",
+        len(clusters), len(qualifying),
+        MIN_ARTICLES_THEME, MIN_PUBLISHERS_THEME, MIN_ARTICLES_EVENT, MIN_PUBLISHERS_EVENT,
+    )
 
-    # Largest / most active clusters first, in case MAX_CLUSTERS_PER_RUN caps the list.
-    ordered = sorted(qualifying.items(), key=lambda kv: len(kv[1]), reverse=True)[:MAX_CLUSTERS_PER_RUN]
+    # All qualifying theme clusters first (at most 5, so this never actually
+    # costs event clusters their slots), then largest/most-active event
+    # clusters first in case MAX_CLUSTERS_PER_RUN still caps the list.
+    ordered = sorted(
+        qualifying.items(),
+        key=lambda kv: (0 if kv[0].startswith("theme:") else 1, -len(kv[1])),
+    )[:MAX_CLUSTERS_PER_RUN]
 
     written = 0
     skipped_unchanged = 0
@@ -341,6 +368,7 @@ def main() -> int:
             "slug": slug,
             "title": title,
             "lead": result["lead"] or None,
+            "scope": "theme" if key.startswith("theme:") else "event",
             "trust_score": result["trust_score"],
             "companies": cluster_companies(members),
             "sources": cluster_sources(members),
