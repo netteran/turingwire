@@ -20,7 +20,7 @@ import { groupByDay } from "@/lib/format";
 import { articleUrl } from "@/lib/types";
 import { site } from "@/lib/site";
 
-export const revalidate = 300;
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Turing Wire — AI News, Research & Market Intelligence",

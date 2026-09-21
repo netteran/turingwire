@@ -10,7 +10,7 @@ import { getArticlesByTag } from "@/lib/queries";
 import { getAiIndexHistory, getStocksSnapshot, getTickers } from "@/lib/data";
 import { absoluteUrl, site } from "@/lib/site";
 
-export const revalidate = 300;
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "AI Stocks",

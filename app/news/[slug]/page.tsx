@@ -3,7 +3,7 @@ import { ArticlePage } from "@/components/ArticlePage";
 import { articleMetadata } from "@/lib/articleMetadata";
 
 /** Articles are rendered on demand and cached; new rows go live without a deploy. */
-export const revalidate = 300;
+export const revalidate = 3600;
 
 type Props = { params: Promise<{ slug: string }> };
 
