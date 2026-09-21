@@ -14,7 +14,8 @@ import {
  *
  * Every helper here replaces a Liquid expression that used to iterate
  * `site.posts` in memory at build time. RLS restricts all of them to
- * status = 'published', so body-less archived rows never surface.
+ * status <> 'draft', so published and archived articles both surface —
+ * only drafts are held back.
  */
 
 const cards = () => getSupabase().from("articles").select(CARD_COLUMNS);
@@ -127,8 +128,9 @@ export async function getArticle(
 
 /**
  * Resolve an old Jekyll permalink to its new address.
- * Looks past RLS-invisible rows deliberately: an archived article still
- * redirects, it just renders as a stub rather than 404ing a live inbound link.
+ * Archived rows are readable like any other, so this redirects for them
+ * too; a body-less one just renders as a stub rather than 404ing a live
+ * inbound link.
  */
 export async function resolveLegacyPath(
   legacyPath: string,

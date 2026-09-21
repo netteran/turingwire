@@ -85,9 +85,9 @@ export async function getSettings(): Promise<Setting[]> {
 
 /**
  * Fetches an article by id for editing, regardless of status. The public
- * lib/queries.ts getArticle() runs on the anon client and can only ever see
- * published rows, so drafts and archived articles need this session-scoped
- * read instead (covered by the "admins read all articles" RLS policy).
+ * lib/queries.ts getArticle() runs on the anon client and can never see
+ * drafts, so those need this session-scoped read instead (covered by the
+ * "admins read all articles" RLS policy).
  */
 export async function getArticleById(id: number): Promise<Article | null> {
   const supabase = await createClient();

@@ -77,7 +77,7 @@ export function ArticleRow({ article }: { article: Row }) {
           disabled={pending}
           className="text-xs font-mono tw-muted hover:tw-accent transition-colors"
         >
-          {status === "published" ? "unpublish" : "publish"}
+          {status === "published" ? "archive" : "publish"}
         </button>
       </td>
     </tr>

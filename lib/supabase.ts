@@ -4,9 +4,10 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
  * Read-only Supabase client used by server components and route handlers.
  *
  * Uses the publishable (anon) key, so every query is filtered by the
- * "public read published" RLS policies — an unpublished or body-less archived
- * article can never leak into a rendered page. The ingest pipeline writes with
- * the service-role key, which lives only in GitHub Actions secrets.
+ * "public read non-draft articles" RLS policy — only a draft can never leak
+ * into a rendered page; published and archived articles are both fair game.
+ * The ingest pipeline writes with the service-role key, which lives only in
+ * GitHub Actions secrets.
  *
  * The client is created lazily. Building it at module scope meant a missing
  * env var threw during Next's "collecting page data" pass, which reports as an
