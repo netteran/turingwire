@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { PublicationsFeed } from "@/components/PublicationsFeed";
 import { getAllArticlesByCategory, getCompaniesWithCounts } from "@/lib/queries";
 
-export const revalidate = 300;
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "All Publications",

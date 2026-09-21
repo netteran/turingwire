@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getStories } from "@/lib/queries";
 import type { Story } from "@/lib/types";
 
-export const revalidate = 300;
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Stories",
