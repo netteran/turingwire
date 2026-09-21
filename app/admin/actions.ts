@@ -60,9 +60,10 @@ export async function updateSetting(key: string, value: string) {
 }
 
 /**
- * Unpublish hides an article from the site without deleting it. It becomes
- * `archived`, which the public RLS policy excludes, so it disappears from
- * listings, feeds and the sitemap on the next revalidation.
+ * Toggles an article between `published` and `archived`. Both statuses are
+ * publicly readable (see the "public read non-draft articles" RLS policy) —
+ * archiving is a label, not a takedown. `draft` is the only status that
+ * hides an article from the site.
  */
 export async function setArticleStatus(id: number, status: "published" | "archived") {
   const supabase = await guard();
