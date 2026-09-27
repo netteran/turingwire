@@ -13,6 +13,7 @@ import { StocksScripts } from "@/components/StocksScripts";
 import {
   getRecentArticles,
   getArticlesByCategory,
+  getBreakingArticle,
   getCompaniesWithCounts,
 } from "@/lib/queries";
 import { getAiIndexHistory, getStocksSnapshot } from "@/lib/data";
@@ -20,7 +21,9 @@ import { groupByDay } from "@/lib/format";
 import { articleUrl } from "@/lib/types";
 import { site } from "@/lib/site";
 
-export const revalidate = 3600;
+// Shorter than the 1h used on detail pages so the breaking banner appears
+// (and clears) close to on time. One page at 5min is ~9K ISR writes/month.
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "Turing Wire — AI News, Research & Market Intelligence",
@@ -48,19 +51,15 @@ const websiteSchema = {
 };
 
 export default async function HomePage() {
-  const [recent, researchSpotlight, companies] = await Promise.all([
+  const [recent, researchSpotlight, companies, breaking] = await Promise.all([
     getRecentArticles(120),
     getArticlesByCategory("research", { limit: 1 }),
     getCompaniesWithCounts(),
+    getBreakingArticle(),
   ]);
 
   const indexHistory = getAiIndexHistory();
   const stocks = getStocksSnapshot();
-
-  const sixHoursAgo = Date.now() - 6 * 60 * 60 * 1000;
-  const breaking = recent.find(
-    (p) => p.impact === "critical" && new Date(p.published_at).getTime() >= sixHoursAgo,
-  );
 
   const spotlight = researchSpotlight[0];
   const groups = groupByDay(recent.filter((p) => p.title?.trim())).slice(0, 3);
