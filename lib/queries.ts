@@ -29,6 +29,29 @@ export async function getRecentArticles(limit = 120): Promise<ArticleCard[]> {
   return (data ?? []) as unknown as ArticleCard[];
 }
 
+/**
+ * The critical article to feature in the homepage breaking banner, if any.
+ *
+ * Freshness is measured from `created_at` (when ingest stored it), not the
+ * source's `published_at`: ingest only runs every 4 hours, so by source time
+ * an article can already be most of the way through a 6-hour window before
+ * it ever reaches the site. The looser `published_at` bound keeps a
+ * back-filled old story from being billed as breaking.
+ */
+export async function getBreakingArticle(): Promise<ArticleCard | null> {
+  const now = Date.now();
+  const onSiteSince = new Date(now - 6 * 60 * 60 * 1000).toISOString();
+  const publishedSince = new Date(now - 24 * 60 * 60 * 1000).toISOString();
+  const { data, error } = await cards()
+    .eq("impact", "critical")
+    .gte("created_at", onSiteSince)
+    .gte("published_at", publishedSince)
+    .order("published_at", { ascending: false })
+    .limit(1);
+  if (error) throw error;
+  return ((data ?? [])[0] as unknown as ArticleCard) ?? null;
+}
+
 /** Newest articles in one section, with an offset for pagination. */
 export async function getArticlesByCategory(
   category: ArticleCategory,
