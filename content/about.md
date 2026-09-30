@@ -66,7 +66,7 @@ Every article on Turing Wire follows the same editorial standards, whoever — o
 ### Bylines {#bylines}
 
 - **{{ site.desks.news }}** and **{{ site.desks.research }}** — automated summaries. An AI pipeline extracts the facts from the primary source and writes the summary, which is published automatically once it passes quality checks: no filler phrases, no headline promising what the body doesn't deliver, and no figure that doesn't appear in the source. Summaries are not individually reviewed before publication. Stories are produced the same way and carry the desk byline.
-- **{{ site.editor.name }}** — articles the editor wrote, or drafted from a source with the same AI tools and then reviewed and edited. The latter are marked as AI-assisted on the article.
+- **{{ site.editor.name }}** — articles the editor wrote, or drafted from a source with the same AI tools and then reviewed and edited. The latter credit the source they are based on.
 
 **Article format.** News articles open with the most specific fact (a number, a name, a decision) and cover what happened, who is involved and the concrete figures, ending on a fact rather than speculation. Research articles follow: Problem, Method, Results, Limitations, Why it matters. The primary source is linked below each summary rather than cited in the text.
 
@@ -80,7 +80,7 @@ Every article on Turing Wire follows the same editorial standards, whoever — o
 No. Turing Wire publishes editorial summaries of publicly available articles and research, and every item links to its original source. For important technical or financial decisions, read the original.
 
 **Are the summaries written by AI?**
-Yes. Articles bylined {{ site.desks.news }} or {{ site.desks.research }} are automated AI summaries of a primary source, published once they pass quality checks. Articles bylined {{ site.editor.name }} were written by the editor, or drafted with AI assistance and then edited by them — those are marked on the article. See [Bylines](#bylines) above.
+Yes. Articles bylined {{ site.desks.news }} or {{ site.desks.research }} are automated AI summaries of a primary source, published once they pass quality checks. Articles bylined {{ site.editor.name }} were written by the editor, or drafted with AI assistance and then edited by them. See [Bylines](#bylines) above.
 
 **Is anything on the AIStocks dashboard investment advice?**
 No. Market data is shown as ecosystem signal, not trading guidance, and may be delayed up to 15 minutes. See the [disclaimer](/disclaimer/).
@@ -104,7 +104,7 @@ Continuously. News and research are added throughout the day; market data refres
     {
       "@type": "Question",
       "name": "Are the summaries written by AI?",
-      "acceptedAnswer": { "@type": "Answer", "text": "Yes. Articles bylined Turing Wire Newsdesk or Turing Wire Research Desk are automated AI summaries of a primary source, published once they pass quality checks. Articles bylined with the editor's name were written by the editor, or drafted with AI assistance and then edited by them; those are marked on the article." }
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. Articles bylined Turing Wire Newsdesk or Turing Wire Research Desk are automated AI summaries of a primary source, published once they pass quality checks. Articles bylined with the editor's name were written by the editor, or drafted with AI assistance and then edited by them." }
     },
     {
       "@type": "Question",

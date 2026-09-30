@@ -15,7 +15,7 @@ Turing Wire focuses on the parts of the AI ecosystem that change what practition
 
 ## What carries my name
 
-Articles bylined **{{ site.editor.name }}** are ones I wrote, or drafted from a source with the same AI tools the pipeline uses and then reviewed and edited myself — those are marked as AI-assisted on the article.
+Articles bylined **{{ site.editor.name }}** are ones I wrote, or drafted from a source with the same AI tools the pipeline uses and then reviewed and edited myself; those credit the source they are based on.
 
 The daily flow of summaries is different: it is bylined **{{ site.desks.news }}** or **{{ site.desks.research }}**, because it is written by an automated pipeline and published without my reviewing each item. My part there is upstream — choosing the sources, writing the prompts and quality checks every summary must pass, and setting the categorisation and impact criteria — and fixing errors when they're reported. The full process is described in [Editorial standards](/about/#editorial-standards).
 
