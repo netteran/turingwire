@@ -2,9 +2,8 @@ import Link from "next/link";
 import { site } from "@/lib/site";
 
 const SECTIONS = [
-  ["/news/", "AI news"],
-  ["/research/", "AI research"],
-  ["/publications/", "All publications"],
+  ["/news/", "AI News"],
+  ["/research/", "AI Research"],
   ["/stories/", "Stories"],
   ["/models/", "Models"],
   ["/benchmarks/", "Benchmarks"],

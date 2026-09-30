@@ -39,6 +39,8 @@ Always preserve the linked primary source publisher — Turing Wire articles car
 ## Content surfaces
 
 - Homepage (latest publications, last 3 days): ${site.url}/
+- AI News (paginated, newest first): ${site.url}/news/
+- AI Research (paginated, newest first): ${site.url}/research/
 - All Publications (filterable by section, category, impact, and company): ${site.url}/publications/
 - Stories (multi-source synthesis): ${site.url}/stories/
 - AI Stocks: ${site.url}/aistocks/
