@@ -74,25 +74,41 @@ Google to index and to build real authority.
 
 ### 2.4 Phase 0 findings (2026-09-30)
 
-- **No manual action.** It's a Domain property, and only `https://turingwire.com/` is indexed.
-- **Google hasn't crawled the site since early May.** Every last-crawl date is between 30 Apr and
-  8 May 2026 (`/aistocks/`, `/benchmarks/`, and a legacy `/post/…` URL). Google has **never seen the
-  Next.js site**. Its only verdict is on the spring Jekyll version, and it has barely come back
-  since. The main problem is **crawl demand close to zero**, more than Google rejecting the current
-  pages.
-- **The sitemap isn't being used.** Hub pages show *Sitemaps: "Temporary processing error"*.
-  `/stories/` is in `sitemap.xml` yet shows "URL is unknown to Google" with *no referring sitemap*.
-- **The Jekyll site pointed its canonicals at the sources.** The legacy research post declared
-  `rel=canonical` → `https://arxiv.org/abs/…`. That told Google the post was a copy of arXiv, a
-  site-wide duplicate signal from the domain's first crawl. The current code declares its own URL
-  as canonical, which is correct.
-- **`www` and `http` hosts were crawled as separate pages.** `/aistocks/` lists referring pages on
-  `https://turingwire.com/`, `https://www.turingwire.com/` and `http://turingwire.com/`. Confirm
-  that `www` and `http` now 301/308 to `https://turingwire.com/` in a single hop.
+These findings **replace parts of 2.1–2.2**: the problem is mainly a host conflict plus crawl demand
+close to zero, not Google rejecting the current pages.
 
-The priorities for Phase 1 change accordingly: **(1)** make `sitemap.xml` fetch fast and reliably,
-then resubmit it; **(2)** trigger a fresh crawl of the homepage and hubs; **(3)** confirm the host
-redirects. After those, trim the URL set and fix internal linking as planned.
+- **No manual action.** It's a Domain property, and only `https://turingwire.com/` is indexed.
+- **The apex and `www` hosts contradict each other (critical).** A redirect check shows
+  `https://turingwire.com` → **308** → 200 and `https://www.turingwire.com` → 200 directly. So `www`
+  is the primary domain in Vercel. But every canonical, every sitemap URL and the robots
+  `Sitemap:` line use `https://turingwire.com` (`lib/site.ts`). Each canonical points at a URL that
+  redirects to `www`, which then declares the apex as canonical. Google receives contradictory
+  signals on every page. `http://turingwire.com` takes two hops (308 → 308).
+- **Almost no crawling, and none of it discovery.** Crawl stats show about 800 requests in 90 days,
+  with many zero days in Aug–Sep. **Refresh is 99.5% and discovery 0.5%.** 55% came from "other
+  agent type" (inspection and testing tools), not Googlebot. Host status shows no problems and
+  response times are about 40–100 ms, so this is not a server problem. Google simply doesn't want
+  more of the site. Last crawl dates on the inspected pages are all 30 Apr – 8 May, so Google has
+  **never crawled the Next.js pages**.
+- **The sitemap isn't the problem, but the legacy sitemap is inflating "Discovered".**
+  - `sitemap.xml` shows *Success, 149 pages*, last read 16 Sep. It is small, so the "~2,000
+    companies" worry in 2.2 #1 doesn't apply to the current sitemap.
+  - `sitemap-legacy.xml` shows *Success, 1,897 pages*. That accounts for most of the **2,014
+    "Discovered – not indexed"** URLs: redirect-only `/post/…` addresses, which now chain
+    apex → `www` → page.
+  - "Temporary processing error" in URL Inspection is stale per-URL data from April.
+- **The Jekyll site pointed its canonicals at the sources.** The legacy research post declared
+  `rel=canonical` → `https://arxiv.org/abs/…`. That was a site-wide "we are a copy" signal during the
+  domain's first crawl, and it likely explains why crawl demand collapsed in May. The current code
+  declares its own URL as canonical.
+
+**Revised Phase 1 order:**
+1. **Make one host primary.** In Vercel → Domains, set `turingwire.com` as the production domain
+   and `www.turingwire.com` → 308 to `turingwire.com`. This needs no code change, and it matches the
+   canonicals, sitemaps and GSC history.
+2. Remove `sitemap-legacy.xml` and its robots.txt line.
+3. Resubmit `sitemap.xml`, then request indexing for `/` and the hub pages.
+4. Then continue with internal linking, OG images, titles and Phase 2 content.
 
 ## 3. Strategy in one sentence
 
