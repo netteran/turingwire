@@ -13,8 +13,8 @@ Turing Wire is an independent AI industry publication covering the AI ecosystem 
 
 The feeds and tools serve distinct needs:
 
-- **News** — What shipped, who got funded, what policy is coming. Organised by impact (Critical → Minor) so you can triage at a glance. Subscribe to the [Major+ RSS feed](/feed-major.xml) to get only the stuff worth stopping for.
-- **Research** — Paper summaries structured for clarity, not jargon: problem, method, results, and *why it matters*. Covers arXiv, Nature Machine Intelligence, JMLR, and major conference proceedings. Each summary links directly to the original and, where available, to the arXiv abstract.
+- **[AI News](/news/)** — What shipped, who got funded, what policy is coming. Organised by impact (Critical → Minor) so you can triage at a glance. Subscribe to the [Major+ RSS feed](/feed-major.xml) to get only the stuff worth stopping for.
+- **[AI Research](/research/)** — Paper summaries structured for clarity, not jargon: problem, method, results, and *why it matters*. Covers arXiv, Nature Machine Intelligence, JMLR, and major conference proceedings. Each summary links directly to the original and, where available, to the arXiv abstract.
 - **AIStocks** — Semiconductor supply, hyperscaler capex, and enterprise AI deployment health — framed as ecosystem signals, not trading tips. When NVDA earnings disappoint or TSMC cuts guidance, it tells you something about where the compute supply chain is heading.
 - **Stories** — In-depth coverage of developing events. When a topic evolves across multiple articles over days, a Story brings all the threads together: each key finding is cross-referenced against independent sources, with links to every supporting or contradicting article. Contested findings are surfaced explicitly.
 - **TW AI Index** — A standing, daily answer to the question the whole industry keeps arguing about: is the AI trade overheating, or just getting started? An equal-weighted basket of chipmakers, hyperscalers, and AI pure-plays, indexed to 100 at launch. Watch the line, not the hot takes.
@@ -41,7 +41,7 @@ It is also not financial advice. See the [disclaimer](/disclaimer/).
 
 **Watch the AI trade:** Bookmark the [TW AI Index](/aistocks/) and check it alongside the news — a quick way to see whether sentiment and price are moving with the headlines or against them.
 
-**Track a company:** Every article is tagged by company. Use the [Companies directory](/companies/) or the tags in any article to see everything from a given lab or vendor.
+**Track a company:** Every article is tagged by company. Use the company filter on [All publications](/publications/) or the company tags in any article to see everything from a given lab or vendor.
 
 **Stay current via RSS:** Multiple feeds are available — [all posts](/feed.xml), [Major+ only](/feed-major.xml), [News only](/news/feed.xml), and [Research only](/research/feed.xml). The Major+ feed is the lowest-noise option for a busy inbox.
 
@@ -49,7 +49,7 @@ It is also not financial advice. See the [disclaimer](/disclaimer/).
 
 ## Who maintains it
 
-Turing Wire is edited by {{ site.editor.name }} ({{ site.editor.role | downcase }}), the pen name of the founder — a practitioner working in the AI field. See the [editor page](/about/editor/) for more. If you spot an error, want to suggest a source, or have any other question, use the [contact form](/contact/).
+Turing Wire is run by {{ site.editor.name }} ({{ site.editor.role | downcase }}), the pen name of the founder — a practitioner working in the AI field. The editor sets the source list, the prompts and quality checks the summaries go through, and the categorisation and impact criteria, and writes or edits the articles that carry their byline. See the [editor page](/about/editor/) for more. If you spot an error, want to suggest a source, or have any other question, use the [contact form](/contact/).
 
 ### Ownership & funding {#ownership}
 
@@ -57,17 +57,20 @@ Turing Wire is an independent, self-funded personal project. It is **not owned b
 
 ## Editorial standards
 
-Every article on Turing Wire is written from a primary source and follows consistent editorial standards.
+Every article on Turing Wire follows the same editorial standards, whoever — or whatever — produced it. The byline tells you which.
 
 **Sources.** Turing Wire monitors arXiv (cs.AI, cs.LG, cs.CL, stat.ML), Nature Machine Intelligence, JMLR, NeurIPS/ICML/ICLR proceedings, TechCrunch, VentureBeat, The Information, Reuters Technology, MIT Technology Review, IEEE Spectrum, and approximately 30 additional specialised AI publications.
 
 **Coverage scope.** Each article is categorised by topic (news or research), subject area (e.g. model release, funding, regulation, inference optimisation), and significance level (Critical → Minor). Coverage is focused on developments with practical implications for the AI field.
 
-**Article format.** News articles follow a consistent editorial structure: lead (what happened, who, why now), body (key facts, numbers, competitive context), and a forward-looking close. Research articles follow: Problem, Method, Results, Limitations, Why it matters. Each article cites its primary source directly within the body using standard journalistic attribution.
+### Bylines {#bylines}
 
-**AI assistance.** Summaries are produced with AI assistance under human editorial oversight. An automated pipeline drafts each summary directly from its primary source; the editor sets the source list, categorisation, and impact criteria, and is responsible for the published result. Summaries never introduce claims or statistics absent from the source, and Turing Wire is not a primary source — every article links to the original so you can verify and read in full.
+- **{{ site.desks.news }}** and **{{ site.desks.research }}** — automated summaries. An AI pipeline extracts the facts from the primary source and writes the summary, which is published automatically once it passes quality checks: no filler phrases, no headline promising what the body doesn't deliver, and no figure that doesn't appear in the source. Summaries are not individually reviewed before publication. Stories are produced the same way and carry the desk byline.
+- **{{ site.editor.name }}** — articles the editor wrote, or drafted from a source with the same AI tools and then reviewed and edited. The latter are marked as AI-assisted on the article.
 
-**Source integrity.** Articles do not invent claims or statistics not present in the source material. Where a source is a preprint, this is stated explicitly. Every article links to its primary source.
+**Article format.** News articles open with the most specific fact (a number, a name, a decision) and cover what happened, who is involved and the concrete figures, ending on a fact rather than speculation. Research articles follow: Problem, Method, Results, Limitations, Why it matters. The primary source is linked below each summary rather than cited in the text.
+
+**Source integrity.** Summaries must not introduce claims or statistics absent from the source; figures that can't be found in the source fail the quality check. Where a source is a preprint, this is stated explicitly. Every summary links to its primary source, and Turing Wire is not a primary source — read the original to verify and for the full account.
 
 **Corrections.** If an article contains an error, contact us via the [contact form](/contact/). Corrections are applied promptly and the publication date is updated to reflect the revision.
 
@@ -77,7 +80,7 @@ Every article on Turing Wire is written from a primary source and follows consis
 No. Turing Wire publishes editorial summaries of publicly available articles and research, and every item links to its original source. For important technical or financial decisions, read the original.
 
 **Are the summaries written by AI?**
-Summaries are produced with AI assistance under human editorial oversight. The editor sets the standards, sources, and impact criteria and is responsible for what is published. See [Editorial standards](#editorial-standards) above.
+Yes. Articles bylined {{ site.desks.news }} or {{ site.desks.research }} are automated AI summaries of a primary source, published once they pass quality checks. Articles bylined {{ site.editor.name }} were written by the editor, or drafted with AI assistance and then edited by them — those are marked on the article. See [Bylines](#bylines) above.
 
 **Is anything on the AIStocks dashboard investment advice?**
 No. Market data is shown as ecosystem signal, not trading guidance, and may be delayed up to 15 minutes. See the [disclaimer](/disclaimer/).
@@ -101,7 +104,7 @@ Continuously. News and research are added throughout the day; market data refres
     {
       "@type": "Question",
       "name": "Are the summaries written by AI?",
-      "acceptedAnswer": { "@type": "Answer", "text": "Summaries are produced with AI assistance under human editorial oversight. The editor sets the standards, sources, and impact criteria and is responsible for what is published." }
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. Articles bylined Turing Wire Newsdesk or Turing Wire Research Desk are automated AI summaries of a primary source, published once they pass quality checks. Articles bylined with the editor's name were written by the editor, or drafted with AI assistance and then edited by them; those are marked on the article." }
     },
     {
       "@type": "Question",

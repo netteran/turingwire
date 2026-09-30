@@ -55,7 +55,9 @@ function toSegments(permalink: string): string[] {
 function renderVars(content: string): string {
   return content
     .replaceAll("{{ site.editor.name }}", site.editor.name)
-    .replaceAll("{{ site.editor.role | downcase }}", site.editor.role.toLowerCase());
+    .replaceAll("{{ site.editor.role | downcase }}", site.editor.role.toLowerCase())
+    .replaceAll("{{ site.desks.news }}", site.desks.news)
+    .replaceAll("{{ site.desks.research }}", site.desks.research);
 }
 
 /**

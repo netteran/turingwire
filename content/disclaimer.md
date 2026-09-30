@@ -6,9 +6,9 @@ permalink: /disclaimer/
 
 ## General disclaimer
 
-Turing Wire publishes editorial summaries of publicly available articles for informational purposes only. Every summary links to its original source. Readers should consult the original source for the complete, authoritative version of any story.
+Turing Wire publishes summaries of publicly available articles and research for informational purposes only, alongside a smaller number of articles written or edited by the editor. Every summary links to its original source. Readers should consult the original source for the complete, authoritative version of any story.
 
-Summaries are produced with AI assistance under human editorial oversight and may contain inaccuracies, omissions, or mischaracterizations. Turing Wire is not a primary news source and does not independently verify the claims it summarizes. See [Editorial standards](/about/#editorial-standards) for how summaries are produced.
+Articles bylined {{ site.desks.news }} or {{ site.desks.research }} are generated automatically by AI and published without individual human review; they may contain inaccuracies, omissions, or mischaracterizations. Turing Wire is not a primary news source and does not independently verify the claims it summarizes. See [Bylines](/about/#bylines) for how each kind of article is produced.
 
 ## Investment disclaimer
 

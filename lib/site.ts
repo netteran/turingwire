@@ -32,6 +32,17 @@ export const site = {
       "Callan Zhang is the pen name of the founder and editor of Turing Wire, an AI practitioner who builds and maintains the publication.",
   },
 
+  /**
+   * Default byline for automated summaries (origin = pipeline) and stories.
+   * The editor persona above is reserved for articles the editor wrote or
+   * edited in Admin (origin = editor / editor_ai).
+   */
+  desks: {
+    news: "Turing Wire Newsdesk",
+    research: "Turing Wire Research Desk",
+    url: "/about/#editorial-standards",
+  },
+
   organization: {
     name: "Turing Wire",
     legalName: "Turing Wire",
