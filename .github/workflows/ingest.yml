@@ -4,10 +4,10 @@ name: Ingest
 # benchmarks and stocks workflows — everything that used to run on its own
 # schedule now runs here, in order.
 #
-# Every 4 hours on weekdays. Feed config, dedupe state and run history live in
-# Postgres, so the article stages commit nothing. The market-data stages are
-# the one exception: the front end reads _data/*.json and *.yml from the repo,
-# so those four files are committed back to main at the end of the run.
+# Every 4 hours on weekdays. Feed config, dedupe state, run history and the
+# market data all live in Postgres, so a run commits nothing. That matters:
+# each commit to main redeploys the site, and a deploy empties the ISR cache.
+# Instead, the last step asks the site to revalidate the pages a run changes.
 #
 # A manual dispatch with `source_id` set restricts the whole article pipeline
 # to that one ingest_sources row (bypassing its active/active_months gate,
@@ -36,8 +36,7 @@ on:
         default: ""
 
 permissions:
-  # the market-data step pushes _data/*.json back to main
-  contents: write
+  contents: read
   issues: write
 
 concurrency:
@@ -61,6 +60,8 @@ jobs:
       # then simply unused.
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      # Shared with the Vercel project; lets the last step call /api/revalidate.
+      REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
       # scripts/ import each other directly, and the stage scripts attach
       # their counters to the run opened by the first step.
       PYTHONPATH: scripts
@@ -162,9 +163,16 @@ jobs:
 
       # ── Market data and reference tables ────────────────────────
       # Folded in from the retired stocks / models / benchmarks workflows.
-      # These write _data/*.json and *.yml, which are committed below because
-      # the front end still reads them from the repo. Unrelated to any one
-      # article source, so a single-source run skips these too.
+      # The stages read and write _data/*.json and *.yml on the runner; the
+      # durable copy is the market_data table, pulled before and pushed after.
+      # Unrelated to any one article source, so a single-source run skips
+      # these too.
+
+      - name: Pull market data
+        if: ${{ !inputs.dry_run && !inputs.source_id }}
+        id: pull_market
+        run: python scripts/market_data_store.py pull
+        continue-on-error: true
 
       - name: Fetch stocks
         if: ${{ !inputs.dry_run && !inputs.source_id }}
@@ -188,22 +196,25 @@ jobs:
         run: python scripts/fetch_models.py
         continue-on-error: true
 
-      # ── Persist the data files the site still reads from git ────
+      # Only after a successful pull: pushing files that still hold the
+      # stale copy from git would overwrite the newer stored data.
+      - name: Push market data
+        if: ${{ !inputs.dry_run && !inputs.source_id && steps.pull_market.outcome == 'success' }}
+        run: python scripts/market_data_store.py push
+        continue-on-error: true
 
-      - name: Commit market data
-        if: ${{ !inputs.dry_run && !inputs.source_id }}
+      # ── Refresh the site ────────────────────────────────────────
+      # Pages are cached for a day; this pushes the new articles and market
+      # data out now (app/api/revalidate). Skipped until REVALIDATE_SECRET is
+      # set, so the pages then fall back to their daily timer.
+      - name: Revalidate site
+        if: ${{ !inputs.dry_run && env.REVALIDATE_SECRET != '' }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add _data/stocks_snapshot.json _data/ai_index_history.json \
-                  _data/benchmarks.yml _data/models.yml || true
-          git diff --cached --quiet && echo "nothing to commit" && exit 0
-          git commit -m "chore(ingest): refresh market data [skip ci]"
-          for attempt in 1 2 3 4; do
-            git pull --rebase origin main && git push origin main && break
-            echo "push attempt $attempt failed, retrying..."
-            sleep $((attempt * 3))
-          done
+          curl -fsS -X POST "${SITE_URL%/}/api/revalidate/" \
+            -H "Authorization: Bearer $REVALIDATE_SECRET"
+        env:
+          SITE_URL: ${{ vars.SITE_URL || 'https://turingwire.com' }}
+        continue-on-error: true
 
       - name: Close run record
         if: ${{ always() && !inputs.dry_run && steps.run.outputs.run_id != '' }}

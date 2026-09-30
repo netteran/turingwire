@@ -10,7 +10,9 @@ import { getArticlesByTag } from "@/lib/queries";
 import { getAiIndexHistory, getStocksSnapshot, getTickers } from "@/lib/data";
 import { absoluteUrl, site } from "@/lib/site";
 
-export const revalidate = 3600;
+// Refreshed on demand after each ingest run (app/api/revalidate); the timer
+// is only a fallback.
+export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: "AI Stocks",
@@ -26,10 +28,12 @@ interface TickersData {
 const RANGES = ["1D", "1W", "1M", "3M", "YTD", "1Y", "all"];
 
 export default async function AiStocksPage() {
-  const snapshot = getStocksSnapshot();
-  const indexHistory = getAiIndexHistory();
+  const [snapshot, indexHistory, posts] = await Promise.all([
+    getStocksSnapshot(),
+    getAiIndexHistory(),
+    getArticlesByTag("stocks", 20),
+  ]);
   const tickers = getTickers<TickersData>().tickers ?? [];
-  const posts = await getArticlesByTag("stocks", 20);
 
   const latest = indexHistory.latest;
   const quotes = snapshot.quotes ?? {};

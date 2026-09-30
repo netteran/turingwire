@@ -4,6 +4,10 @@ import { ShareButtons } from "@/components/ShareButtons";
 import { getBenchmarks } from "@/lib/data";
 import { absoluteUrl } from "@/lib/site";
 
+// Refreshed on demand after each ingest run (app/api/revalidate); the timer
+// is only a fallback.
+export const revalidate = 86400;
+
 export const metadata: Metadata = {
   title: "AI Benchmark Leaderboard",
   description:
@@ -17,8 +21,8 @@ interface BenchmarksData {
   benchmarks?: Benchmark[];
 }
 
-export default function BenchmarksPage() {
-  const data = getBenchmarks<BenchmarksData>();
+export default async function BenchmarksPage() {
+  const data = await getBenchmarks<BenchmarksData>();
   const benchmarks = data.benchmarks ?? [];
 
   return (

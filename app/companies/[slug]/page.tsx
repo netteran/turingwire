@@ -8,7 +8,9 @@ import { getArticlesForCompany, getCompany, getCompanyPrimaryCount } from "@/lib
 import { robotsForCompany } from "@/lib/seo";
 import { site, absoluteUrl } from "@/lib/site";
 
-export const revalidate = 3600;
+// Refreshed on demand after each ingest run (app/api/revalidate); the timer
+// is only a fallback.
+export const revalidate = 86400;
 
 type Props = { params: Promise<{ slug: string }> };
 
