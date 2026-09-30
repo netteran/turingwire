@@ -72,6 +72,44 @@ Canonicals, the `noindex` gate for thin articles, `NewsMediaOrganization` / `New
 **Changing more technical SEO on its own won't fix this.** The fix is to cut down what you ask
 Google to index and to build real authority.
 
+### 2.4 Phase 0 findings (2026-09-30)
+
+These findings **replace parts of 2.1–2.2**: the problem is mainly a host conflict plus crawl demand
+close to zero, not Google rejecting the current pages.
+
+- **No manual action.** It's a Domain property, and only `https://turingwire.com/` is indexed.
+- **The apex and `www` hosts contradict each other (critical).** A redirect check shows
+  `https://turingwire.com` → **308** → 200 and `https://www.turingwire.com` → 200 directly. So `www`
+  is the primary domain in Vercel. But every canonical, every sitemap URL and the robots
+  `Sitemap:` line use `https://turingwire.com` (`lib/site.ts`). Each canonical points at a URL that
+  redirects to `www`, which then declares the apex as canonical. Google receives contradictory
+  signals on every page. `http://turingwire.com` takes two hops (308 → 308).
+- **Almost no crawling, and none of it discovery.** Crawl stats show about 800 requests in 90 days,
+  with many zero days in Aug–Sep. **Refresh is 99.5% and discovery 0.5%.** 55% came from "other
+  agent type" (inspection and testing tools), not Googlebot. Host status shows no problems and
+  response times are about 40–100 ms, so this is not a server problem. Google simply doesn't want
+  more of the site. Last crawl dates on the inspected pages are all 30 Apr – 8 May, so Google has
+  **never crawled the Next.js pages**.
+- **The sitemap isn't the problem, but the legacy sitemap is inflating "Discovered".**
+  - `sitemap.xml` shows *Success, 149 pages*, last read 16 Sep. It is small, so the "~2,000
+    companies" worry in 2.2 #1 doesn't apply to the current sitemap.
+  - `sitemap-legacy.xml` shows *Success, 1,897 pages*. That accounts for most of the **2,014
+    "Discovered – not indexed"** URLs: redirect-only `/post/…` addresses, which now chain
+    apex → `www` → page.
+  - "Temporary processing error" in URL Inspection is stale per-URL data from April.
+- **The Jekyll site pointed its canonicals at the sources.** The legacy research post declared
+  `rel=canonical` → `https://arxiv.org/abs/…`. That was a site-wide "we are a copy" signal during the
+  domain's first crawl, and it likely explains why crawl demand collapsed in May. The current code
+  declares its own URL as canonical.
+
+**Revised Phase 1 order:**
+1. **Make one host primary.** In Vercel → Domains, set `turingwire.com` as the production domain
+   and `www.turingwire.com` → 308 to `turingwire.com`. This needs no code change, and it matches the
+   canonicals, sitemaps and GSC history.
+2. Remove `sitemap-legacy.xml` and its robots.txt line.
+3. Resubmit `sitemap.xml`, then request indexing for `/` and the hub pages.
+4. Then continue with internal linking, OG images, titles and Phase 2 content.
+
 ## 3. Strategy in one sentence
 
 **Stop asking Google to index ~2,300 derivative pages. Ask it to index ~150–400 pages it can't get

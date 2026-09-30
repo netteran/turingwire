@@ -322,30 +322,6 @@ export async function getAllArticleAddresses(): Promise<
 }
 
 /**
- * Every legacy Jekyll permalink that now 301s to a current article, for the
- * temporary redirect sitemap (see app/sitemap-legacy.xml). Paginated because
- * there are ~5,200 of them — well past Supabase's 1,000-row default cap.
- */
-export async function getAllLegacyPaths(): Promise<string[]> {
-  const pageSize = 1000;
-  const all: string[] = [];
-
-  for (let offset = 0; ; offset += pageSize) {
-    const { data, error } = await getSupabase()
-      .from("articles")
-      .select("legacy_path")
-      .not("legacy_path", "is", null)
-      .order("legacy_path", { ascending: true })
-      .range(offset, offset + pageSize - 1);
-    if (error) throw error;
-    if (!data || data.length === 0) break;
-    all.push(...(data as { legacy_path: string }[]).map((r) => r.legacy_path));
-    if (data.length < pageSize) break;
-  }
-  return all;
-}
-
-/**
  * Chronological neighbours, replacing Jekyll's page.previous / page.next.
  * "previous" is the older article, matching Jekyll's ordering.
  */
