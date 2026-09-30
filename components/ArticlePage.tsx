@@ -13,6 +13,8 @@ import {
 import { articleUrl, type ArticleCategory } from "@/lib/types";
 import { formatDate, slugify } from "@/lib/format";
 import { site, absoluteUrl } from "@/lib/site";
+import { articleModifiedAt } from "@/lib/articleMetadata";
+import { ogImageUrl } from "@/lib/ogImage";
 
 const SECTION_LABEL: Record<ArticleCategory, string> = {
   news: "News",
@@ -49,10 +51,11 @@ export async function ArticlePage({
     "@type": "NewsArticle",
     headline: article.title,
     datePublished: publishedTime.toISOString(),
-    dateModified: publishedTime.toISOString(),
-    image: [absoluteUrl(site.logo)],
+    dateModified: new Date(articleModifiedAt(article)).toISOString(),
+    image: [ogImageUrl(article.category, article.slug)],
     publisher: {
-      "@type": "Organization",
+      "@type": "NewsMediaOrganization",
+      "@id": `${site.url}/#organization`,
       name: site.title,
       url: site.url,
       logo: { "@type": "ImageObject", url: absoluteUrl(site.logo) },

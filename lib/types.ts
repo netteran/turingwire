@@ -15,6 +15,8 @@ export interface Article {
   /** First 400 chars of body, generated in Postgres. */
   excerpt: string | null;
   published_at: string;
+  /** Bumped by a Postgres trigger on every row update (admin edits). */
+  updated_at: string;
 
   subcategory: string;
   impact: ArticleImpact;

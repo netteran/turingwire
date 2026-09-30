@@ -246,3 +246,24 @@ responses, requests per day), referring domains (GSC → Links), and Bing index 
 
 This change is low-risk and fully reversible. It targets the two causes behind 99% of the
 "not indexed" count: crawl priority and the quality of what the sitemap submits.
+
+## 7. Status
+
+Shipped on the `claude/exciting-volta-d60yie` branch (PR #47):
+
+- [x] `sitemap-legacy.xml` removed, along with its robots.txt line (the `/post/…` 301s stay).
+- [x] Sitemap split behind an index at `/sitemap.xml`: `sitemap-pages`, `-news`, `-research`,
+      `-stories` and `-companies`. `lastmod` is only emitted where it's real. Noindexed `/search/`
+      and `/methodology/` are no longer listed.
+- [x] Server-rendered `/news/` and `/research/` hubs with paginated `<a>` links
+      (`/news/page/2/`, …) replace the 301s to `/publications/?section=…`. Breadcrumbs, footer and
+      homepage link to them.
+- [x] A 1200×630 share card for each article and story (`/og/<kind>/<slug>/`), used for
+      `og:image`, `twitter:image` and the JSON-LD `image`.
+- [x] `dateModified` / `article:modified_time` come from `updated_at`.
+- [x] Homepage H1; company titles, descriptions and `CollectionPage` schema; stories use the same
+      author and publisher entities as articles.
+- [ ] Topic hubs per subcategory, and intro/FAQ copy on `/models/`, `/benchmarks/` and
+      `/aistocks/`. These need copy written by the owner.
+- [ ] Stricter article and company index thresholds. These wait for the per-reason URL exports
+      (Phase 0 step 4).

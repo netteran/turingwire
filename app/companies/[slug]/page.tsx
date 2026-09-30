@@ -20,14 +20,25 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!company) return { title: "Not found", robots: { index: false, follow: false } };
 
   const primaryCount = await getCompanyPrimaryCount(slug);
+  const title = `${company.name}: AI News, Models & Research`;
+  const description =
+    company.description ??
+    `The latest ${company.name} AI news: model releases, product launches, funding, research and policy — ${primaryCount} ${
+      primaryCount === 1 ? "article" : "articles"
+    } summarised from primary sources, newest first.`;
 
   return {
-    title: company.name,
-    description:
-      company.description ??
-      `Turing Wire coverage of ${company.name}: AI news, research summaries, and analysis.`,
+    title,
+    description,
     alternates: { canonical: `/companies/${company.slug}/` },
     robots: robotsForCompany({ primaryCount }),
+    openGraph: {
+      type: "website",
+      title,
+      description,
+      url: absoluteUrl(`/companies/${company.slug}/`),
+      siteName: site.title,
+    },
   };
 }
 
@@ -39,16 +50,25 @@ export default async function CompanyPage({ params }: Props) {
   const { primary, secondary } = await getArticlesForCompany(company.name);
   const url = absoluteUrl(`/companies/${company.slug}/`);
 
+  // The page is a collection *about* the company; the Organization's own
+  // `url` would be its website, not this page, so it isn't set here.
   const organizationSchema = {
     "@context": "https://schema.org",
-    "@type": "Organization",
-    name: company.name,
+    "@type": "CollectionPage",
+    "@id": `${url}#page`,
     url,
-    identifier: company.slug,
-    subjectOf: {
-      "@type": "Dataset",
-      name: "Turing Wire Knowledge Graph",
-      url: `${site.url}/knowledge-graph.json`,
+    name: `${company.name}: AI News, Models & Research`,
+    isPartOf: { "@id": `${site.url}/#website` },
+    publisher: { "@id": `${site.url}/#organization` },
+    about: {
+      "@type": "Organization",
+      name: company.name,
+      identifier: company.slug,
+      subjectOf: {
+        "@type": "Dataset",
+        name: "Turing Wire Knowledge Graph",
+        url: `${site.url}/knowledge-graph.json`,
+      },
     },
   };
 
@@ -73,7 +93,9 @@ export default async function CompanyPage({ params }: Props) {
         </nav>
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <h1 className="text-3xl font-semibold tw-heading">{company.name}</h1>
+            <h1 className="text-3xl font-semibold tw-heading">
+              {company.name} <span className="tw-muted font-normal">AI news</span>
+            </h1>
             <p className="mt-2 text-sm tw-muted font-mono">
               {primary.length} primary articles · {secondary.length} secondary
               mentions

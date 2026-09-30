@@ -85,8 +85,8 @@ export function PublicationsFeed({
     setCompany("all");
   }
 
-  // Old /news/ and /research/ links now 301 to /publications/?section=...,
-  // so pick that up here once mounted, the same way the homepage used to.
+  // Preselect a section from ?section=... (the /news/ and /research/ hubs
+  // link here for topic and company filtering), once mounted.
   useEffect(() => {
     const s = new URLSearchParams(window.location.search).get("section");
     if (s === "news" || s === "research") setSection(s);

@@ -28,7 +28,14 @@ const PATHS = [
   "/feed-major.xml",
   "/news/feed.xml",
   "/research/feed.xml",
+  "/news/",
+  "/research/",
   "/sitemap.xml",
+  "/sitemap-pages.xml",
+  "/sitemap-news.xml",
+  "/sitemap-research.xml",
+  "/sitemap-stories.xml",
+  "/sitemap-companies.xml",
   "/llms.txt",
   "/llms-full.txt",
   "/knowledge-graph.json",
@@ -38,7 +45,13 @@ const PATHS = [
 // articles, a story page gains the articles clustered into it. Revalidating
 // the route marks every cached copy stale; only the ones visited afterwards
 // are re-rendered.
-const ROUTES = ["/companies/[slug]", "/story/[slug]"];
+const ROUTES = [
+  "/companies/[slug]",
+  "/story/[slug]",
+  // Paginated hubs: each new article shifts every page by one.
+  "/news/page/[num]",
+  "/research/page/[num]",
+];
 
 export async function POST(request: NextRequest) {
   const secret = process.env.REVALIDATE_SECRET;
