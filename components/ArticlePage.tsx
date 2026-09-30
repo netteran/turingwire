@@ -17,8 +17,8 @@ import { articleModifiedAt } from "@/lib/articleMetadata";
 import { ogImageUrl } from "@/lib/ogImage";
 
 const SECTION_LABEL: Record<ArticleCategory, string> = {
-  news: "News",
-  research: "Research",
+  news: "AI News",
+  research: "AI Research",
 };
 
 /** Ported from _layouts/post.html. */

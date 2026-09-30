@@ -23,7 +23,7 @@ const HUBS: Record<
   { label: string; title: string; description: string; intro: string }
 > = {
   news: {
-    label: "News",
+    label: "AI News",
     title: "AI News",
     description:
       "AI industry news in one feed: model releases, product launches, funding rounds, policy, safety, and compute infrastructure. Each item is summarised from its primary source and linked back to it.",
@@ -31,7 +31,7 @@ const HUBS: Record<
       "Model releases, product launches, funding rounds, regulation, safety and compute infrastructure from across the AI industry. Every item is summarised from its primary source, rated for impact, and linked to the company it covers and to the original report.",
   },
   research: {
-    label: "Research",
+    label: "AI Research",
     title: "AI Research Papers",
     description:
       "Summaries of new AI research papers: foundation models, reasoning, alignment and safety, interpretability, agents, multimodal, efficiency and training methods, with links to arXiv.",

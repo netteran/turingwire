@@ -128,13 +128,10 @@ export default async function HomePage() {
 
             <div className="mt-4 flex flex-wrap gap-4 text-sm font-mono">
               <Link href="/news/" className="tw-filter-chip">
-                All AI news →
+                AI News →
               </Link>
               <Link href="/research/" className="tw-filter-chip">
-                All research →
-              </Link>
-              <Link href="/publications/" className="tw-filter-chip">
-                All publications →
+                AI Research →
               </Link>
             </div>
           </div>
