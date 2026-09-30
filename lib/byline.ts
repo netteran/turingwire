@@ -13,8 +13,13 @@ export interface Byline {
   kind: "desk" | "editor";
   name: string;
   href: string;
-  /** Reader-facing note on how the piece was produced; null when none applies. */
-  disclosure: string | null;
+  /**
+   * Attribution line under the byline: who summarised or edited it and from
+   * what; null when there is nothing to attribute (original writing). The
+   * byline's "How we work" link (/about/#bylines) explains how each kind of
+   * article is produced.
+   */
+  note: string | null;
   /** schema.org `author` value. */
   schema: Record<string, unknown>;
 }
@@ -40,20 +45,31 @@ export const editorSchema = {
   url: absoluteUrl(site.editor.url),
 };
 
+/** "TechCrunch's reporting" / "the original report", for attribution lines. */
+function sourceLabel(article: { source_publisher?: string | null; source_url?: string | null }): string | null {
+  if (!article.source_url) return null;
+  const pub = article.source_publisher?.trim();
+  return pub && pub !== "Unknown" && pub !== site.title ? pub : null;
+}
+
 export function bylineFor(article: {
   category: ArticleCategory;
   origin?: ArticleOrigin | null;
+  source_publisher?: string | null;
+  source_url?: string | null;
+  arxiv_id?: string | null;
 }): Byline {
   const origin = article.origin ?? "pipeline";
+  const publisher = sourceLabel(article);
 
   if (origin === "editor" || origin === "editor_ai") {
     return {
       kind: "editor",
       name: site.editor.name,
       href: site.editor.url,
-      disclosure:
-        origin === "editor_ai"
-          ? `Drafted with AI assistance from the source material, then reviewed and edited by ${site.editor.name}.`
+      note:
+        origin === "editor_ai" && article.source_url
+          ? `Based on ${publisher ? `reporting by ${publisher}` : "the original report"}, edited by ${site.editor.name}.`
           : null,
       schema: editorSchema,
     };
@@ -63,8 +79,16 @@ export function bylineFor(article: {
     kind: "desk",
     name: deskName(article.category),
     href: site.desks.url,
-    disclosure:
-      "An automated summary of the primary source, produced with AI under Turing Wire's editorial standards. Turing Wire is not a primary source — read the original for the authoritative account.",
+    note: deskNote(article.category, publisher, Boolean(article.arxiv_id)),
     schema: deskSchema(article.category),
   };
+}
+
+function deskNote(category: ArticleCategory, publisher: string | null, isPaper: boolean): string {
+  if (category === "research") {
+    const from = isPaper ? "the paper" : publisher ? `${publisher}'s coverage` : "the original work";
+    return `Summarised from ${from} by the ${site.desks.research}. The full paper has the complete methods and results.`;
+  }
+  const from = publisher ? `${publisher}'s original report` : "the original report";
+  return `Summarised from ${from} by the ${site.desks.news}. Read the original for the full story.`;
 }

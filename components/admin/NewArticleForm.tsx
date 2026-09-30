@@ -160,7 +160,7 @@ export function NewArticleForm({ editorName }: { editorName: string }) {
         <div className="tw-card border tw-border rounded-lg p-4 text-xs font-mono tw-muted leading-relaxed">
           <p>
             <span className="tw-heading">Byline:</span> {editorName}
-            {mode === "digest" && " · marked as drafted with AI assistance and edited by the editor"}
+            {mode === "digest" && " · shown as \"Based on reporting by <publisher>, edited by " + editorName + "\""}
           </p>
           <p>
             <span className="tw-heading">Section:</span> {category} ·{" "}

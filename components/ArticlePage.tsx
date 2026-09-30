@@ -277,17 +277,17 @@ export async function ArticlePage({
           {byline.kind === "editor" && <> · {site.editor.role}</>} ·{" "}
           {formatDate(article.published_at)} ·{" "}
           <Link
-            href="/about/#editorial-standards"
+            href="/about/#bylines"
             className="hover:tw-accent transition-colors"
           >
-            Editorial standards →
+            How we work →
           </Link>
         </p>
       </div>
 
-      {byline.disclosure && (
+      {byline.note && (
         <p className="mt-3 text-xs font-mono tw-muted leading-relaxed">
-          {byline.disclosure}
+          {byline.note}
         </p>
       )}
 
