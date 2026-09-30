@@ -72,6 +72,28 @@ Canonicals, the `noindex` gate for thin articles, `NewsMediaOrganization` / `New
 **Changing more technical SEO on its own won't fix this.** The fix is to cut down what you ask
 Google to index and to build real authority.
 
+### 2.4 Phase 0 findings (2026-09-30)
+
+- **No manual action.** It's a Domain property, and only `https://turingwire.com/` is indexed.
+- **Google hasn't crawled the site since early May.** Every last-crawl date is between 30 Apr and
+  8 May 2026 (`/aistocks/`, `/benchmarks/`, and a legacy `/post/…` URL). Google has **never seen the
+  Next.js site**. Its only verdict is on the spring Jekyll version, and it has barely come back
+  since. The main problem is **crawl demand close to zero**, more than Google rejecting the current
+  pages.
+- **The sitemap isn't being used.** Hub pages show *Sitemaps: "Temporary processing error"*.
+  `/stories/` is in `sitemap.xml` yet shows "URL is unknown to Google" with *no referring sitemap*.
+- **The Jekyll site pointed its canonicals at the sources.** The legacy research post declared
+  `rel=canonical` → `https://arxiv.org/abs/…`. That told Google the post was a copy of arXiv, a
+  site-wide duplicate signal from the domain's first crawl. The current code declares its own URL
+  as canonical, which is correct.
+- **`www` and `http` hosts were crawled as separate pages.** `/aistocks/` lists referring pages on
+  `https://turingwire.com/`, `https://www.turingwire.com/` and `http://turingwire.com/`. Confirm
+  that `www` and `http` now 301/308 to `https://turingwire.com/` in a single hop.
+
+The priorities for Phase 1 change accordingly: **(1)** make `sitemap.xml` fetch fast and reliably,
+then resubmit it; **(2)** trigger a fresh crawl of the homepage and hubs; **(3)** confirm the host
+redirects. After those, trim the URL set and fix internal linking as planned.
+
 ## 3. Strategy in one sentence
 
 **Stop asking Google to index ~2,300 derivative pages. Ask it to index ~150–400 pages it can't get
