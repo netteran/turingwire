@@ -293,24 +293,30 @@ export async function searchArticles(
   return (data ?? []) as Article[];
 }
 
-/** Every published article address, for the sitemap. */
-export async function getAllArticleAddresses(): Promise<
-  { category: ArticleCategory; slug: string; published_at: string; quality: "high" | null; summary_word_count: number; source_truncated: boolean }[]
-> {
+export type ArticleAddress = Pick<
+  Article,
+  | "category"
+  | "slug"
+  | "published_at"
+  | "updated_at"
+  | "quality"
+  | "summary_word_count"
+  | "source_truncated"
+>;
+
+/** Every published article address (optionally one section), for the sitemaps. */
+export async function getAllArticleAddresses(
+  category?: ArticleCategory,
+): Promise<ArticleAddress[]> {
   const pageSize = 1000;
-  const all: {
-    category: ArticleCategory;
-    slug: string;
-    published_at: string;
-    quality: "high" | null;
-    summary_word_count: number;
-    source_truncated: boolean;
-  }[] = [];
+  const all: ArticleAddress[] = [];
 
   for (let offset = 0; ; offset += pageSize) {
-    const { data, error } = await getSupabase()
+    let q = getSupabase()
       .from("articles")
-      .select("category,slug,published_at,quality,summary_word_count,source_truncated")
+      .select("category,slug,published_at,updated_at,quality,summary_word_count,source_truncated");
+    if (category) q = q.eq("category", category);
+    const { data, error } = await q
       .order("published_at", { ascending: false })
       .range(offset, offset + pageSize - 1);
     if (error) throw error;

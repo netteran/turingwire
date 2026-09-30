@@ -81,9 +81,10 @@ export default async function HomePage() {
         <div className="lg:grid lg:grid-cols-3 lg:gap-10">
           <div className="lg:col-span-2">
             <div className="mb-6">
-              <h1 className="text-xs font-mono tw-muted">
-                {site.tagline}
+              <h1 className="text-lg font-semibold tw-heading">
+                AI news, research &amp; model pricing
               </h1>
+              <p className="text-xs font-mono tw-muted mt-1">{site.tagline}</p>
             </div>
 
             {recent.length === 0 ? (
@@ -126,6 +127,12 @@ export default async function HomePage() {
             )}
 
             <div className="mt-4 flex flex-wrap gap-4 text-sm font-mono">
+              <Link href="/news/" className="tw-filter-chip">
+                All AI news →
+              </Link>
+              <Link href="/research/" className="tw-filter-chip">
+                All research →
+              </Link>
               <Link href="/publications/" className="tw-filter-chip">
                 All publications →
               </Link>
@@ -197,7 +204,7 @@ export default async function HomePage() {
                   )}
                 </div>
                 <Link
-                  href="/publications/?section=research"
+                  href="/research/"
                   className="block mt-3 text-xs font-mono text-cyan-600 hover:text-cyan-500 transition-colors"
                 >
                   All research →

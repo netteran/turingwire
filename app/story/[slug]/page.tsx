@@ -6,6 +6,7 @@ import { ShareButtons } from "@/components/ShareButtons";
 import { getStory } from "@/lib/queries";
 import { formatDate, slugify } from "@/lib/format";
 import { site, absoluteUrl } from "@/lib/site";
+import { OG_IMAGE_SIZE, ogImageUrl } from "@/lib/ogImage";
 import type { StoryClaim } from "@/lib/types";
 
 // Refreshed on demand after each ingest run (app/api/revalidate); the timer
@@ -19,11 +20,26 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const story = await getStory(slug);
   if (!story) return { title: "Not found", robots: { index: false, follow: false } };
 
+  const description = story.lead ?? story.title;
+  const image = ogImageUrl("story", story.slug);
   return {
     title: story.title,
-    description: story.lead ?? story.title,
+    description,
     alternates: { canonical: `/story/${story.slug}/` },
-    openGraph: { type: "article", title: story.title, description: story.lead ?? story.title },
+    openGraph: {
+      type: "article",
+      title: story.title,
+      description,
+      url: absoluteUrl(`/story/${story.slug}/`),
+      siteName: site.title,
+      images: [{ url: image, ...OG_IMAGE_SIZE, alt: story.title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: story.title,
+      description,
+      images: [image],
+    },
   };
 }
 
@@ -66,12 +82,21 @@ export default async function StoryPage({ params }: Props) {
     dateModified: story.last_updated
       ? new Date(story.last_updated).toISOString()
       : undefined,
-    publisher: { "@type": "Organization", name: site.title, url: site.url },
+    image: [ogImageUrl("story", story.slug)],
+    publisher: {
+      "@type": "NewsMediaOrganization",
+      "@id": `${site.url}/#organization`,
+      name: site.title,
+      url: site.url,
+      logo: { "@type": "ImageObject", url: absoluteUrl(site.logo) },
+    },
+    // Same author entity as articles (components/ArticlePage.tsx); this used
+    // to be a team typed as a Person, which contradicted the article bylines.
     author: {
       "@type": "Person",
-      "@id": `${site.url}/about/#editorial-team`,
-      name: "Turing Wire Editorial Team",
-      url: `${site.url}/about/`,
+      "@id": `${site.url}/about/editor/#editor`,
+      name: site.editor.name,
+      url: absoluteUrl(site.editor.url),
     },
     mainEntityOfPage: url,
     about: companies.map((co) => ({ "@type": "Organization", name: co })),
