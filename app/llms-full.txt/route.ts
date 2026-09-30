@@ -64,7 +64,7 @@ URL: ${site.url}${articleUrl(p)}
 Published: ${day(p.published_at)}
 Impact: ${p.impact} · Category: ${p.subcategory}
 Company: ${p.company ?? ""}${also}
-Original source: ${p.source_publisher} — ${p.source_url}
+${p.source_url ? `Original source: ${p.source_publisher} — ${p.source_url}` : "Original reporting by Turing Wire"}
 
 ${text}
 

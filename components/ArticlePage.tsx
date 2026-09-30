@@ -15,6 +15,7 @@ import { formatDate, slugify } from "@/lib/format";
 import { site, absoluteUrl } from "@/lib/site";
 import { articleModifiedAt } from "@/lib/articleMetadata";
 import { ogImageUrl } from "@/lib/ogImage";
+import { bylineFor } from "@/lib/byline";
 
 const SECTION_LABEL: Record<ArticleCategory, string> = {
   news: "AI News",
@@ -39,6 +40,7 @@ export async function ArticlePage({
   ]);
 
   const canonical = absoluteUrl(articleUrl(article));
+  const byline = bylineFor(article);
   const bodyHtml = marked.parse(article.body ?? "", { async: false }) as string;
   const publishedTime = new Date(article.published_at);
 
@@ -60,12 +62,7 @@ export async function ArticlePage({
       url: site.url,
       logo: { "@type": "ImageObject", url: absoluteUrl(site.logo) },
     },
-    author: {
-      "@type": "Person",
-      "@id": `${site.url}/about/editor/#editor`,
-      name: site.editor.name,
-      url: absoluteUrl(site.editor.url),
-    },
+    author: byline.schema,
     mainEntityOfPage: { "@type": "WebPage", "@id": canonical },
     url: canonical,
     about: [
@@ -84,12 +81,17 @@ export async function ArticlePage({
         url: `${site.url}/companies/${slugify(co)}/`,
       })),
     ],
-    citation: {
-      "@type": "CreativeWork",
-      name: article.source_publisher,
-      url: article.source_url,
-    },
-    isBasedOn: article.source_url,
+    // Original pieces written in Admin may have no source to cite.
+    ...(article.source_url
+      ? {
+          citation: {
+            "@type": "CreativeWork",
+            name: article.source_publisher,
+            url: article.source_url,
+          },
+          isBasedOn: article.source_url,
+        }
+      : {}),
   };
 
   const breadcrumbSchema = {
@@ -267,23 +269,27 @@ export async function ArticlePage({
         <p className="text-xs font-mono tw-muted leading-relaxed">
           By{" "}
           <Link
-            href={site.editor.url}
+            href={byline.href}
             className="tw-heading font-medium hover:tw-accent transition-colors"
           >
-            {site.editor.name}
-          </Link>{" "}
-          · {formatDate(article.published_at)} ·{" "}
-          <Link href="/about/" className="hover:tw-accent transition-colors">
+            {byline.name}
+          </Link>
+          {byline.kind === "editor" && <> · {site.editor.role}</>} ·{" "}
+          {formatDate(article.published_at)} ·{" "}
+          <Link
+            href="/about/#editorial-standards"
+            className="hover:tw-accent transition-colors"
+          >
             Editorial standards →
           </Link>
         </p>
       </div>
 
-      <p className="mt-3 text-xs font-mono tw-muted leading-relaxed">
-        Summarised from the primary source with AI assistance under human
-        editorial oversight. Turing Wire is not a primary source — read the
-        original for the authoritative account.
-      </p>
+      {byline.disclosure && (
+        <p className="mt-3 text-xs font-mono tw-muted leading-relaxed">
+          {byline.disclosure}
+        </p>
+      )}
 
       {article.source_url && (
         <p className="mt-3 text-xs font-mono tw-muted">

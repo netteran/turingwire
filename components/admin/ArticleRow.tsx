@@ -12,6 +12,7 @@ interface Row {
   status: "published" | "archived" | "draft";
   company: string | null;
   published_at: string;
+  origin?: "pipeline" | "editor" | "editor_ai";
 }
 
 export function ArticleRow({ article }: { article: Row }) {
@@ -45,6 +46,11 @@ export function ArticleRow({ article }: { article: Row }) {
         >
           {article.title}
         </a>
+        {article.origin && article.origin !== "pipeline" && (
+          <span className="ml-2 font-mono text-[10px] uppercase tracking-widest tw-accent">
+            editor{article.origin === "editor_ai" ? " · AI-assisted" : ""}
+          </span>
+        )}
         {error && (
           <div className="text-xs font-mono mt-1" style={{ color: "#ef4444" }}>
             {error}

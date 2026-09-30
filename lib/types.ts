@@ -1,6 +1,13 @@
 export type ArticleCategory = "news" | "research";
 export type ArticleImpact = "critical" | "major" | "notable" | "minor";
 export type ArticleStatus = "published" | "archived" | "draft";
+/**
+ * Who produced the article (migration 0017). `pipeline` rows are automated
+ * summaries bylined to the desk; `editor` and `editor_ai` were created in
+ * Admin and carry the editor's byline. Absent on rows read before the
+ * migration ran, which are all pipeline output.
+ */
+export type ArticleOrigin = "pipeline" | "editor" | "editor_ai";
 
 export interface Article {
   id: number;
@@ -33,6 +40,7 @@ export interface Article {
 
   summary_word_count: number;
   quality: "high" | null;
+  origin?: ArticleOrigin;
 
   legacy_slug: string | null;
   legacy_path: string | null;

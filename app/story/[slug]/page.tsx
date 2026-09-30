@@ -7,6 +7,7 @@ import { getStory } from "@/lib/queries";
 import { formatDate, slugify } from "@/lib/format";
 import { site, absoluteUrl } from "@/lib/site";
 import { OG_IMAGE_SIZE, ogImageUrl } from "@/lib/ogImage";
+import { deskSchema } from "@/lib/byline";
 import type { StoryClaim } from "@/lib/types";
 
 // Refreshed on demand after each ingest run (app/api/revalidate); the timer
@@ -90,14 +91,9 @@ export default async function StoryPage({ params }: Props) {
       url: site.url,
       logo: { "@type": "ImageObject", url: absoluteUrl(site.logo) },
     },
-    // Same author entity as articles (components/ArticlePage.tsx); this used
-    // to be a team typed as a Person, which contradicted the article bylines.
-    author: {
-      "@type": "Person",
-      "@id": `${site.url}/about/editor/#editor`,
-      name: site.editor.name,
-      url: absoluteUrl(site.editor.url),
-    },
+    // Stories are synthesised automatically (scripts/build_stories.py), so
+    // they are credited to the desk like pipeline articles (lib/byline.ts).
+    author: deskSchema("news"),
     mainEntityOfPage: url,
     about: companies.map((co) => ({ "@type": "Organization", name: co })),
     citation: sources.map((src) => ({

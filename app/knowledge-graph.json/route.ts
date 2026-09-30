@@ -77,11 +77,15 @@ export async function GET() {
         ...(p.company ? [org(p.company)] : []),
         ...p.secondary_companies.map(org),
       ],
-      citation: {
-        "@type": "CreativeWork",
-        name: p.source_publisher,
-        url: p.source_url,
-      },
+      ...(p.source_url
+        ? {
+            citation: {
+              "@type": "CreativeWork",
+              name: p.source_publisher,
+              url: p.source_url,
+            },
+          }
+        : {}),
     })),
   };
 
