@@ -3,7 +3,9 @@ import { stripMarkdown, truncateWords } from "@/lib/format";
 import { articleUrl } from "@/lib/types";
 import { site } from "@/lib/site";
 
-export const revalidate = 3600;
+// Refreshed on demand after each ingest run (app/api/revalidate); the timer
+// is only a fallback.
+export const revalidate = 86400;
 
 const day = (iso: string | null) => (iso ? iso.slice(0, 10) : "—");
 

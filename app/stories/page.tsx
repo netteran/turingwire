@@ -3,7 +3,9 @@ import Link from "next/link";
 import { getStories } from "@/lib/queries";
 import type { Story } from "@/lib/types";
 
-export const revalidate = 3600;
+// Refreshed on demand after each ingest run (app/api/revalidate); the timer
+// is only a fallback.
+export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: "Stories",

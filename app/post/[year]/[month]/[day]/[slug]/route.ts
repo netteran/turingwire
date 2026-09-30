@@ -8,9 +8,10 @@ import { articleUrl } from "@/lib/types";
  *   /post/2026/09/15/<old-60-char-slug>/  ->  /news/<full-slug>/
  *
  * Every migrated row carries its original permalink in `legacy_path`, so this
- * is a single indexed lookup rather than 5,196 entries in next.config.
+ * is a single indexed lookup rather than 5,196 entries in next.config. The
+ * result never changes once an article exists, so a daily timer is plenty.
  */
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 export async function GET(
   _request: Request,

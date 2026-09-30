@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { PublicationsFeed } from "@/components/PublicationsFeed";
 import { getAllArticlesByCategory, getCompaniesWithCounts } from "@/lib/queries";
 
-export const revalidate = 3600;
+// Refreshed on demand after each ingest run (app/api/revalidate); the timer
+// is only a fallback.
+export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: "All Publications",

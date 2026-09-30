@@ -4,7 +4,9 @@ import { getAllArticleAddresses, getCompaniesWithCounts, getStories } from "@/li
 import { shouldNoindex } from "@/lib/seo";
 import { site } from "@/lib/site";
 
-export const revalidate = 3600;
+// Refreshed on demand after each ingest run (app/api/revalidate); the timer
+// is only a fallback.
+export const revalidate = 86400;
 
 /** Static routes that were Jekyll pages. */
 const STATIC_PATHS = [
