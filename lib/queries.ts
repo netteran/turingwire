@@ -302,6 +302,7 @@ export type ArticleAddress = Pick<
   | "quality"
   | "summary_word_count"
   | "source_truncated"
+  | "impact"
 >;
 
 /** Every published article address (optionally one section), for the sitemaps. */
@@ -314,7 +315,7 @@ export async function getAllArticleAddresses(
   for (let offset = 0; ; offset += pageSize) {
     let q = getSupabase()
       .from("articles")
-      .select("category,slug,published_at,updated_at,quality,summary_word_count,source_truncated");
+      .select("category,slug,published_at,updated_at,quality,summary_word_count,source_truncated,impact");
     if (category) q = q.eq("category", category);
     const { data, error } = await q
       .order("published_at", { ascending: false })

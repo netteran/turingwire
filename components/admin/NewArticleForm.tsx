@@ -9,7 +9,12 @@ import {
   type CustomSourceInput,
 } from "@/app/admin/actions";
 import type { Draft } from "@/lib/editorial/pipeline";
-import { IMPACT_LEVELS, INDEXABLE_MIN_WORDS, SUBCATEGORIES } from "@/lib/editorial/taxonomy";
+import { IMPACT_LEVELS, SUBCATEGORIES } from "@/lib/editorial/taxonomy";
+import {
+  INDEXABLE_MIN_WORDS,
+  INDEXABLE_MIN_WORDS_SIGNIFICANT_NEWS,
+  meetsLengthGate,
+} from "@/lib/seo";
 import type { ArticleCategory, ArticleImpact } from "@/lib/types";
 
 type Mode = CustomSourceInput["mode"];
@@ -206,8 +211,14 @@ export function NewArticleForm({ editorName }: { editorName: string }) {
 
           <label className="text-xs font-mono tw-muted">
             Body (Markdown) · {words} words
-            {words < INDEXABLE_MIN_WORDS && (
-              <span style={WARN_STYLE}> · under {INDEXABLE_MIN_WORDS} words: page will be noindexed</span>
+            {!meetsLengthGate({ category, impact: edit.impact, summary_word_count: words }) && (
+              <span style={WARN_STYLE}>
+                {" "}
+                · too short to be indexed (needs {INDEXABLE_MIN_WORDS}+ words
+                {category === "news" &&
+                  `, or ${INDEXABLE_MIN_WORDS_SIGNIFICANT_NEWS}+ for major/critical news`}
+                )
+              </span>
             )}
             <textarea
               value={edit.body}
