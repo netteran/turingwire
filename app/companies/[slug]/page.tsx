@@ -14,6 +14,20 @@ export const revalidate = 86400;
 
 type Props = { params: Promise<{ slug: string }> };
 
+/** The pipeline used to store this placeholder for every company (cleared by migration 0018). */
+function profileOf(description: string | null): string | null {
+  const d = description?.trim();
+  return d && !d.startsWith("Turing Wire coverage of ") ? d : null;
+}
+
+function hostOf(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const company = await getCompany(slug);
@@ -21,11 +35,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const primaryCount = await getCompanyPrimaryCount(slug);
   const title = `${company.name}: AI News, Models & Research`;
-  const description =
-    company.description ??
-    `The latest ${company.name} AI news: model releases, product launches, funding, research and policy — ${primaryCount} ${
+  const profile = profileOf(company.description);
+  const coverage = `The latest ${company.name} AI news: model releases, product launches, funding, research and policy — ${primaryCount} ${
       primaryCount === 1 ? "article" : "articles"
     } summarised from primary sources, newest first.`;
+  // A full profile is the snippet on its own (unique per company); a short
+  // one gets the coverage line added. Snippets show ~155 characters.
+  const description = !profile ? coverage : profile.length >= 110 ? profile : `${profile} ${coverage}`;
 
   return {
     title,
@@ -49,6 +65,8 @@ export default async function CompanyPage({ params }: Props) {
 
   const { primary, secondary } = await getArticlesForCompany(company.name);
   const url = absoluteUrl(`/companies/${company.slug}/`);
+  const profile = profileOf(company.description);
+  const website = company.website ?? null;
 
   // The page is a collection *about* the company; the Organization's own
   // `url` would be its website, not this page, so it isn't set here.
@@ -64,6 +82,9 @@ export default async function CompanyPage({ params }: Props) {
       "@type": "Organization",
       name: company.name,
       identifier: company.slug,
+      ...(profile ? { description: profile } : {}),
+      // The company's own site identifies which organisation this is.
+      ...(website ? { url: website, sameAs: [website] } : {}),
       subjectOf: {
         "@type": "Dataset",
         name: "Turing Wire Knowledge Graph",
@@ -96,16 +117,30 @@ export default async function CompanyPage({ params }: Props) {
             <h1 className="text-3xl font-semibold tw-heading">
               {company.name} <span className="tw-muted font-normal">AI news</span>
             </h1>
-            <p className="mt-2 text-sm tw-muted font-mono">
-              {primary.length} primary articles · {secondary.length} secondary
-              mentions
+            {profile && (
+              <p className="mt-3 tw-muted leading-relaxed max-w-3xl">{profile}</p>
+            )}
+            <p className="mt-3 text-sm tw-muted font-mono flex flex-wrap items-center gap-x-3 gap-y-1">
+              {website && (
+                <a
+                  href={website}
+                  target="_blank"
+                  rel="noopener"
+                  className="text-cyan-600 hover:text-cyan-500 transition-colors"
+                >
+                  {hostOf(website)} ↗
+                </a>
+              )}
+              <span>
+                {primary.length} primary articles · {secondary.length} secondary mentions
+              </span>
             </p>
           </div>
           <div className="flex-shrink-0 mt-1">
             <ShareButtons
               url={url}
               title={company.name}
-              summary={site.description}
+              summary={profile ?? site.description}
               variant="popover"
               align="right"
             />

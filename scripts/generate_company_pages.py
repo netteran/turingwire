@@ -48,11 +48,10 @@ def main() -> int:
         if not slugify(name):
             log.warning("skipping company with unusable name: %r", name)
             continue
-        description = (
-            f"Turing Wire coverage of {name}: AI news, research summaries, and analysis."
-        )
+        # No placeholder description: the page builds one from coverage, and
+        # a curated profile can be added in Admin → Companies.
         try:
-            upsert_company(name, description)
+            upsert_company(name)
         except SupabaseError as exc:
             log.error("failed to upsert %r: %s", name, exc)
             continue

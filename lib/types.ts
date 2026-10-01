@@ -76,7 +76,10 @@ export interface Company {
   id: number;
   slug: string;
   name: string;
+  /** Short reader-facing profile (migration 0018); null when not curated. */
   description: string | null;
+  /** Official website; null when not set. Absent before migration 0018. */
+  website?: string | null;
 }
 
 export interface StorySource {
