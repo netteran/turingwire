@@ -41,7 +41,7 @@ It is also not financial advice. See the [disclaimer](/disclaimer/).
 
 **Watch the AI trade:** Bookmark the [TW AI Index](/aistocks/) and check it alongside the news — a quick way to see whether sentiment and price are moving with the headlines or against them.
 
-**Track a company:** Every article is tagged by company. Use the company filter on [All publications](/publications/) or the company tags in any article to see everything from a given lab or vendor.
+**Track a company:** Every article is tagged by company. Browse the [Companies](/companies/) directory, use the company filter on [AI News](/news/) and [AI Research](/research/), or the company tags in any article to see everything from a given lab or vendor.
 
 **Stay current via RSS:** Multiple feeds are available — [all posts](/feed.xml), [Major+ only](/feed-major.xml), [News only](/news/feed.xml), and [Research only](/research/feed.xml). The Major+ feed is the lowest-noise option for a busy inbox.
 

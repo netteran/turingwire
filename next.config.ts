@@ -10,8 +10,9 @@ const nextConfig: NextConfig = {
       // Old paginated index: /page/2/ -> /news/?page=2 is lossy, so send the
       // handful of indexed pagination URLs to the homepage.
       { source: "/page/:num", destination: "/", permanent: true },
-      // The companies index was folded into the /publications/ filter.
-      { source: "/companies/", destination: "/publications/", permanent: true },
+      // The combined /publications/ feed was split back into the filterable
+      // /news/ and /research/ hubs and the /companies/ directory.
+      { source: "/publications/", destination: "/news/", permanent: true },
       // The conference-calendar ("Events") page was retired outright.
       { source: "/calendar/", destination: "/", permanent: true },
     ];

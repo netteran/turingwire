@@ -223,7 +223,7 @@ export default async function HomePage() {
                 ))}
               </div>
               <Link
-                href="/publications/"
+                href="/companies/"
                 className="block mt-3 text-xs font-mono tw-muted hover:text-cyan-600 transition-colors"
               >
                 All companies →

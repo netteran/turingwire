@@ -3,17 +3,24 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 
 import { PostCard } from "./PostCard";
-import { countArticlesByCategory, getArticlesByCategory } from "@/lib/queries";
+import { SectionFeed } from "./SectionFeed";
+import {
+  countArticlesByCategory,
+  getAllArticlesByCategory,
+  getArticlesByCategory,
+} from "@/lib/queries";
+import { slugify } from "@/lib/format";
 import { site, absoluteUrl } from "@/lib/site";
-import type { ArticleCategory } from "@/lib/types";
+import type { ArticleCard, ArticleCategory } from "@/lib/types";
 
 /**
- * Server-rendered, paginated section index for /news/ and /research/.
+ * Section index for /news/ and /research/.
  *
- * /publications/ reveals its cards client-side, so crawlers only ever saw
- * its first 30 links; every older article was reachable from the sitemap
- * alone. These hubs give each article a plain <a href> path from the header
- * and from its own breadcrumb: /news/, /news/page/2/, /news/page/3/, …
+ * Page 1 is the filterable feed (topic, impact, company, date range, text).
+ * It reveals cards client-side as the reader scrolls, so on its own crawlers
+ * would only see its first batch of links; the server-rendered archive pages
+ * (/news/page/2/, /news/page/3/, …) linked below it give every article a
+ * plain <a href> path.
  */
 
 export const HUB_PAGE_SIZE = 30;
@@ -84,13 +91,22 @@ export async function SectionHub({
   page: number;
 }) {
   const hub = HUBS[category];
-  const [posts, total] = await Promise.all([
-    getArticlesByCategory(category, {
-      limit: HUB_PAGE_SIZE,
-      offset: (page - 1) * HUB_PAGE_SIZE,
-    }),
-    countArticlesByCategory(category),
-  ]);
+  // Page 1 filters the whole section client-side, so it loads all of it;
+  // archive pages only need their own slice and the total for the pager.
+  const all =
+    page === 1
+      ? (await getAllArticlesByCategory(category)).filter((p) => p.title?.trim())
+      : [];
+  const [posts, total] =
+    page === 1
+      ? [all.slice(0, HUB_PAGE_SIZE), all.length]
+      : await Promise.all([
+          getArticlesByCategory(category, {
+            limit: HUB_PAGE_SIZE,
+            offset: (page - 1) * HUB_PAGE_SIZE,
+          }),
+          countArticlesByCategory(category),
+        ]);
 
   const lastPage = Math.max(1, Math.ceil(total / HUB_PAGE_SIZE));
   if (page > lastPage) notFound();
@@ -177,8 +193,8 @@ export async function SectionHub({
           <Link href="/stories/" className="tw-filter-chip">
             Multi-source stories →
           </Link>
-          <Link href={`/publications/?section=${category}`} className="tw-filter-chip">
-            Filter by topic &amp; company →
+          <Link href="/companies/" className="tw-filter-chip">
+            Browse by company →
           </Link>
         </div>
       </header>
@@ -187,19 +203,58 @@ export async function SectionHub({
         <div className="tw-card rounded-lg border tw-border p-8 text-center">
           <p className="tw-muted text-sm font-mono">No articles yet.</p>
         </div>
+      ) : page === 1 ? (
+        <SectionFeed
+          category={category}
+          posts={all}
+          companies={companyOptions(all)}
+          todayUtc={new Date().toISOString().slice(0, 10)}
+          nowMs={Date.now()}
+        />
       ) : (
-        <div className="space-y-3">
-          {posts.map((post) => (
-            <PostCard key={post.id} post={post} />
-          ))}
-        </div>
+        <>
+          <p className="mb-4 text-xs font-mono tw-muted">
+            Archive, newest first.{" "}
+            <Link href={hubPath(category, 1)} className="tw-accent hover:underline">
+              Filter by topic, impact and company →
+            </Link>
+          </p>
+          <div className="space-y-3">
+            {posts.map((post) => (
+              <PostCard key={post.id} post={post} />
+            ))}
+          </div>
+        </>
       )}
 
       {lastPage > 1 && (
-        <Pagination category={category} page={page} lastPage={lastPage} />
+        <>
+          {page === 1 && (
+            <h2 className="mt-10 text-center text-xs font-mono uppercase tracking-widest tw-muted">
+              Browse the archive by page
+            </h2>
+          )}
+          <Pagination category={category} page={page} lastPage={lastPage} />
+        </>
       )}
     </div>
   );
+}
+
+/** Every company tagged in the section (primary or secondary), A–Z. */
+function companyOptions(posts: ArticleCard[]) {
+  const bySlug = new Map<string, string>();
+  for (const p of posts) {
+    for (const name of [p.company, ...(p.secondary_companies ?? [])]) {
+      const trimmed = name?.trim();
+      if (!trimmed) continue;
+      const slug = slugify(trimmed);
+      if (slug && !bySlug.has(slug)) bySlug.set(slug, trimmed);
+    }
+  }
+  return [...bySlug]
+    .map(([slug, name]) => ({ slug, name }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 function Pagination({

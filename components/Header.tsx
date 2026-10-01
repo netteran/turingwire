@@ -13,8 +13,9 @@ import { createBrowserClient } from "@supabase/ssr";
  */
 
 const NAV_LINKS = [
-  { href: "/news/", label: "AI News", match: ["/news", "/companies", "/publications"] },
+  { href: "/news/", label: "AI News", match: ["/news"] },
   { href: "/research/", label: "AI Research", match: ["/research"] },
+  { href: "/companies/", label: "Companies", match: ["/companies"] },
   { href: "/stories/", label: "Stories", match: ["/stor"] },
   { href: "/models/", label: "Models", match: ["/models"] },
   { href: "/benchmarks/", label: "Benchmarks", match: ["/benchmarks"] },
