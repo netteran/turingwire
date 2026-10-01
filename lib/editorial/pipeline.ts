@@ -119,6 +119,12 @@ async function canonicalCompanies(supabase: SupabaseClient): Promise<Map<string,
   return new Map((data ?? []).map((r: { slug: string; name: string }) => [r.slug, r.name]));
 }
 
+/** supabase_store.clean_company: the classifier sometimes returns the string "null". */
+const NO_COMPANY = new Set(["", "null", "none", "n/a", "na", "unknown", "nil"]);
+function cleanCompany(name: unknown): boolean {
+  return name != null && !NO_COMPANY.has(String(name).trim().toLowerCase());
+}
+
 /** supabase_store.canonical_company: one spelling per slug. */
 function canonical(names: Map<string, string>, name: string): string {
   return names.get(slugify(name)) ?? name;
@@ -163,13 +169,15 @@ async function classify(
       ? [result.secondary_companies]
       : [];
 
-  const company = result.company ? canonical(names, String(result.company)) : null;
+  const company = cleanCompany(result.company) ? canonical(names, String(result.company).trim()) : null;
 
   return {
     subcategory: String(result.subcategory || "other"),
     impact: IMPACTS.includes(impact) ? impact : "notable",
     company,
-    secondaryCompanies: [...new Set(secondary.map((c) => canonical(names, String(c))))].filter(
+    secondaryCompanies: [
+      ...new Set(secondary.filter(cleanCompany).map((c) => canonical(names, String(c).trim()))),
+    ].filter(
       (c) => c && c !== company,
     ),
     // Same rule as build_row: other sections the classifier routed to
