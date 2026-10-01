@@ -38,6 +38,3 @@ export const SUBCATEGORIES: Record<ArticleCategory, string[]> = {
 };
 
 export const IMPACT_LEVELS: ArticleImpact[] = ["critical", "major", "notable", "minor"];
-
-/** lib/seo.ts noindexes anything shorter; surfaced in the form. */
-export const INDEXABLE_MIN_WORDS = 300;

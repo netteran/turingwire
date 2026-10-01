@@ -1,27 +1,54 @@
 import { site } from "./site";
-import type { Article } from "./types";
+import type { Article, ArticleCategory, ArticleImpact } from "./types";
+
+/** Any article of this length passes the length check. */
+export const INDEXABLE_MIN_WORDS = 300;
 
 /**
- * Indexing gate, ported verbatim from _layouts/default.html.
- *
- * An article is withheld from search indexes when it is a truncated-source
- * summary, is under 300 words, or — while `requireQualityFlag` is on — was not
- * marked `quality: high` by the improved pipeline. This is what withdrew the
- * thin AI-summary backlog from Google's index, so it has to survive the move.
+ * Shorter news passes when it is significant. News summaries are short by
+ * design (120–500-word targets), so the flat 300-word bar left 2 of ~1,000
+ * quality-checked news articles indexable; indexing the major and critical
+ * ones (~190) covers the stories people search for without re-admitting
+ * minor filler.
  */
-export function shouldNoindex(
-  article: Pick<Article, "source_truncated" | "summary_word_count" | "quality">,
-): boolean {
+export const INDEXABLE_MIN_WORDS_SIGNIFICANT_NEWS = 150;
+
+const SIGNIFICANT: ArticleImpact[] = ["major", "critical"];
+
+/** The length part of the gate; also used to warn in the Admin article form. */
+export function meetsLengthGate(article: {
+  category: ArticleCategory;
+  impact: ArticleImpact;
+  summary_word_count: number;
+}): boolean {
+  if (article.summary_word_count >= INDEXABLE_MIN_WORDS) return true;
+  return (
+    article.category === "news" &&
+    SIGNIFICANT.includes(article.impact) &&
+    article.summary_word_count >= INDEXABLE_MIN_WORDS_SIGNIFICANT_NEWS
+  );
+}
+
+type GateFields = Pick<
+  Article,
+  "source_truncated" | "summary_word_count" | "quality" | "category" | "impact"
+>;
+
+/**
+ * Indexing gate. An article is withheld from search indexes (noindex, and
+ * left out of the sitemaps) when it is a truncated-source summary, fails
+ * meetsLengthGate(), or — while `requireQualityFlag` is on — was not marked
+ * `quality: high`. This is what keeps the thin summary backlog out of
+ * Google's index.
+ */
+export function shouldNoindex(article: GateFields): boolean {
   if (article.source_truncated) return true;
-  if (article.summary_word_count < 300) return true;
   if (site.requireQualityFlag && article.quality !== "high") return true;
-  return false;
+  return !meetsLengthGate(article);
 }
 
 /** Metadata.robots value for an article, or undefined to inherit the default. */
-export function robotsFor(
-  article: Pick<Article, "source_truncated" | "summary_word_count" | "quality">,
-) {
+export function robotsFor(article: GateFields) {
   return shouldNoindex(article)
     ? { index: false, follow: true }
     : { index: true, follow: true };

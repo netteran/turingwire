@@ -265,5 +265,9 @@ Shipped on the `claude/exciting-volta-d60yie` branch (PR #47):
       author and publisher entities as articles.
 - [ ] Topic hubs per subcategory, and intro/FAQ copy on `/models/`, `/benchmarks/` and
       `/aistocks/`. These need copy written by the owner.
-- [ ] Stricter article and company index thresholds. These wait for the per-reason URL exports
-      (Phase 0 step 4).
+- [x] Article index gate revised from data (2026-10-01): of 3,031 news articles, 1,041 passed the
+      quality check but only 2 reached 300 words, so news was effectively all noindexed. The rule is
+      now quality high, not truncated, and either 300+ words or (news, major/critical impact, 150+
+      words). That gives about 194 news + 230 research articles, roughly 450–500 indexable URLs in
+      total with stories, companies and the main pages.
+- [ ] Company index threshold (still `primary_count > 0`). Revisit with the per-reason URL exports.
