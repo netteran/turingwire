@@ -81,10 +81,8 @@ export default async function HomePage() {
         <div className="lg:grid lg:grid-cols-3 lg:gap-10">
           <div className="lg:col-span-2">
             <div className="mb-6">
-              <h1 className="text-lg font-semibold tw-heading">
-                AI news, research &amp; model pricing
-              </h1>
-              <p className="text-xs font-mono tw-muted mt-1">{site.tagline}</p>
+              <h1 className="text-lg font-semibold tw-heading">{site.headline}</h1>
+              <p className="text-xs font-mono tw-muted mt-1">{site.motto}</p>
             </div>
 
             {recent.length === 0 ? (

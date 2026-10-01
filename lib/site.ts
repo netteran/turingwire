@@ -7,7 +7,10 @@
  */
 export const site = {
   title: "Turing Wire",
-  tagline: "AI — news, research, and markets. Signal over noise.",
+  /** Homepage H1; also the first half of the tagline. */
+  headline: "AI news, research, and markets",
+  motto: "Signal over noise.",
+  tagline: "AI news, research, and markets. Signal over noise.",
   description:
     "The essential daily briefing for AI engineers, researchers, and builders — in-depth news coverage, research analysis, and ecosystem market data.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://turingwire.com",
