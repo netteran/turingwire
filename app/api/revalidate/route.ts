@@ -20,7 +20,7 @@ import { NextResponse, type NextRequest } from "next/server";
 // market data.
 const PATHS = [
   "/",
-  "/publications/",
+  "/companies/",
   "/stories/",
   "/aistocks/",
   "/benchmarks/",

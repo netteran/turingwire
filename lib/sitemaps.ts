@@ -33,7 +33,7 @@ const STATIC_PATHS = [
   "/models/",
   "/benchmarks/",
   "/stories/",
-  "/publications/",
+  "/companies/",
   "/about/",
   "/about/editor/",
   "/contact/",

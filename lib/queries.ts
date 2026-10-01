@@ -67,7 +67,7 @@ export async function getArticlesByCategory(
 
 /**
  * Every article in one section, paginated past Supabase's 1,000-row default
- * cap. Backs /publications/, which filters client-side and so needs the
+ * cap. Backs page 1 of /news/ and /research/, which filter client-side and so need the
  * complete corpus up front rather than a bounded page.
  */
 export async function getAllArticlesByCategory(

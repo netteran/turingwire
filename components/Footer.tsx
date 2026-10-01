@@ -4,6 +4,7 @@ import { site } from "@/lib/site";
 const SECTIONS = [
   ["/news/", "AI News"],
   ["/research/", "AI Research"],
+  ["/companies/", "Companies"],
   ["/stories/", "Stories"],
   ["/models/", "Models"],
   ["/benchmarks/", "Benchmarks"],
