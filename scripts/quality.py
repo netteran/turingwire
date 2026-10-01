@@ -40,6 +40,7 @@ BAN_PHRASES = [
     "comes at a pivotal time",
     "comes at a time when",
     "particularly timely",
+    "particularly relevant as",
     "significant not only",
     "promises to enhance",
     "promise to enhance",
