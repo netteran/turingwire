@@ -301,16 +301,19 @@ body.tw-body {
 .tw-prose ul, .tw-prose ol { padding-left: 1.5em; margin-bottom: 1em; }
 .tw-prose li { margin-bottom: 0.25em; }
 
-.tw-prose strong:first-child {
-  display: block;
+/* Section labels in article bodies ("Problem", "Why it matters", …). Emitted
+   as headings by lib/articleBody.ts; bold text elsewhere stays inline. */
+.tw-prose h3.tw-section-label {
   font-size: 0.875rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--accent);
   font-weight: 600;
-  margin-bottom: 0.25em;
-  margin-top: 1.5em;
+  margin-top: 1.75em;
+  margin-bottom: 0.4em;
 }
+
+.tw-prose > h3.tw-section-label:first-child { margin-top: 0; }
 
 /* ── Footer ──────────────────────────────────────────────────────────────── */
 

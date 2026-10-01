@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { marked } from "marked";
 
 import { ImpactBadge } from "./ImpactBadge";
 import { ShareButtons } from "./ShareButtons";
+import { renderArticleBody } from "@/lib/articleBody";
 import {
   getAdjacentArticles,
   getArticle,
@@ -41,7 +41,7 @@ export async function ArticlePage({
 
   const canonical = absoluteUrl(articleUrl(article));
   const byline = bylineFor(article);
-  const bodyHtml = marked.parse(article.body ?? "", { async: false }) as string;
+  const bodyHtml = renderArticleBody(article.body ?? "");
   const publishedTime = new Date(article.published_at);
 
   const isStocks = article.tags.includes("stocks");
