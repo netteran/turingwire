@@ -310,3 +310,38 @@ export async function createCustomArticle(
 
   return { id: (data as { id: number }).id, path };
 }
+
+// ── Company profiles (/admin/companies) ────────────────────────────
+
+/** Edits the profile shown at the top of /companies/<slug>/. */
+export async function updateCompanyProfile(
+  slug: string,
+  patch: { description: string; website: string },
+) {
+  const supabase = await guard();
+
+  const description = patch.description.trim() || null;
+  let website: string | null = patch.website.trim() || null;
+  if (website) {
+    if (!/^https?:\/\//i.test(website)) website = `https://${website}`;
+    try {
+      website = new URL(website).toString().replace(/\/$/, "");
+    } catch {
+      throw new Error("That website isn't a valid URL.");
+    }
+  }
+
+  const { error } = await supabase
+    .from("companies")
+    .update({ description, website })
+    .eq("slug", slug);
+  if (error) {
+    throw new Error(
+      error.message.includes("website")
+        ? "The database is missing the `website` column — apply migration 0018_company_profiles.sql first."
+        : error.message,
+    );
+  }
+  revalidatePath("/admin/companies");
+  revalidatePath(`/companies/${slug}/`);
+}

@@ -25,6 +25,16 @@ export const BAN_PHRASES = [
   "it will be crucial",
   "it will be important",
   "this could lead to a cascade",
+  // Timeliness/significance padding (2026-10 audit).
+  "comes at a crucial time",
+  "comes at a critical time",
+  "comes at a pivotal time",
+  "comes at a time when",
+  "particularly timely",
+  "particularly relevant as",
+  "significant not only",
+  "promises to enhance",
+  "promise to enhance",
 ];
 
 const GUIDE_RE = /\b(guide|how to|how-to|tutorial|step[-\s]?by[-\s]?step|walkthrough)\b/i;
