@@ -112,6 +112,20 @@ def _unique_slug(category: str, base: str) -> str:
 # Articles
 # --------------------------------------------------------------------------
 
+# The classifier sometimes returns the *string* "null" (or similar) instead
+# of JSON null; stored as-is it became a company named "null" with its own
+# /companies/null/ page.
+_NO_COMPANY = {"", "null", "none", "n/a", "na", "unknown", "nil"}
+
+
+def clean_company(name: object) -> str | None:
+    """A real company name, or None for empty/placeholder values."""
+    if name is None:
+        return None
+    s = str(name).strip()
+    return None if s.lower() in _NO_COMPANY else s
+
+
 def build_row(
     article: dict,
     summary: str,
@@ -151,9 +165,13 @@ def build_row(
         secondary = [secondary]
 
     # Collapse casing variants onto one spelling per slug before storing.
-    raw_company = classification.get("company") or article.get("source_company") or None
+    raw_company = clean_company(classification.get("company")) or clean_company(
+        article.get("source_company")
+    )
     company = canonical_company(raw_company) if raw_company else None
-    secondary_names = [canonical_company(str(c)) for c in secondary]
+    secondary_names = [
+        canonical_company(c) for c in (clean_company(x) for x in secondary) if c and c != company
+    ]
 
     return {
         "category": primary,
@@ -335,10 +353,10 @@ def companies_in_articles() -> set[str]:
         if not rows:
             break
         for r in rows:
-            if r.get("company"):
+            if clean_company(r.get("company")):
                 names.add(r["company"])
             for c in r.get("secondary_companies") or []:
-                if c:
+                if clean_company(c):
                     names.add(c)
         if len(rows) < page:
             break
