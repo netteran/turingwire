@@ -156,7 +156,7 @@ Rules for "body":
 - {context_block}
 - Length follows substance: roughly {min_words}–{max_words} words. When the extracted facts are rich — many named entities, figures, or distinct events — use the higher end of that range and cover them individually instead of compressing everything into one or two sentences; a long, substantive source should produce a long, substantive article. A shorter, denser summary is still better than a padded one, but never cut real substance short just to be brief.
 - Do NOT invent facts, numbers, or quotes. Use only what the source supports.
-- BANNED — do not write any of these or similar filler: "the competitive landscape is heating up", "implications could be substantial", "for users, this means", "looking ahead", "it will be crucial/important to monitor", "remains to be seen", "game-changer", "in a rapidly evolving". Do not end with a vague "what to watch next" sentence — end on a concrete fact.
+- BANNED — do not write any of these or similar filler: "the competitive landscape is heating up", "implications could be substantial", "for users, this means", "looking ahead", "it will be crucial/important to monitor", "remains to be seen", "game-changer", "in a rapidly evolving", "comes at a crucial/critical time", "comes at a time when", "particularly timely", "significant not only for…". Do not end with a vague "what to watch next" sentence — end on a concrete fact.
 - Do NOT cite, link to, or name-check the source publication anywhere in the body — no "according to X", no markdown link to the source, no standalone source line. The source is already shown separately below the byline, so write as if reporting it directly rather than pointing back at where it came from.
 
 Article title: {title}

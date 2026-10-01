@@ -33,6 +33,16 @@ BAN_PHRASES = [
     "it will be crucial",
     "it will be important",
     "this could lead to a cascade",
+    # Timeliness/significance padding found in the June 2026 backlog and in
+    # a handful of later summaries (2026-10 audit).
+    "comes at a crucial time",
+    "comes at a critical time",
+    "comes at a pivotal time",
+    "comes at a time when",
+    "particularly timely",
+    "significant not only",
+    "promises to enhance",
+    "promise to enhance",
 ]
 
 # Headlines that promise instructional content the summaries never deliver.
