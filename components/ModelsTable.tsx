@@ -1,8 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
-/** Ported from pages/models.html — filters and sorting are React state now. */
+/**
+ * Filterable table on /models/. Rows come from the ai_models table (see
+ * lib/models.ts); `tier` is the objective price band (flagship = premium,
+ * standard = mid-range, economy = budget) rather than a vendor label.
+ */
 
 export interface ModelRow {
   id: string;
@@ -25,18 +30,18 @@ export interface ModelRow {
   notes?: string;
 }
 
-const PROVIDERS = ["all", "Anthropic", "OpenAI", "Google", "Meta", "Mistral"];
 const TIERS = [
   ["all", "All"],
-  ["flagship", "Flagship"],
-  ["standard", "Standard"],
-  ["economy", "Economy"],
+  ["flagship", "Premium"],
+  ["standard", "Mid-range"],
+  ["economy", "Budget"],
 ] as const;
+const TIER_LABEL: Record<string, string> = { flagship: "Premium", standard: "Mid-range", economy: "Budget" };
 const CAPS = [
   ["all", "All"],
-  ["multimodal", "Multimodal"],
+  ["multimodal", "Vision"],
+  ["tools", "Tool use"],
   ["reasoning", "Reasoning"],
-  ["open_source", "Open Source"],
 ] as const;
 
 const providerClass = (p: string) =>
@@ -45,9 +50,10 @@ const providerClass = (p: string) =>
 const priceClass = (value: number, mid: number, high: number) =>
   value < mid ? "tw-price-low" : value < high ? "tw-price-mid" : "tw-price-high";
 
-const formatContext = (k: number) => (k >= 1000 ? `${k / 1000}M` : `${k}k`);
+const formatContext = (k: number) =>
+  !k ? "—" : k >= 1000 ? `${+(k / 1000).toFixed(2)}M` : `${Math.round(k)}K`;
 
-const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+const tierLabel = (s: string) => TIER_LABEL[s] ?? s;
 
 function Capabilities({ m }: { m: ModelRow }) {
   return (
@@ -82,6 +88,10 @@ function Capabilities({ m }: { m: ModelRow }) {
 }
 
 export function ModelsTable({ models }: { models: ModelRow[] }) {
+  const PROVIDERS = useMemo(
+    () => ["all", ...[...new Set(models.map((m) => m.provider))].sort((a, b) => a.localeCompare(b))],
+    [models],
+  );
   const [provider, setProvider] = useState("all");
   const [tier, setTier] = useState("all");
   const [cap, setCap] = useState("all");
@@ -95,8 +105,8 @@ export function ModelsTable({ models }: { models: ModelRow[] }) {
       .filter((m) => {
         if (cap === "all") return true;
         if (cap === "multimodal") return !!m.multimodal;
+        if (cap === "tools") return !!m.function_calling;
         if (cap === "reasoning") return !!m.reasoning;
-        if (cap === "open_source") return !!m.open_source;
         return true;
       });
 
@@ -244,7 +254,9 @@ export function ModelsTable({ models }: { models: ModelRow[] }) {
                       className="border-b tw-border hover:tw-card transition-colors"
                     >
                       <td className="px-4 py-3">
-                        <div className="font-semibold tw-heading text-sm">{m.name}</div>
+                        <Link href={`/models/${m.id}/`} className="font-semibold tw-heading text-sm hover:tw-accent">
+                          {m.name}
+                        </Link>
                         {m.notes && (
                           <div className="text-xs tw-muted mt-0.5">{m.notes}</div>
                         )}
@@ -254,7 +266,7 @@ export function ModelsTable({ models }: { models: ModelRow[] }) {
                       </td>
                       <td className="px-4 py-3">
                         <span className={`tw-tier-badge tw-tier-${m.tier}`}>
-                          {capitalize(m.tier)}
+                          {tierLabel(m.tier)}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right font-mono">
@@ -288,11 +300,13 @@ export function ModelsTable({ models }: { models: ModelRow[] }) {
               <div key={m.id} className="tw-card rounded-xl border tw-border p-4">
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <div>
-                    <div className="font-semibold tw-heading">{m.name}</div>
+                    <Link href={`/models/${m.id}/`} className="font-semibold tw-heading hover:tw-accent">
+                      {m.name}
+                    </Link>
                     <div className="flex gap-1.5 mt-1">
                       <span className={providerClass(m.provider)}>{m.provider}</span>
                       <span className={`tw-tier-badge tw-tier-${m.tier}`}>
-                        {capitalize(m.tier)}
+                        {tierLabel(m.tier)}
                       </span>
                     </div>
                   </div>
@@ -318,7 +332,7 @@ export function ModelsTable({ models }: { models: ModelRow[] }) {
                     </div>
                   </div>
                   <div>
-                    <div className="tw-muted">Released</div>
+                    <div className="tw-muted">Listed since</div>
                     <div className="font-mono tw-heading">{m.release_date}</div>
                   </div>
                 </div>

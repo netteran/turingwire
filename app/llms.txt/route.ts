@@ -44,7 +44,9 @@ Always preserve the linked primary source publisher — Turing Wire articles car
 - Companies (searchable directory of every covered company): ${site.url}/companies/
 - Stories (multi-source synthesis): ${site.url}/stories/
 - AI Stocks: ${site.url}/aistocks/
-- Models: ${site.url}/models/
+- Model API pricing (list prices per 1M tokens, updated daily; one page per model at /models/<slug>/): ${site.url}/models/
+- Model comparisons (head-to-head pricing and specs): ${site.url}/models/compare/
+- TW Model Price Index (weekly index of AI API list prices, with weekly change reports): ${site.url}/models/price-index/
 - Benchmarks: ${site.url}/benchmarks/
 
 ## Tracked entities

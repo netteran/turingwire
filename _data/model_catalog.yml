@@ -1,0 +1,126 @@
+# Tracked AI models for /models/, the model pages, comparisons and the
+# price index.
+#
+# This file only decides *which* models are tracked and how they are named
+# and linked. Prices, context windows and capabilities are never typed in
+# by hand: scripts/fetch_model_prices.py reads them daily from LiteLLM's
+# public model price list (MIT licence,
+# https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json),
+# which records each provider's first-party API list price, and stores a
+# new history row whenever a price changes.
+#
+# Fields
+#   slug      URL segment: /models/<slug>/
+#   name      display name
+#   provider  who sells the API (shown on the page)
+#   company   canonical company name, linking to /companies/<slug>/
+#   key       the model's key in LiteLLM's price list (first-party API)
+#
+# Add a model: append an entry (key must exist in the price list), merge,
+# and the next ingest run fills in its data. Retiring a model: set
+# `retired: true` to keep its page and history but drop it from listings.
+
+models:
+  # ── Anthropic ───────────────────────────────────────────────────────────
+  - { slug: claude-opus-5-5,   name: "Claude Opus 5.5",   provider: Anthropic, company: Anthropic, key: claude-opus-5-5 }
+  - { slug: claude-opus-5,     name: "Claude Opus 5",     provider: Anthropic, company: Anthropic, key: claude-opus-5 }
+  - { slug: claude-sonnet-5-5, name: "Claude Sonnet 5.5", provider: Anthropic, company: Anthropic, key: claude-sonnet-5-5 }
+  - { slug: claude-sonnet-5,   name: "Claude Sonnet 5",   provider: Anthropic, company: Anthropic, key: claude-sonnet-5 }
+  - { slug: claude-fable-5-1,  name: "Claude Fable 5.1",  provider: Anthropic, company: Anthropic, key: claude-fable-5-1 }
+  - { slug: claude-mythos-5-1, name: "Claude Mythos 5.1", provider: Anthropic, company: Anthropic, key: claude-mythos-5-1 }
+  - { slug: claude-haiku-4-5,  name: "Claude Haiku 4.5",  provider: Anthropic, company: Anthropic, key: claude-haiku-4-5 }
+
+  # ── OpenAI ──────────────────────────────────────────────────────────────
+  - { slug: gpt-6-1-sol,  name: "GPT-6.1 Sol",  provider: OpenAI, company: OpenAI, key: gpt-6.1-sol }
+  - { slug: gpt-6-astra,  name: "GPT-6 Astra",  provider: OpenAI, company: OpenAI, key: gpt-6-astra }
+  - { slug: gpt-6-sol,    name: "GPT-6 Sol",    provider: OpenAI, company: OpenAI, key: gpt-6-sol }
+  - { slug: gpt-6-luna,   name: "GPT-6 Luna",   provider: OpenAI, company: OpenAI, key: gpt-6-luna }
+  - { slug: gpt-5-6,      name: "GPT-5.6",      provider: OpenAI, company: OpenAI, key: gpt-5.6 }
+  - { slug: gpt-5-5,      name: "GPT-5.5",      provider: OpenAI, company: OpenAI, key: gpt-5.5 }
+  - { slug: gpt-5-4-mini, name: "GPT-5.4 mini", provider: OpenAI, company: OpenAI, key: gpt-5.4-mini }
+  - { slug: gpt-5,        name: "GPT-5",        provider: OpenAI, company: OpenAI, key: gpt-5 }
+  - { slug: gpt-5-mini,   name: "GPT-5 mini",   provider: OpenAI, company: OpenAI, key: gpt-5-mini }
+  - { slug: gpt-4-1,      name: "GPT-4.1",      provider: OpenAI, company: OpenAI, key: gpt-4.1 }
+  - { slug: gpt-4o,       name: "GPT-4o",       provider: OpenAI, company: OpenAI, key: gpt-4o }
+  - { slug: gpt-4o-mini,  name: "GPT-4o mini",  provider: OpenAI, company: OpenAI, key: gpt-4o-mini }
+  - { slug: o3,           name: "o3",           provider: OpenAI, company: OpenAI, key: o3 }
+  - { slug: o4-mini,      name: "o4-mini",      provider: OpenAI, company: OpenAI, key: o4-mini }
+
+  # ── Google ──────────────────────────────────────────────────────────────
+  - { slug: gemini-3-8-flash,      name: "Gemini 3.8 Flash",      provider: Google, company: Google DeepMind, key: gemini/gemini-3.8-flash }
+  - { slug: gemini-3-5-flash,      name: "Gemini 3.5 Flash",      provider: Google, company: Google DeepMind, key: gemini/gemini-3.5-flash }
+  - { slug: gemini-3-5-flash-lite, name: "Gemini 3.5 Flash-Lite", provider: Google, company: Google DeepMind, key: gemini/gemini-3.5-flash-lite }
+  - { slug: gemini-2-5-pro,        name: "Gemini 2.5 Pro",        provider: Google, company: Google DeepMind, key: gemini/gemini-2.5-pro }
+  - { slug: gemini-2-5-flash,      name: "Gemini 2.5 Flash",      provider: Google, company: Google DeepMind, key: gemini/gemini-2.5-flash }
+  - { slug: gemini-2-5-flash-lite, name: "Gemini 2.5 Flash-Lite", provider: Google, company: Google DeepMind, key: gemini/gemini-2.5-flash-lite }
+
+  # ── xAI ─────────────────────────────────────────────────────────────────
+  - { slug: grok-4-7,           name: "Grok 4.7",           provider: xAI, company: xAI, key: xai/grok-4.7 }
+  - { slug: grok-4-3,           name: "Grok 4.3",           provider: xAI, company: xAI, key: xai/grok-4.3 }
+  - { slug: grok-code-fast-1,   name: "Grok Code Fast 1",   provider: xAI, company: xAI, key: xai/grok-code-fast-1 }
+
+  # ── DeepSeek ────────────────────────────────────────────────────────────
+  - { slug: deepseek-v4-pro,   name: "DeepSeek V4 Pro",   provider: DeepSeek, company: DeepSeek, key: deepseek/deepseek-v4-pro }
+  - { slug: deepseek-v4-flash, name: "DeepSeek V4 Flash", provider: DeepSeek, company: DeepSeek, key: deepseek/deepseek-v4-flash }
+  - { slug: deepseek-chat,     name: "DeepSeek Chat (deepseek-chat)", provider: DeepSeek, company: DeepSeek, key: deepseek/deepseek-chat }
+
+  # ── Mistral ─────────────────────────────────────────────────────────────
+  - { slug: mistral-large-3,      name: "Mistral Large 3",      provider: Mistral, company: Mistral, key: mistral/mistral-large-3 }
+  - { slug: mistral-medium-3-5,   name: "Mistral Medium 3.5",   provider: Mistral, company: Mistral, key: mistral/mistral-medium-3-5 }
+  - { slug: mistral-small-2603,   name: "Mistral Small (2603)", provider: Mistral, company: Mistral, key: mistral/mistral-small-2603 }
+  - { slug: codestral-2508,       name: "Codestral (2508)",     provider: Mistral, company: Mistral, key: mistral/codestral-2508 }
+
+  # ── Others ──────────────────────────────────────────────────────────────
+  - { slug: kimi-k3,         name: "Kimi K3",          provider: Moonshot AI, company: Moonshot AI, key: moonshot/kimi-k3 }
+  - { slug: kimi-k2-6,       name: "Kimi K2.6",        provider: Moonshot AI, company: Moonshot AI, key: moonshot/kimi-k2.6 }
+  - { slug: minimax-m3,      name: "MiniMax M3",       provider: MiniMax,     company: MiniMax,     key: minimax/MiniMax-M3 }
+  - { slug: glm-5-3,         name: "GLM-5.3",          provider: Z.ai,        company: Z.ai,        key: zai/glm-5.3 }
+  - { slug: qwen3-8-max,     name: "Qwen3.8 Max",      provider: Alibaba Cloud, company: Alibaba,   key: dashscope/qwen3.8-max }
+  - { slug: qwen3-8-flash,   name: "Qwen3.8 Flash",    provider: Alibaba Cloud, company: Alibaba,   key: dashscope/qwen3.8-flash }
+  - { slug: nova-premier,    name: "Amazon Nova Premier", provider: Amazon, company: Amazon, key: amazon-nova/nova-premier-v1 }
+  - { slug: nova-pro,        name: "Amazon Nova Pro",  provider: Amazon,  company: Amazon,  key: amazon-nova/nova-pro-v1 }
+  - { slug: command-a,       name: "Command A",        provider: Cohere,  company: Cohere,  key: command-a-03-2025 }
+
+# Hand-picked head-to-head pages: /models/compare/<a>-vs-<b>/.
+# Pairs people actually weigh against each other — same tier across
+# providers, or a provider's step up/down. Order sets the canonical URL.
+comparisons:
+  # Flagships across providers
+  - [claude-opus-5-5, gpt-6-1-sol]
+  - [claude-opus-5-5, gpt-6-astra]
+  - [claude-opus-5-5, gemini-3-8-flash]
+  - [gpt-6-1-sol, gemini-3-8-flash]
+  - [claude-opus-5-5, grok-4-7]
+  - [gpt-6-1-sol, grok-4-7]
+  - [claude-opus-5-5, deepseek-v4-pro]
+  - [gpt-6-1-sol, deepseek-v4-pro]
+  - [deepseek-v4-pro, kimi-k3]
+  - [kimi-k3, qwen3-8-max]
+  - [deepseek-v4-pro, qwen3-8-max]
+  - [mistral-large-3, deepseek-v4-pro]
+  # Mid-range
+  - [claude-sonnet-5-5, gpt-6-sol]
+  - [claude-sonnet-5-5, gemini-3-5-flash]
+  - [gpt-6-sol, gemini-3-5-flash]
+  - [claude-sonnet-5-5, grok-4-7]
+  - [mistral-medium-3-5, claude-sonnet-5-5]
+  - [glm-5-3, kimi-k2-6]
+  # Budget / high-volume
+  - [claude-haiku-4-5, gpt-6-luna]
+  - [claude-haiku-4-5, gemini-3-5-flash-lite]
+  - [gpt-6-luna, gemini-3-5-flash-lite]
+  - [gpt-5-mini, gemini-2-5-flash]
+  - [deepseek-v4-flash, gemini-3-5-flash-lite]
+  - [qwen3-8-flash, deepseek-v4-flash]
+  - [minimax-m3, deepseek-v4-flash]
+  - [mistral-small-2603, gpt-6-luna]
+  # Coding
+  - [codestral-2508, grok-code-fast-1]
+  # Step up / step down within a provider
+  - [claude-opus-5-5, claude-sonnet-5-5]
+  - [claude-sonnet-5-5, claude-haiku-4-5]
+  - [gpt-6-1-sol, gpt-6-luna]
+  - [gpt-6-astra, gpt-6-1-sol]
+  - [claude-opus-5-5, claude-opus-5]
+  - [gpt-5, gpt-6-1-sol]
+  - [gemini-2-5-pro, gemini-3-8-flash]

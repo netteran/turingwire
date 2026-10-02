@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { ShareButtons } from "@/components/ShareButtons";
-import { getStory } from "@/lib/queries";
+import { getArticlesBySourceUrls, getStory } from "@/lib/queries";
 import { formatDate, slugify } from "@/lib/format";
 import { site, absoluteUrl } from "@/lib/site";
 import { OG_IMAGE_SIZE, ogImageUrl } from "@/lib/ogImage";
@@ -67,6 +67,8 @@ export default async function StoryPage({ params }: Props) {
   if (!story) notFound();
 
   const sources = story.sources ?? [];
+  // Our own summaries of the sources, so readers can stay on the site.
+  const ours = await getArticlesBySourceUrls(sources.map((s) => s.url));
   const claims = story.claims ?? [];
   const companies = story.companies ?? [];
   const disputedCount = claims.filter((c) => c.status === "disputed").length;
@@ -306,6 +308,17 @@ export default async function StoryPage({ params }: Props) {
                     </a>
                     <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] font-mono tw-muted">
                       <span>{src.publisher}</span>
+                      {ours.get(src.url) && (
+                        <>
+                          <span>·</span>
+                          <Link
+                            href={`/${ours.get(src.url)!.category}/${ours.get(src.url)!.slug}/`}
+                            className="tw-accent hover:underline"
+                          >
+                            Our summary
+                          </Link>
+                        </>
+                      )}
                       {src.date && (
                         <>
                           <span>·</span>

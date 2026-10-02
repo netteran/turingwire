@@ -191,9 +191,11 @@ jobs:
         run: python scripts/fetch_benchmarks.py
         continue-on-error: true
 
-      - name: Check model pricing
+      # Tracked models (_data/model_catalog.yml) get today's list prices;
+      # a price change adds a model_price_history row.
+      - name: Sync model prices
         if: ${{ !inputs.dry_run && !inputs.source_id }}
-        run: python scripts/fetch_models.py
+        run: python scripts/fetch_model_prices.py
         continue-on-error: true
 
       # Only after a successful pull: pushing files that still hold the

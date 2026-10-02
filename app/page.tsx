@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { DevelopingStories } from "@/components/DevelopingStories";
+
 import { PostCard } from "@/components/PostCard";
 import { BreakingStrip } from "@/components/BreakingStrip";
 import { DayLabel } from "@/components/DayLabel";
@@ -84,6 +86,8 @@ export default async function HomePage() {
               <h1 className="text-lg font-semibold tw-heading">{site.headline}</h1>
               <p className="text-xs font-mono tw-muted mt-1">{site.motto}</p>
             </div>
+
+            <DevelopingStories />
 
             {recent.length === 0 ? (
               <div className="tw-card rounded-lg border tw-border p-8 text-center">

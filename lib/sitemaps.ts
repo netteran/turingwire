@@ -7,6 +7,14 @@ import {
 } from "./queries";
 import { articleModifiedAt } from "./articleMetadata";
 import { shouldNoindex } from "./seo";
+import {
+  comparisonSlug,
+  computePriceIndex,
+  eventfulWeeks,
+  getAllModels,
+  getComparisons,
+  getPriceHistory,
+} from "./models";
 import { site } from "./site";
 import type { ArticleCategory } from "./types";
 
@@ -21,7 +29,7 @@ import type { ArticleCategory } from "./types";
  * request for static pages, which teaches Google to ignore it site-wide.
  */
 
-export const SITEMAP_TYPES = ["pages", "news", "research", "stories", "companies"] as const;
+export const SITEMAP_TYPES = ["pages", "news", "research", "stories", "companies", "models"] as const;
 export type SitemapType = (typeof SITEMAP_TYPES)[number];
 
 export type SitemapEntry = { path: string; lastModified?: string | null };
@@ -94,6 +102,30 @@ async function storyEntries(): Promise<SitemapEntry[]> {
   }));
 }
 
+/**
+ * Model pages, comparisons and the price index. lastmod is the latest price
+ * change, not the daily sync time, so it only moves when content does.
+ */
+async function modelEntries(): Promise<SitemapEntry[]> {
+  const [models, history] = await Promise.all([getAllModels(), getPriceHistory()]);
+  const lastChange = new Map<string, string>();
+  for (const p of history) lastChange.set(p.model_slug, p.observed_on);
+  const latest = history.length ? history[history.length - 1].observed_on : null;
+  const later = (a?: string, b?: string) => (a && b ? (a > b ? a : b) : (a ?? b ?? null));
+  const weeks = eventfulWeeks(computePriceIndex(models, history));
+
+  return [
+    ...models.map((m) => ({ path: `/models/${m.slug}/`, lastModified: lastChange.get(m.slug) ?? null })),
+    { path: "/models/compare/", lastModified: latest },
+    ...getComparisons(models).map(([a, b]) => ({
+      path: `/models/compare/${comparisonSlug(a.slug, b.slug)}/`,
+      lastModified: later(lastChange.get(a.slug), lastChange.get(b.slug)),
+    })),
+    { path: "/models/price-index/", lastModified: latest },
+    ...weeks.map((w) => ({ path: `/models/price-index/${w.key}/`, lastModified: w.start })),
+  ];
+}
+
 export function sitemapEntries(type: SitemapType): Promise<SitemapEntry[]> {
   switch (type) {
     case "pages":
@@ -106,6 +138,8 @@ export function sitemapEntries(type: SitemapType): Promise<SitemapEntry[]> {
       return storyEntries();
     case "companies":
       return companyEntries();
+    case "models":
+      return modelEntries();
   }
 }
 

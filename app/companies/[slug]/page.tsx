@@ -7,6 +7,9 @@ import { ShareButtons } from "@/components/ShareButtons";
 import { getArticlesForCompany, getCompany, getCompanyPrimaryCount } from "@/lib/queries";
 import { profileOf } from "@/lib/format";
 import { robotsForCompany } from "@/lib/seo";
+import { getBenchmarks } from "@/lib/data";
+import { blended, formatTokens, formatUsd, getAllModels } from "@/lib/models";
+import type { Benchmark } from "@/components/BenchmarkBoard";
 import { site, absoluteUrl } from "@/lib/site";
 
 // Refreshed on demand after each ingest run (app/api/revalidate); the timer
@@ -58,7 +61,25 @@ export default async function CompanyPage({ params }: Props) {
   const company = await getCompany(slug);
   if (!company) notFound();
 
-  const { primary, secondary } = await getArticlesForCompany(company.name);
+  const [{ primary, secondary }, allModels, benchData] = await Promise.all([
+    getArticlesForCompany(company.name),
+    getAllModels().catch(() => []),
+    getBenchmarks<{ benchmarks?: Benchmark[] }>().catch(() => ({ benchmarks: [] })),
+  ]);
+  const models = allModels
+    .filter((m) => m.company === company.name && !m.retired && m.input_price !== null)
+    .sort((a, b) => (blended(b) ?? 0) - (blended(a) ?? 0));
+  // Benchmark tables label Google DeepMind's models "Google".
+  const benchProvider = company.name === "Google DeepMind" ? "Google" : company.name;
+  const benchmarks = (benchData.benchmarks ?? [])
+    .map((bm) => {
+      const ranked = [...(bm.results ?? [])].sort((x, y) =>
+        bm.higher_is_better === false ? x.score - y.score : y.score - x.score,
+      );
+      const i = ranked.findIndex((r) => r.provider === benchProvider);
+      return i < 0 ? null : { bm, best: ranked[i], position: i + 1, of: ranked.length };
+    })
+    .filter((x): x is NonNullable<typeof x> => x !== null);
   const url = absoluteUrl(`/companies/${company.slug}/`);
   const profile = profileOf(company.description);
   const website = company.website ?? null;
@@ -142,6 +163,70 @@ export default async function CompanyPage({ params }: Props) {
           </div>
         </div>
       </header>
+
+      {models.length > 0 && (
+        <section className="mb-10">
+          <h2 className="text-xs font-mono tw-muted uppercase tracking-widest mb-4">
+            Models &amp; API prices
+          </h2>
+          <div className="tw-card border tw-border rounded-lg overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b tw-border text-left text-xs font-mono tw-muted">
+                  <th className="px-4 py-2">Model</th>
+                  <th className="px-4 py-2 text-right">Input / 1M</th>
+                  <th className="px-4 py-2 text-right">Output / 1M</th>
+                  <th className="px-4 py-2 text-right">Context</th>
+                </tr>
+              </thead>
+              <tbody>
+                {models.map((m) => (
+                  <tr key={m.slug} className="border-b tw-border last:border-0">
+                    <td className="px-4 py-2">
+                      <Link href={`/models/${m.slug}/`} className="tw-accent hover:underline">{m.name}</Link>
+                    </td>
+                    <td className="px-4 py-2 text-right font-mono">{formatUsd(m.input_price)}</td>
+                    <td className="px-4 py-2 text-right font-mono">{formatUsd(m.output_price)}</td>
+                    <td className="px-4 py-2 text-right font-mono tw-muted">{formatTokens(m.context_tokens)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-xs tw-muted mt-2">
+            List prices per million tokens for {company.name}&apos;s own API, updated daily.{" "}
+            <Link href="/models/" className="tw-accent hover:underline">Compare all models →</Link>
+          </p>
+        </section>
+      )}
+
+      {benchmarks.length > 0 && (
+        <section className="mb-10">
+          <h2 className="text-xs font-mono tw-muted uppercase tracking-widest mb-4">
+            Published benchmark results
+          </h2>
+          <ul className="tw-card border tw-border rounded-lg divide-y tw-border text-sm">
+            {benchmarks.map(({ bm, best, position, of }) => (
+              <li key={bm.id} className="px-4 py-2 flex flex-wrap items-baseline justify-between gap-2">
+                <span>
+                  <span className="tw-heading font-medium">{bm.name}</span>
+                  <span className="tw-muted"> · best listed: {best.model}</span>
+                </span>
+                <span className="font-mono text-xs tw-muted">
+                  {best.score}
+                  {bm.unit ?? ""} · #{position} of {of} listed
+                  {best.date ? ` · ${best.date}` : ""}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs tw-muted mt-2">
+            Position among the results listed on our{" "}
+            <Link href="/benchmarks/" className="tw-accent hover:underline">benchmark leaderboard</Link>, with
+            the date each result was published.
+          </p>
+        </section>
+      )}
 
       {primary.length > 0 && (
         <section>
