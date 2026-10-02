@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 
+import { profileOf } from "@/lib/format";
 import type { CompanyCount } from "@/lib/queries";
 
 /**
@@ -45,12 +46,6 @@ const DAY_MS = 86_400_000;
 function letterOf(name: string): string {
   const first = name.trim().charAt(0).toUpperCase();
   return first >= "A" && first <= "Z" ? first : "#";
-}
-
-/** The pipeline used to store this placeholder for every company (cleared by migration 0018). */
-function profileOf(description: string | null): string | null {
-  const d = description?.trim();
-  return d && !d.startsWith("Turing Wire coverage of ") ? d : null;
 }
 
 function shortDate(iso: string): string {

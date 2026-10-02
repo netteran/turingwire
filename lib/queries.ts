@@ -293,6 +293,37 @@ export async function searchArticles(
   return (data ?? []) as Article[];
 }
 
+/**
+ * Covered companies whose name or profile matches the query, for /search/.
+ * Name matches rank ahead of profile-only matches (exact, then prefix, then
+ * anywhere in the name), each group busiest first.
+ */
+export async function searchCompanies(query: string, limit = 50): Promise<CompanyCount[]> {
+  // Characters that would break out of a PostgREST or=() filter value, plus
+  // ilike's own wildcards — a company search never needs any of them.
+  const term = query.trim().replace(/[,()"\\%_*]/g, " ").replace(/\s+/g, " ").trim();
+  if (!term) return [];
+  const { data, error } = await getSupabase()
+    .from("company_article_counts")
+    .select("*")
+    .gt("article_count", 0)
+    .or(`name.ilike."%${term}%",description.ilike."%${term}%"`)
+    .order("primary_count", { ascending: false })
+    .limit(200);
+  if (error) throw error;
+
+  const needle = term.toLowerCase();
+  const rank = (c: CompanyCount) => {
+    const name = c.name.toLowerCase();
+    if (name === needle) return 0;
+    if (name.startsWith(needle)) return 1;
+    if (name.includes(needle)) return 2;
+    return 3;
+  };
+  // Array.prototype.sort is stable, so the primary_count order holds within a rank.
+  return ((data ?? []) as CompanyCount[]).sort((a, b) => rank(a) - rank(b)).slice(0, limit);
+}
+
 export type ArticleAddress = Pick<
   Article,
   | "category"
