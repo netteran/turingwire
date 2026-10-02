@@ -10,7 +10,9 @@ TEASER_CHARS) — capped to genuinely new entries via the seen-articles cache.
 
 --source-id restricts the run to one ingest_sources row, for verifying a
 single source end-to-end (e.g. from the "run" button per source in
-Admin / Sources) without waiting on or paying for the full sweep.
+Admin / Sources) without waiting on or paying for the full sweep. Such a
+run, and a source's first-ever run, look back BACKFILL_LOOKBACK_HOURS
+instead of the normal 26h window, so a low-volume source isn't empty.
 """
 from __future__ import annotations
 
@@ -53,6 +55,19 @@ TRACKING_PARAMS = {
     "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content",
     "fbclid", "gclid", "ref", "referer", "_ga", "mc_cid", "mc_eid",
 }
+
+# Normal sweep window: a run every 4h only needs the last day of entries.
+LOOKBACK_HOURS = 26
+# Backfill window, used for an explicit single-source run and for a
+# source's first-ever run. Low-volume feeds (a Google News search for one
+# small company, a blog that posts monthly) can go days or weeks without a
+# new entry, so under the 26h window alone a newly added source shows
+# nothing until its next fresh hit — and the per-source "run" button,
+# which exists to verify a source end-to-end, would usually come back
+# empty. Capped to the newest BACKFILL_MAX_ARTICLES so a busy feed can't
+# turn one backfill into a month of LLM summaries.
+BACKFILL_LOOKBACK_HOURS = 30 * 24
+BACKFILL_MAX_ARTICLES = 15
 
 _CYRILLIC_RE = re.compile(r"[Ѐ-ӿ]")
 _ALPHA_RE = re.compile(r"[A-Za-zЀ-ӿ]")
@@ -157,7 +172,9 @@ def fetch_full_text(url: str) -> tuple[str, bool]:
         return "", False
 
 
-def fetch_rss_atom(source: dict, etag_cache: dict, dry_run: bool) -> list[dict]:
+def fetch_rss_atom(
+    source: dict, etag_cache: dict, dry_run: bool, backfill: bool = False
+) -> list[dict]:
     url = source["url"]
 
     if dry_run:
@@ -181,7 +198,9 @@ def fetch_rss_atom(source: dict, etag_cache: dict, dry_run: bool) -> list[dict]:
         headers: dict[str, str] = {}
         cache_key = url
 
-        if cache_key in etag_cache:
+        # A backfill wants the whole feed, not "unchanged since last run" —
+        # a 304 here would hide exactly the older entries it's looking for.
+        if cache_key in etag_cache and not backfill:
             entry = etag_cache[cache_key]
             if entry.get("etag"):
                 headers["If-None-Match"] = entry["etag"]
@@ -210,7 +229,8 @@ def fetch_rss_atom(source: dict, etag_cache: dict, dry_run: bool) -> list[dict]:
 
     feed = feedparser.parse(raw_text)
     articles = []
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=26)
+    lookback = BACKFILL_LOOKBACK_HOURS if backfill else LOOKBACK_HOURS
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=lookback)
 
     # deduplicate.py drops anything already in seen_articles anyway, so an
     # entry this pipeline ingested on a prior run doesn't need — and, now that
@@ -305,10 +325,18 @@ def fetch_rss_atom(source: dict, etag_cache: dict, dry_run: bool) -> list[dict]:
         })
 
     max_articles = source.get("max_articles")
+    if backfill:
+        # Google News search feeds are ordered by relevance, not date, so
+        # sort before capping to keep the newest entries.
+        articles.sort(key=lambda a: a["published"], reverse=True)
+        max_articles = min(max_articles or BACKFILL_MAX_ARTICLES, BACKFILL_MAX_ARTICLES)
     if max_articles:
         articles = articles[:max_articles]
 
-    log.info("fetched %d articles from %s", len(articles), source["name"])
+    log.info(
+        "fetched %d articles from %s%s", len(articles), source["name"],
+        f" (backfill, last {lookback // 24}d)" if backfill else "",
+    )
     return articles
 
 
@@ -431,7 +459,10 @@ def main(dry_run: bool = False, source_id: int | None = None) -> int:
             if source.get("type") == "api" and "arxiv" in (source.get("url") or ""):
                 articles = fetch_arxiv(source, dry_run)
             else:
-                articles = fetch_rss_atom(source, cache, dry_run)
+                # Backfill on an explicit single-source run, or the first
+                # time a newly added source runs in the sweep.
+                backfill = source_id is not None or not source.get("last_run_at")
+                articles = fetch_rss_atom(source, cache, dry_run, backfill=backfill)
         except Exception as exc:  # one bad feed must not end the run
             log.warning("source failed: %s: %s", source["name"], exc)
             record_source_result(source["id"], "error", 0, error=str(exc))
