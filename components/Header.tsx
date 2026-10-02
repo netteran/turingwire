@@ -353,57 +353,75 @@ export function Header() {
           mobileOpen ? "" : " hidden"
         }`}
       >
-        <nav className="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-1 text-sm font-medium">
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`tw-nav-link py-2${
-                isActive(link.match) ? " tw-nav-active" : ""
-              }`}
-            >
-              {link.label}
-            </Link>
-          ))}
-
-          <form action="/search/" method="get" className="mt-2">
+        <div className="max-w-7xl mx-auto px-4 py-3 text-sm font-medium">
+          <form action="/search/" method="get" className="mb-2">
             <input
               type="search"
               name="q"
               placeholder="Search…"
-              className="tw-search-input w-full font-mono text-sm"
+              aria-label="Search"
+              // Inline so it beats .tw-search-input's fixed header width.
+              style={{ width: "100%" }}
+              className="tw-search-input font-mono text-sm"
             />
           </form>
 
-          {isAdmin && (
-            <div className="mt-2 pt-2 border-t tw-border flex flex-col gap-1">
-              <span className="px-2.5 pt-1 text-xs font-mono uppercase tracking-widest tw-muted">
-                Admin
-              </span>
-              {ADMIN_LINKS.map((link) => (
+          {/* Admins get two columns: site sections left, admin right. */}
+          <div className={isAdmin ? "grid grid-cols-2 gap-3" : ""}>
+            <nav className="flex flex-col gap-1 min-w-0" aria-label="Site sections">
+              {isAdmin && <MenuHeading>Sections</MenuHeading>}
+              {NAV_LINKS.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  aria-current={activeAdmin === link.href ? "page" : undefined}
                   className={`tw-nav-link py-2${
-                    activeAdmin === link.href ? " tw-nav-active" : ""
+                    isActive(link.match) ? " tw-nav-active" : ""
                   }`}
                 >
                   {link.label}
                 </Link>
               ))}
-              <button
-                type="button"
-                onClick={handleSignOut}
-                disabled={signingOut}
-                className="tw-nav-link py-2 text-left disabled:opacity-50"
+            </nav>
+
+            {isAdmin && (
+              <nav
+                className="flex flex-col gap-1 min-w-0 pl-3 border-l tw-border"
+                aria-label="Admin sections"
               >
-                {signingOut ? "Signing out…" : "Sign out"}
-              </button>
-            </div>
-          )}
-        </nav>
+                <MenuHeading>Admin</MenuHeading>
+                {ADMIN_LINKS.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    aria-current={activeAdmin === link.href ? "page" : undefined}
+                    className={`tw-nav-link py-2${
+                      activeAdmin === link.href ? " tw-nav-active" : ""
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  disabled={signingOut}
+                  className="tw-nav-link py-2 text-left disabled:opacity-50"
+                >
+                  {signingOut ? "Signing out…" : "Sign out"}
+                </button>
+              </nav>
+            )}
+          </div>
+        </div>
       </div>
     </header>
+  );
+}
+
+function MenuHeading({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="px-2.5 pt-1 pb-0.5 text-xs font-mono uppercase tracking-widest tw-muted">
+      {children}
+    </span>
   );
 }
