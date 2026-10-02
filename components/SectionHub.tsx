@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 
 import { PostCard } from "./PostCard";
+import { DevelopingStories } from "./DevelopingStories";
 import { SectionFeed } from "./SectionFeed";
 import {
   countArticlesByCategory,
@@ -198,6 +199,8 @@ export async function SectionHub({
           </Link>
         </div>
       </header>
+
+      {page === 1 && <DevelopingStories />}
 
       {posts.length === 0 ? (
         <div className="tw-card rounded-lg border tw-border p-8 text-center">

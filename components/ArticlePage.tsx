@@ -8,7 +8,7 @@ import {
   getAdjacentArticles,
   getArticle,
   getRelatedArticles,
-  getStoryForCompany,
+  getStoryForArticle,
 } from "@/lib/queries";
 import { articleUrl, type ArticleCategory } from "@/lib/types";
 import { formatDate, slugify } from "@/lib/format";
@@ -35,7 +35,7 @@ export async function ArticlePage({
 
   const [related, story, adjacent] = await Promise.all([
     getRelatedArticles(article),
-    article.company ? getStoryForCompany(article.company) : Promise.resolve(null),
+    getStoryForArticle(article),
     getAdjacentArticles(article),
   ]);
 

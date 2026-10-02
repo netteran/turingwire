@@ -271,3 +271,20 @@ Shipped on the `claude/exciting-volta-d60yie` branch (PR #47):
       words). That gives about 194 news + 230 research articles, roughly 450–500 indexable URLs in
       total with stories, companies and the main pages.
 - [ ] Company index threshold (still `primary_count > 0`). Revisit with the per-reason URL exports.
+
+### Phase 2 status (2026-10-02)
+
+- [x] Model pricing rebuilt on LiteLLM's public price list (MIT). The hand-kept `models.yml` had
+      drifted and was removed. 46 tracked models are curated in `_data/model_catalog.yml`, with prices
+      synced daily by `scripts/fetch_model_prices.py`. Price history was backfilled from the price
+      list's git history (weekly since April 2024), in migration 0019.
+- [x] One page per model at `/models/<slug>/`: prices, specs, workload costs, price-history chart and
+      table, comparisons, similarly priced models, related coverage.
+- [x] 34 curated comparisons at `/models/compare/<a>-vs-<b>/` plus an index page.
+- [x] TW Model Price Index at `/models/price-index/` (chain-linked weekly index), with a weekly report
+      page for every week that had a price change or new listing.
+- [x] Company pages list the company's models and prices, and its best published benchmark results.
+- [x] "Developing stories" on the homepage and news/research hubs. Articles link to the story whose
+      sources include them; story sources link to our summaries.
+- [ ] Benchmarks data (`/benchmarks/`) is still 2024-era Papers With Code results, and that site has
+      shut down. It needs a new source before benchmark positions are meaningful for current models.

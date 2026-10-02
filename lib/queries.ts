@@ -411,3 +411,54 @@ export async function getSubcategories(category?: ArticleCategory): Promise<stri
   const set = new Set((data ?? []).map((r) => (r as { subcategory: string }).subcategory));
   return [...set].sort();
 }
+
+/**
+ * The story an article belongs to: the one whose sources include the
+ * article's own source URL, falling back to the latest story covering its
+ * company.
+ */
+export async function getStoryForArticle(
+  article: Pick<Article, "source_url" | "company">,
+): Promise<Story | null> {
+  if (article.source_url) {
+    const { data } = await getSupabase()
+      .from("stories")
+      .select("*")
+      .contains("sources", [{ url: article.source_url }])
+      .order("last_updated", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (data) return data as Story;
+  }
+  return article.company ? getStoryForCompany(article.company) : null;
+}
+
+/** Most recently updated stories, for the homepage and section hubs. */
+export async function getRecentStories(limit = 3): Promise<Story[]> {
+  const { data, error } = await getSupabase()
+    .from("stories")
+    .select("*")
+    .order("last_updated", { ascending: false })
+    .limit(limit);
+  if (error) return [];
+  return (data ?? []) as Story[];
+}
+
+/** Our summaries of the given source URLs, keyed by source URL. */
+export async function getArticlesBySourceUrls(
+  urls: string[],
+): Promise<Map<string, Pick<Article, "category" | "slug" | "title">>> {
+  const clean = [...new Set(urls.filter(Boolean))];
+  if (clean.length === 0) return new Map();
+  const { data, error } = await getSupabase()
+    .from("articles")
+    .select("category,slug,title,source_url")
+    .in("source_url", clean);
+  if (error) return new Map();
+  return new Map(
+    (data ?? []).map((r) => [
+      r.source_url as string,
+      { category: r.category, slug: r.slug, title: r.title } as Pick<Article, "category" | "slug" | "title">,
+    ]),
+  );
+}
