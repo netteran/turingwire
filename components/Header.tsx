@@ -22,6 +22,17 @@ const NAV_LINKS = [
   { href: "/aistocks/", label: "AI Stocks", match: ["/aistocks"] },
 ] as const;
 
+/** Admin sections: a dropdown on desktop, a group in the mobile menu. */
+const ADMIN_LINKS = [
+  { href: "/admin", label: "Overview" },
+  { href: "/admin/sources", label: "Sources" },
+  { href: "/admin/articles", label: "Articles" },
+  { href: "/admin/articles/new", label: "New article" },
+  { href: "/admin/companies", label: "Companies" },
+  { href: "/admin/prompts", label: "Prompts" },
+  { href: "/admin/settings", label: "Settings" },
+] as const;
+
 export function Header() {
   const pathname = usePathname() ?? "/";
   const router = useRouter();
@@ -30,7 +41,9 @@ export function Header() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [isAdmin, setIsAdmin] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
+  const adminRef = useRef<HTMLDivElement>(null);
 
   // Checked client-side (rather than in the server layout) so this stays a
   // plain client-only concern — reading cookies in the root layout would
@@ -82,6 +95,16 @@ export function Header() {
   const isActive = (fragments: readonly string[]) =>
     fragments.some((f) => pathname.startsWith(f));
 
+  // The most specific admin link matching the path ("New article" beats
+  // "Articles" on /admin/articles/new).
+  const adminPath = pathname.replace(/\/$/, "");
+  const activeAdmin = ADMIN_LINKS.filter((l) =>
+    l.href === "/admin"
+      ? adminPath === "/admin"
+      : adminPath === l.href || adminPath.startsWith(`${l.href}/`),
+  ).sort((a, b) => b.href.length - a.href.length)[0]?.href;
+  const inAdmin = adminPath === "/admin" || adminPath.startsWith("/admin/");
+
   // Adopt whatever the no-flash script already applied to <html>.
   useEffect(() => {
     const current = document.documentElement.getAttribute("data-theme");
@@ -111,8 +134,28 @@ export function Header() {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  // Close the drawer on navigation.
-  useEffect(() => setMobileOpen(false), [pathname]);
+  // Close the drawer and the admin dropdown on navigation.
+  useEffect(() => {
+    setMobileOpen(false);
+    setAdminOpen(false);
+  }, [pathname]);
+
+  // Close the admin dropdown on an outside click or Escape.
+  useEffect(() => {
+    if (!adminOpen) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (!adminRef.current?.contains(e.target as Node)) setAdminOpen(false);
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setAdminOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [adminOpen]);
 
   const toggleTheme = () => {
     const next = theme === "dark" ? "light" : "dark";
@@ -181,24 +224,53 @@ export function Header() {
             </form>
           </div>
 
-          {isAdmin && !pathname.startsWith("/admin") && (
-            <Link
-              href="/admin"
-              className="hidden sm:inline-flex items-center h-7 px-2.5 rounded-md border tw-border text-xs font-mono tw-muted hover:tw-accent transition-colors"
-            >
-              Admin
-            </Link>
-          )}
-
           {isAdmin && (
-            <button
-              type="button"
-              onClick={handleSignOut}
-              disabled={signingOut}
-              className="hidden sm:inline-flex items-center h-7 px-2.5 rounded-md border tw-border text-xs font-mono tw-muted hover:tw-accent transition-colors disabled:opacity-50"
-            >
-              {signingOut ? "Signing out…" : "Sign out"}
-            </button>
+            <div ref={adminRef} className="relative hidden md:block">
+              <button
+                type="button"
+                onClick={() => setAdminOpen((v) => !v)}
+                aria-haspopup="menu"
+                aria-expanded={adminOpen}
+                aria-controls="admin-menu"
+                className={`tw-admin-trigger${inAdmin ? " active" : ""}`}
+              >
+                Admin
+                <svg
+                  className={`w-3 h-3 transition-transform${adminOpen ? " rotate-180" : ""}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {adminOpen && (
+                <div id="admin-menu" role="menu" className="tw-admin-menu">
+                  {ADMIN_LINKS.map((link) => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      role="menuitem"
+                      aria-current={activeAdmin === link.href ? "page" : undefined}
+                      className={`tw-admin-menu-item${activeAdmin === link.href ? " active" : ""}`}
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                  <div className="tw-admin-menu-sep" role="separator" />
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={handleSignOut}
+                    disabled={signingOut}
+                    className="tw-admin-menu-item disabled:opacity-50"
+                  >
+                    {signingOut ? "Signing out…" : "Sign out"}
+                  </button>
+                </div>
+              )}
+            </div>
           )}
 
           <button
@@ -305,11 +377,21 @@ export function Header() {
 
           {isAdmin && (
             <div className="mt-2 pt-2 border-t tw-border flex flex-col gap-1">
-              {!pathname.startsWith("/admin") && (
-                <Link href="/admin" className="tw-nav-link py-2">
-                  Admin panel
+              <span className="px-2.5 pt-1 text-xs font-mono uppercase tracking-widest tw-muted">
+                Admin
+              </span>
+              {ADMIN_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  aria-current={activeAdmin === link.href ? "page" : undefined}
+                  className={`tw-nav-link py-2${
+                    activeAdmin === link.href ? " tw-nav-active" : ""
+                  }`}
+                >
+                  {link.label}
                 </Link>
-              )}
+              ))}
               <button
                 type="button"
                 onClick={handleSignOut}
