@@ -38,6 +38,18 @@ export interface PricePoint {
 
 const num = (v: unknown): number | null => (v === null || v === undefined ? null : Number(v));
 
+/**
+ * PGRST205 = the table doesn't exist: migration 0019 hasn't been applied.
+ * Treat that as "no pricing data yet" so a deploy that lands before the
+ * migration still builds (pages render empty and fill in on revalidation)
+ * instead of failing the whole build. Any other error is real and throws.
+ */
+function missingTable(error: { code?: string } | null): boolean {
+  if (error?.code !== "PGRST205") return false;
+  console.warn("Model pricing tables not found; apply supabase/migrations/0019_model_pricing.sql.");
+  return true;
+}
+
 function toModel(r: Record<string, unknown>): AiModel {
   return {
     ...(r as unknown as AiModel),
@@ -56,12 +68,14 @@ export async function getAllModels(): Promise<AiModel[]> {
     .select("*")
     .order("provider")
     .order("name");
+  if (missingTable(error)) return [];
   if (error) throw error;
   return (data ?? []).map(toModel);
 }
 
 export async function getModel(slug: string): Promise<AiModel | null> {
   const { data, error } = await getSupabase().from("ai_models").select("*").eq("slug", slug).maybeSingle();
+  if (missingTable(error)) return null;
   if (error) throw error;
   return data ? toModel(data) : null;
 }
@@ -72,6 +86,7 @@ export async function getPriceHistory(): Promise<PricePoint[]> {
     .from("model_price_history")
     .select("model_slug,observed_on,input_price,output_price")
     .order("observed_on", { ascending: true });
+  if (missingTable(error)) return [];
   if (error) throw error;
   return (data ?? []).map((r) => ({
     model_slug: r.model_slug as string,
