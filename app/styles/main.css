@@ -11,7 +11,6 @@
   --bg-card:       #ffffff;
   --bg-header:     #ffffffee;
   --bg-mobile:     #ffffff;
-  --bg-admin-nav:  #f8faff;
   --fg:            #111827;
   --fg-muted:      #64748b;
   --fg-heading:    #0f172a;
@@ -30,7 +29,6 @@
   --bg-card:       #0d1732;
   --bg-header:     #060d1fee;
   --bg-mobile:     #060d1f;
-  --bg-admin-nav:  #0a1224;
   --fg:            #e2e8f0;
   --fg-muted:      #94a3b8;
   --fg-heading:    #f0f4ff;
@@ -113,37 +111,69 @@ body.tw-body {
 
 .tw-mobile-nav { background-color: var(--bg-mobile); }
 
-/* ── Admin sub-nav ───────────────────────────────────────────────────────── */
+/* ── Admin menu (header dropdown) ────────────────────────────────────────── */
 
-.tw-admin-nav {
-  /* Pins directly under .tw-header (h-14 + its 1px bottom border). */
-  position: sticky;
-  top: 3.5625rem;
-  z-index: 40;
-  background-color: var(--bg-admin-nav);
-}
-
-.tw-admin-nav-link {
+.tw-admin-trigger {
   display: inline-flex;
   align-items: center;
-  padding: 0.2rem 0.625rem;
+  gap: 0.25rem;
+  height: 1.75rem;
+  padding: 0 0.625rem;
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  color: var(--fg-muted);
+  font-size: 0.75rem;
+  font-family: 'JetBrains Mono', monospace;
+  transition: color 0.15s;
+}
+
+.tw-admin-trigger:hover,
+.tw-admin-trigger[aria-expanded="true"] { color: var(--accent); }
+.tw-admin-trigger.active { color: var(--accent); font-weight: 600; }
+
+.tw-admin-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.375rem);
+  min-width: 11rem;
+  padding: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+  z-index: 60;
+}
+
+.tw-admin-menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.375rem 0.625rem;
   border-radius: 0.375rem;
   color: var(--fg-muted);
   text-decoration: none;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-family: 'JetBrains Mono', monospace;
   transition: color 0.15s, background-color 0.15s;
 }
 
-.tw-admin-nav-link:hover {
+.tw-admin-menu-item:hover {
   color: var(--fg-heading);
   background-color: color-mix(in srgb, var(--border) 60%, transparent);
 }
 
-.tw-admin-nav-link.active {
+.tw-admin-menu-item.active {
   color: var(--accent);
   font-weight: 600;
   background-color: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.tw-admin-menu-sep {
+  height: 1px;
+  margin: 0.25rem 0;
+  background-color: var(--border);
 }
 
 /* ── Search ──────────────────────────────────────────────────────────────── */
