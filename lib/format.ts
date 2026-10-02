@@ -11,6 +11,16 @@ export function formatDate(iso: string): string {
   });
 }
 
+/**
+ * A company's reader-facing profile, or null. The pipeline used to store a
+ * "Turing Wire coverage of …" placeholder for every company (cleared by
+ * migration 0018), which never counts as a real profile.
+ */
+export function profileOf(description: string | null): string | null {
+  const d = description?.trim();
+  return d && !d.startsWith("Turing Wire coverage of ") ? d : null;
+}
+
 /** ISO-8601, matching Jekyll's `date_to_xmlschema`. */
 export function xmlSchemaDate(iso: string): string {
   return new Date(iso).toISOString();

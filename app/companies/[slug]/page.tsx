@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { PostCard } from "@/components/PostCard";
 import { ShareButtons } from "@/components/ShareButtons";
 import { getArticlesForCompany, getCompany, getCompanyPrimaryCount } from "@/lib/queries";
+import { profileOf } from "@/lib/format";
 import { robotsForCompany } from "@/lib/seo";
 import { site, absoluteUrl } from "@/lib/site";
 
@@ -13,12 +14,6 @@ import { site, absoluteUrl } from "@/lib/site";
 export const revalidate = 86400;
 
 type Props = { params: Promise<{ slug: string }> };
-
-/** The pipeline used to store this placeholder for every company (cleared by migration 0018). */
-function profileOf(description: string | null): string | null {
-  const d = description?.trim();
-  return d && !d.startsWith("Turing Wire coverage of ") ? d : null;
-}
 
 function hostOf(url: string): string {
   try {
