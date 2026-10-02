@@ -215,3 +215,41 @@
     color: #fff;
   }
   .err-link-primary:hover { background-color: var(--accent-hover); border-color: var(--accent-hover); color: #fff; }
+
+/* ── Price charts (components/PriceChart.tsx) ─────────────────────────────
+   Series colors are the validated categorical pair (blue, orange), stepped
+   separately for the light and dark card surfaces; checked with the dataviz
+   palette validator against #ffffff and #0d1732. */
+.tw-viz {
+  --viz-series-1: #2a78d6;
+  --viz-series-2: #eb6834;
+  margin: 0;
+}
+[data-theme="dark"] .tw-viz {
+  --viz-series-1: #3987e5;
+  --viz-series-2: #d95926;
+}
+.tw-viz-frame { position: relative; }
+.tw-viz svg { width: 100%; height: auto; display: block; touch-action: pan-y; }
+.tw-viz-grid { stroke: var(--border); stroke-width: 1; }
+.tw-viz-tick { fill: var(--fg-muted); font-size: 11px; font-family: "JetBrains Mono", ui-monospace, monospace; }
+.tw-viz-endlabel { fill: var(--fg); font-size: 11px; font-family: "JetBrains Mono", ui-monospace, monospace; }
+.tw-viz-line { stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.tw-viz-line.tw-viz-s1 { stroke: var(--viz-series-1); }
+.tw-viz-line.tw-viz-s2 { stroke: var(--viz-series-2); }
+.tw-viz-crosshair { stroke: var(--fg-muted); stroke-width: 1; }
+.tw-viz-legend { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; margin-bottom: 0.5rem;
+  font-size: 0.75rem; color: var(--fg-muted); font-family: "JetBrains Mono", ui-monospace, monospace; }
+.tw-viz-legend-item { display: inline-flex; align-items: center; gap: 0.4rem; }
+.tw-viz-key { display: inline-block; width: 14px; height: 2px; border-radius: 1px; }
+.tw-viz-key.tw-viz-s1 { background: var(--viz-series-1); }
+.tw-viz-key.tw-viz-s2 { background: var(--viz-series-2); }
+.tw-viz-tooltip { position: absolute; top: 4px; transform: translateX(-50%); pointer-events: none;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px;
+  font-size: 0.75rem; font-family: "JetBrains Mono", ui-monospace, monospace; white-space: nowrap;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.08); z-index: 2; }
+.tw-viz-tooltip-date { color: var(--fg-muted); margin-bottom: 2px; }
+.tw-viz-tooltip-row { display: flex; align-items: center; gap: 0.4rem; color: var(--fg); }
+.tw-viz-marker { stroke: var(--bg-card); stroke-width: 2; }
+.tw-viz-marker.tw-viz-s1 { fill: var(--viz-series-1); }
+.tw-viz-marker.tw-viz-s2 { fill: var(--viz-series-2); }

@@ -378,7 +378,8 @@ def upsert_story(story: dict) -> None:
 def recent_article_texts(days: int = 30, limit: int = 1000) -> list[dict]:
     """Title + body of articles published within the last `days`.
 
-    Backs the pricing-change scan in fetch_models.py, which used to glob
+    Formerly backed the pricing-change scan in fetch_models.py (now
+    fetch_model_prices.py, which reads prices directly), which used to glob
     _posts/**/*.md before articles moved into Postgres.
     """
     from datetime import timedelta

@@ -6,8 +6,9 @@ import { getSupabase } from "./supabase";
 /**
  * Reference datasets.
  *
- * `models.yml` and `tickers.yml` are hand-maintained and stay in the repo;
- * reading them from disk is enough, since they only change with a deploy.
+ * `tickers.yml` and `model_catalog.yml` are hand-maintained and stay in the
+ * repo; reading them from disk is enough, since they only change with a
+ * deploy. (Model *prices* live in Supabase — see lib/models.ts.)
  *
  * The datasets the Ingest workflow refreshes — stock quotes, the AI index and
  * benchmarks — live in the `market_data` table instead. Committing them to
@@ -87,5 +88,10 @@ export const getAiIndexHistory = async (): Promise<AiIndexHistory> =>
 export const getBenchmarks = async <T = unknown>(): Promise<T> =>
   (await readMarketData<T>("benchmarks")) ?? readYaml<T>("benchmarks.yml", [] as T);
 
-export const getModels = <T = unknown>(): T => readYaml<T>("models.yml", [] as T);
+export interface ModelCatalog {
+  models: { slug: string; name: string; provider: string; company?: string; key: string; retired?: boolean }[];
+  comparisons: [string, string][];
+}
+export const getModelCatalog = (): ModelCatalog =>
+  readYaml<ModelCatalog>("model_catalog.yml", { models: [], comparisons: [] });
 export const getTickers = <T = unknown>(): T => readYaml<T>("tickers.yml", [] as T);

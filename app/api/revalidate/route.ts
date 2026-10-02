@@ -23,6 +23,10 @@ const PATHS = [
   "/companies/",
   "/stories/",
   "/aistocks/",
+  "/models/",
+  "/models/compare/",
+  "/models/price-index/",
+  "/sitemap-models.xml",
   "/benchmarks/",
   "/feed.xml",
   "/feed-major.xml",
@@ -51,6 +55,10 @@ const ROUTES = [
   // Paginated hubs: each new article shifts every page by one.
   "/news/page/[num]",
   "/research/page/[num]",
+  // Model prices change on any ingest run.
+  "/models/[slug]",
+  "/models/compare/[pair]",
+  "/models/price-index/[week]",
 ];
 
 export async function POST(request: NextRequest) {
