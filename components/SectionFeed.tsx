@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { PostCard } from "./PostCard";
 import { DayLabel } from "./DayLabel";
 import { groupByDay, slugify } from "@/lib/format";
+import type { FeedFacets } from "@/lib/feed";
 import type { ArticleCard, ArticleCategory } from "@/lib/types";
 
 /** Cards revealed per scroll step. */
@@ -12,9 +13,11 @@ const BATCH_SIZE = 30;
 /**
  * Filter bar + day-grouped feed for the first page of /news/ and /research/.
  *
- * The full section loads with the page and is filtered client-side. The first
- * batch is server-rendered like any other markup, and the paginated archive
- * (/news/page/2/, …) below it keeps every article reachable by plain link.
+ * The first batch is server-rendered with the page. The full section (trimmed
+ * cards, /api/feed/<category>/) is fetched once, the first time the reader
+ * filters or scrolls past that batch, and filtered client-side from then on;
+ * see lib/feed.ts for why it isn't embedded. The paginated archive
+ * (/news/page/2/, …) below keeps every article reachable by plain link.
  *
  * Filters mirror into the query string (?topic=, ?impact=, ?company=,
  * ?range=, ?q=) so a filtered view can be shared or bookmarked.
@@ -76,14 +79,16 @@ const DAY_MS = 86_400_000;
 
 export function SectionFeed({
   category,
-  posts,
-  companies,
+  initialPosts,
+  facets,
   todayUtc,
   nowMs,
 }: {
   category: ArticleCategory;
-  posts: ArticleCard[];
-  companies: { slug: string; name: string }[];
+  /** The newest cards, server-rendered. */
+  initialPosts: ArticleCard[];
+  /** Counts and company options for the whole section. */
+  facets: FeedFacets;
   todayUtc: string;
   /** Render time, passed from the server so the range filter hydrates identically. */
   nowMs: number;
@@ -94,18 +99,13 @@ export function SectionFeed({
   // False until the query string has been read, so the URL mirror below
   // never overwrites it with the defaults.
   const [ready, setReady] = useState(false);
+  // The whole section, once fetched; until then only the first batch.
+  const [all, setAll] = useState<ArticleCard[] | null>(null);
+  const [loadState, setLoadState] = useState<"idle" | "loading" | "error">("idle");
+  const posts = all ?? initialPosts;
+  const { total, topicCounts, companies } = facets;
 
   const topicChips = TOPIC_CHIPS[category];
-
-  // Topics that actually have articles, with counts, so empty chips can be
-  // dimmed rather than offering a dead end.
-  const topicCounts = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const p of posts) {
-      if (p.subcategory) counts.set(p.subcategory, (counts.get(p.subcategory) ?? 0) + 1);
-    }
-    return counts;
-  }, [posts]);
 
   // Adopt filters from the query string once mounted.
   useEffect(() => {
@@ -146,6 +146,22 @@ export function SectionFeed({
     (k) => filters[k].trim() !== DEFAULTS[k],
   );
 
+  // Fetch the full section the first time it's needed: a filter is set, or
+  // the reader has scrolled past the server-rendered batch.
+  const needAll = hasActiveFilters || visibleCount > initialPosts.length;
+  useEffect(() => {
+    if (!needAll || all || loadState === "loading" || loadState === "error") return;
+    setLoadState("loading");
+    fetch(`/api/feed/${category}/`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((rows: ArticleCard[]) => {
+        setAll(rows);
+        setLoadState("idle");
+      })
+      .catch(() => setLoadState("error"));
+  }, [needAll, all, loadState, category]);
+  const pending = needAll && !all;
+
   const visible = useMemo(() => {
     const needle = filters.q.trim().toLowerCase();
     const cutoff = filters.range === "all" ? 0 : nowMs - Number(filters.range) * DAY_MS;
@@ -154,12 +170,12 @@ export function SectionFeed({
       if (filters.impact === "major" && p.impact !== "critical" && p.impact !== "major") return false;
       if (filters.impact === "critical" && p.impact !== "critical") return false;
       if (filters.company !== "all") {
-        const all = [p.company, ...(p.secondary_companies ?? [])].filter(Boolean) as string[];
-        if (!all.some((c) => slugify(c) === filters.company)) return false;
+        const names = [p.company, ...(p.secondary_companies ?? [])].filter(Boolean) as string[];
+        if (!names.some((c) => slugify(c) === filters.company)) return false;
       }
       if (cutoff && new Date(p.published_at).getTime() < cutoff) return false;
       if (needle) {
-        const haystack = `${p.title} ${p.description ?? ""} ${p.company ?? ""} ${
+        const haystack = `${p.title} ${p.excerpt ?? ""} ${p.description ?? ""} ${p.company ?? ""} ${
           p.source_publisher ?? ""
         }`.toLowerCase();
         if (!haystack.includes(needle)) return false;
@@ -174,8 +190,12 @@ export function SectionFeed({
     setVisibleCount(BATCH_SIZE);
   }, [filters]);
 
-  const shown = visible.slice(0, visibleCount);
-  const hasMore = visibleCount < visible.length;
+  // While the full list is on its way, filtered results would be wrong, so
+  // a filtered view waits; an unfiltered one keeps showing the first batch.
+  const shown = pending && hasActiveFilters ? [] : visible.slice(0, visibleCount);
+  const hasMore = all ? visibleCount < visible.length : !pending && total > initialPosts.length;
+  // Before the full list arrives, the unfiltered count is the section total.
+  const matching = all || !hasActiveFilters ? (all ? visible.length : total) : null;
 
   // Infinite scroll: reveal another batch of the already-fetched, already-
   // filtered list as the sentinel nears the viewport.
@@ -245,7 +265,7 @@ export function SectionFeed({
 
         <FilterRow label="Topic">
           {[{ value: "all", label: "All topics" }, ...topicChips].map((chip) => {
-            const count = chip.value === "all" ? posts.length : topicCounts.get(chip.value) ?? 0;
+            const count = chip.value === "all" ? total : topicCounts[chip.value] ?? 0;
             return (
               <button
                 key={chip.value}
@@ -295,7 +315,8 @@ export function SectionFeed({
 
         <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t tw-border">
           <p className="text-xs font-mono tw-muted" aria-live="polite">
-            {visible.length.toLocaleString("en-US")} of {posts.length.toLocaleString("en-US")}{" "}
+            {matching === null ? "…" : matching.toLocaleString("en-US")} of{" "}
+            {total.toLocaleString("en-US")}{" "}
             {category === "news" ? "articles" : "papers"}
           </p>
           <button
@@ -323,9 +344,20 @@ export function SectionFeed({
         </div>
       </div>
 
+      {loadState === "error" && (
+        <div className="tw-card rounded-lg border tw-border p-4 mb-4 text-center text-sm font-mono tw-muted">
+          Couldn&apos;t load the full list.{" "}
+          <button type="button" className="tw-accent hover:underline" onClick={() => setLoadState("idle")}>
+            Try again
+          </button>
+        </div>
+      )}
+
       {groups.length === 0 ? (
         <div className="tw-card rounded-lg border tw-border p-8 text-center">
-          <p className="tw-muted text-sm font-mono">No articles match these filters.</p>
+          <p className="tw-muted text-sm font-mono">
+            {pending ? "Loading…" : "No articles match these filters."}
+          </p>
         </div>
       ) : (
         groups.map((group) => (
@@ -351,7 +383,13 @@ export function SectionFeed({
 
       {hasMore ? (
         <div ref={sentinelRef} className="h-1" aria-hidden="true" />
+      ) : pending ? (
+        groups.length > 0 &&
+        loadState === "loading" && (
+          <p className="text-center text-xs font-mono tw-muted py-4">Loading more…</p>
+        )
       ) : (
+        all &&
         visible.length > 0 && (
           <p className="text-center text-xs font-mono tw-muted py-4">
             {visible.length} {category === "news" ? "article" : "paper"}

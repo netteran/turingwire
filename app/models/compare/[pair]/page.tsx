@@ -21,8 +21,8 @@ import {
 import { site, absoluteUrl } from "@/lib/site";
 import { slugify } from "@/lib/slugify";
 
-// Refreshed on demand after each ingest run (app/api/revalidate); the timer
-// is only a fallback.
+// Refreshed daily by this timer; deliberately not revalidated on every ingest
+// run, which would cost ISR writes for little gain (app/api/revalidate).
 export const revalidate = 86400;
 
 type Props = { params: Promise<{ pair: string }> };
