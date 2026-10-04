@@ -4,8 +4,8 @@ import { ShareButtons } from "@/components/ShareButtons";
 import { getBenchmarks } from "@/lib/data";
 import { absoluteUrl } from "@/lib/site";
 
-// Refreshed on demand after each ingest run (app/api/revalidate); the timer
-// is only a fallback.
+// Refreshed daily by this timer; deliberately not revalidated on every ingest
+// run, which would cost ISR writes for little gain (app/api/revalidate).
 export const revalidate = 86400;
 
 export const metadata: Metadata = {

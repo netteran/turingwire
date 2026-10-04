@@ -10,16 +10,16 @@ import {
   getAllArticlesByCategory,
   getArticlesByCategory,
 } from "@/lib/queries";
-import { slugify } from "@/lib/format";
+import { FEED_INITIAL, feedFacets, toFeedCard } from "@/lib/feed";
 import { site, absoluteUrl } from "@/lib/site";
-import type { ArticleCard, ArticleCategory } from "@/lib/types";
+import type { ArticleCategory } from "@/lib/types";
 
 /**
  * Section index for /news/ and /research/.
  *
  * Page 1 is the filterable feed (topic, impact, company, date range, text).
- * It reveals cards client-side as the reader scrolls, so on its own crawlers
- * would only see its first batch of links; the server-rendered archive pages
+ * It renders the first batch and loads the rest on demand (lib/feed.ts), so
+ * on its own crawlers would only see that batch of links; the server-rendered archive pages
  * (/news/page/2/, /news/page/3/, …) linked below it give every article a
  * plain <a href> path.
  */
@@ -92,8 +92,8 @@ export async function SectionHub({
   page: number;
 }) {
   const hub = HUBS[category];
-  // Page 1 filters the whole section client-side, so it loads all of it;
-  // archive pages only need their own slice and the total for the pager.
+  // Page 1 reads the whole section for its filter facets but only embeds
+  // the first batch; archive pages need their own slice and the total.
   const all =
     page === 1
       ? (await getAllArticlesByCategory(category)).filter((p) => p.title?.trim())
@@ -209,8 +209,8 @@ export async function SectionHub({
       ) : page === 1 ? (
         <SectionFeed
           category={category}
-          posts={all}
-          companies={companyOptions(all)}
+          initialPosts={all.slice(0, FEED_INITIAL).map(toFeedCard)}
+          facets={feedFacets(all)}
           todayUtc={new Date().toISOString().slice(0, 10)}
           nowMs={Date.now()}
         />
@@ -242,22 +242,6 @@ export async function SectionHub({
       )}
     </div>
   );
-}
-
-/** Every company tagged in the section (primary or secondary), A–Z. */
-function companyOptions(posts: ArticleCard[]) {
-  const bySlug = new Map<string, string>();
-  for (const p of posts) {
-    for (const name of [p.company, ...(p.secondary_companies ?? [])]) {
-      const trimmed = name?.trim();
-      if (!trimmed) continue;
-      const slug = slugify(trimmed);
-      if (slug && !bySlug.has(slug)) bySlug.set(slug, trimmed);
-    }
-  }
-  return [...bySlug]
-    .map(([slug, name]) => ({ slug, name }))
-    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 function Pagination({

@@ -3,8 +3,8 @@ import { stripMarkdown, truncateWords } from "@/lib/format";
 import { articleUrl } from "@/lib/types";
 import { site } from "@/lib/site";
 
-// Refreshed on demand after each ingest run (app/api/revalidate); the timer
-// is only a fallback.
+// Refreshed daily by this timer; deliberately not revalidated on every ingest
+// run, which would cost ISR writes for little gain (app/api/revalidate).
 export const revalidate = 86400;
 
 const day = (iso: string | null) => (iso ? iso.slice(0, 10) : "—");
