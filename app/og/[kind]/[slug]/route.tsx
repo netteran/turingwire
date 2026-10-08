@@ -135,7 +135,9 @@ export async function GET(
       width: 1200,
       height: 630,
       headers: {
-        "Cache-Control": "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+        // A card only changes if the title is edited; a week at the CDN
+        // keeps crawlers re-fetching it from regenerating it daily.
+        "Cache-Control": "public, max-age=86400, s-maxage=604800, stale-while-revalidate=2592000",
       },
     },
   );

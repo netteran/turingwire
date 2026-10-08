@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/Link";
 import { blended, formatUsd, pctChange, type IndexWeek, type PriceChange } from "@/lib/models";
 
 /** One-paragraph summary of a week's movement, generated from the data. */

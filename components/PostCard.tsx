@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/Link";
 import { ImpactBadge } from "./ImpactBadge";
 import { articleUrl, type ArticleCard } from "@/lib/types";
 import { excerpt, formatDate, slugify, xmlSchemaDate } from "@/lib/format";
