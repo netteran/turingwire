@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { ModelsTable, type ModelRow } from "@/components/ModelsTable";
 import { ShareButtons } from "@/components/ShareButtons";
 import { absoluteUrl } from "@/lib/site";

@@ -72,10 +72,18 @@ export async function updateSetting(key: string, value: string) {
  */
 export async function setArticleStatus(id: number, status: "published" | "archived") {
   const supabase = await guard();
-  const { error } = await supabase.from("articles").update({ status }).eq("id", id);
+  const { data, error } = await supabase
+    .from("articles")
+    .update({ status })
+    .eq("id", id)
+    .select("category, slug")
+    .single();
   if (error) throw error;
   revalidatePath("/admin/articles");
   revalidatePath("/");
+  // Article pages have no timer (they're cached until the next deploy), so
+  // the status label only changes if the page is refreshed here.
+  revalidatePath(`/${data.category}/${data.slug}/`);
 }
 
 export interface ArticleEdit {
@@ -102,7 +110,10 @@ export async function updateArticle(id: number, slug: string, patch: ArticleEdit
   if (error) throw error;
   revalidatePath("/admin/articles");
   revalidatePath(`/admin/articles/${id}`);
-  revalidatePath(`/${patch.category}/${slug}/`);
+  // Both sections: a category change leaves the old URL cached otherwise,
+  // and article pages have no timer to clear it.
+  revalidatePath(`/news/${slug}/`);
+  revalidatePath(`/research/${slug}/`);
   revalidatePath("/");
 }
 

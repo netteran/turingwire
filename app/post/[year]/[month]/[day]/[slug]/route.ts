@@ -9,9 +9,10 @@ import { articleUrl } from "@/lib/types";
  *
  * Every migrated row carries its original permalink in `legacy_path`, so this
  * is a single indexed lookup rather than 5,196 entries in next.config. The
- * result never changes once an article exists, so a daily timer is plenty.
+ * result never changes once an article exists, so it is cached until the
+ * next deploy rather than re-run daily for every crawled legacy URL.
  */
-export const revalidate = 86400;
+export const revalidate = false;
 
 export async function GET(
   _request: Request,

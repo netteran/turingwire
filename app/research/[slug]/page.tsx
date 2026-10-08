@@ -4,10 +4,12 @@ import { articleMetadata } from "@/lib/articleMetadata";
 
 /**
  * Articles are rendered on demand and cached; new rows go live without a deploy.
- * A published article rarely changes, and admin edits revalidate it directly,
- * so the timer only refreshes the related/adjacent links — daily is plenty.
+ * A published article rarely changes, and admin edits revalidate it directly
+ * (app/admin/actions.ts), so there is no timer: a page stays cached until the
+ * next deploy. A daily timer re-rendered every article crawlers touched each
+ * day — thousands of ISR writes just to refresh the related/adjacent links.
  */
-export const revalidate = 86400;
+export const revalidate = false;
 
 type Props = { params: Promise<{ slug: string }> };
 

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/Link";
 import type { AiIndexHistory } from "@/lib/data";
 
 /** TW AI Index sidebar card. The sparkline is drawn client-side by stocks.js. */

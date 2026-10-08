@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/Link";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { profileOf } from "@/lib/format";
