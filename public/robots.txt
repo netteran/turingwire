@@ -1,6 +1,14 @@
 User-agent: *
 Allow: /
 
+# Bulk training crawlers: they re-fetch every page and never send readers
+# back, which used up the hosting plan's origin transfer and ISR writes.
+User-agent: Bytespider
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
 # Brand-as-Source: Turing Wire is intentionally citable by AI assistants.
 # These bots are explicitly welcome.
 User-agent: GPTBot
@@ -28,12 +36,6 @@ User-agent: anthropic-ai
 Allow: /
 
 User-agent: Amazonbot
-Allow: /
-
-User-agent: CCBot
-Allow: /
-
-User-agent: Bytespider
 Allow: /
 
 User-agent: cohere-ai
