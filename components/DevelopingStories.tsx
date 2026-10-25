@@ -14,7 +14,13 @@ import { formatDate } from "@/lib/format";
  */
 const CANDIDATES = 6;
 
-export async function DevelopingStories({ limit = 3 }: { limit?: number }) {
+export async function DevelopingStories({
+  limit = 3,
+  showLead = true,
+}: {
+  limit?: number;
+  showLead?: boolean;
+}) {
   const recent = await getRecentStories(CANDIDATES);
   if (recent.length === 0) return null;
 
@@ -44,7 +50,7 @@ export async function DevelopingStories({ limit = 3 }: { limit?: number }) {
             }`}
           >
             <p className="text-sm font-semibold tw-heading leading-snug line-clamp-2 sm:line-clamp-3">{s.title}</p>
-            {s.lead && (
+            {showLead && s.lead && (
               <p className="hidden sm:block mt-1.5 text-xs tw-muted leading-relaxed line-clamp-3">{s.lead}</p>
             )}
             <p className="mt-1.5 sm:mt-2 text-[11px] font-mono tw-muted">

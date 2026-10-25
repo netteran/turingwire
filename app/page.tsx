@@ -88,7 +88,7 @@ export default async function HomePage() {
               <p className="text-xs font-mono tw-muted mt-1">{site.motto}</p>
             </div>
 
-            <DevelopingStories />
+            <DevelopingStories showLead={false} />
 
             {recent.length === 0 ? (
               <div className="tw-card rounded-lg border tw-border p-8 text-center">
