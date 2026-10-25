@@ -893,3 +893,24 @@ select.tw-input {
   padding: 6px 8px;
 }
 .tw-share-panel .tw-share-label { display: inline; }
+
+/* Support message when advertising cannot load. */
+.tw-support-notice {
+  border: 1px solid #ef4444;
+  border-left-width: 4px;
+  border-radius: 0.5rem;
+  padding: 1rem 1.25rem;
+  background: #fff1f2;
+  color: #991b1b;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.tw-support-notice-title {
+  font-weight: 600;
+  margin-bottom: 0.375rem;
+}
+[data-theme="dark"] .tw-support-notice {
+  background: #30141e;
+  color: #fecaca;
+  border-color: #f87171;
+}
