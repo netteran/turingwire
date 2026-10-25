@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 
 import { ImpactBadge } from "./ImpactBadge";
 import { ShareButtons } from "./ShareButtons";
-import { renderArticleBody } from "@/lib/articleBody";
+import { splitArticleBodyForAd } from "@/lib/articleBody";
+import { ArticleAd } from "./ArticleAd";
 import {
   getAdjacentArticles,
   getArticle,
@@ -41,7 +42,7 @@ export async function ArticlePage({
 
   const canonical = absoluteUrl(articleUrl(article));
   const byline = bylineFor(article);
-  const bodyHtml = renderArticleBody(article.body ?? "");
+  const [bodyIntroHtml, bodyRestHtml] = splitArticleBodyForAd(article.body ?? "");
   const publishedTime = new Date(article.published_at);
 
   const isStocks = article.tags.includes("stocks");
@@ -252,8 +253,17 @@ export async function ArticlePage({
 
       <div
         className="tw-prose prose-article"
-        dangerouslySetInnerHTML={{ __html: bodyHtml }}
+        dangerouslySetInnerHTML={{ __html: bodyIntroHtml }}
       />
+      {bodyRestHtml && (
+        <>
+          <ArticleAd key={article.id} />
+          <div
+            className="tw-prose prose-article"
+            dangerouslySetInnerHTML={{ __html: bodyRestHtml }}
+          />
+        </>
+      )}
 
       <div className="mt-10 pt-6 border-t tw-border flex items-center gap-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -7,6 +7,7 @@ import { PostCard } from "@/components/PostCard";
 import { BreakingStrip } from "@/components/BreakingStrip";
 import { DayLabel } from "@/components/DayLabel";
 import { PartnerSpotlight } from "@/components/PartnerSpotlight";
+import { FeedAd } from "@/components/FeedAd";
 import { AiIndexCard } from "@/components/AiIndexCard";
 import { TopMovers } from "@/components/TopMovers";
 import { StocksBootstrap } from "@/components/StocksBootstrap";
@@ -117,9 +118,7 @@ export default async function HomePage() {
                       <div key={post.id}>
                         <PostCard post={post} />
                         {groupIndex === 0 && postIndex === 0 && (
-                          <div className="block lg:hidden mt-3">
-                            <PartnerSpotlight />
-                          </div>
+                          <FeedAd />
                         )}
                       </div>
                     ))}

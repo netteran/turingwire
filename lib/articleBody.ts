@@ -63,3 +63,29 @@ export function renderArticleBody(markdown: string): string {
     return splitLabel(inner.trim()) ?? match;
   });
 }
+
+/** Split after the first top-level paragraph, keeping nested HTML intact. */
+export function splitArticleBodyForAd(markdown: string): [string, string] {
+  const tokens = marked.lexer(markdown);
+  for (let index = 0; index < tokens.length; index++) {
+    const token = tokens[index];
+    if (token.type !== "paragraph") continue;
+    // Section labels can render as headings rather than paragraphs.
+    const rendered = renderArticleBody(token.raw);
+    if (!rendered.includes("</p>")) continue;
+    const before = tokens.slice(0, index + 1);
+    const after = tokens.slice(index + 1);
+    // Preserve reference-style links when parsing the two token lists.
+    const parse = (part: typeof before) => {
+      const list = Object.assign(part, { links: tokens.links });
+      return marked.parser(list).replace(/<p>([\s\S]*?)<\/p>/g, (match, inner: string) =>
+        splitLabel(inner.trim()) ?? match,
+      );
+    };
+    const remainder = parse(after);
+    // A one-paragraph article has no between-paragraph placement.
+    if (!remainder.includes("<p>")) break;
+    return [parse(before), remainder];
+  }
+  return [renderArticleBody(markdown), ""];
+}
