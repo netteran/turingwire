@@ -9,6 +9,11 @@ import { site, absoluteUrl } from "@/lib/site";
 
 export const revalidate = 86400;
 
+// Generate and cache paths on first visit, including content added after a deploy.
+export async function generateStaticParams(): Promise<{ week: string }[]> {
+  return [];
+}
+
 type Props = { params: Promise<{ week: string }> };
 
 async function load(key: string) {

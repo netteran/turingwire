@@ -25,6 +25,11 @@ import { slugify } from "@/lib/slugify";
 // run, which would cost ISR writes for little gain (app/api/revalidate).
 export const revalidate = 86400;
 
+// Generate and cache paths on first visit, including content added after a deploy.
+export async function generateStaticParams(): Promise<{ pair: string }[]> {
+  return [];
+}
+
 type Props = { params: Promise<{ pair: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

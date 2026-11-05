@@ -5,6 +5,11 @@ import { SectionHub, parsePageParam, sectionHubMetadata } from "@/components/Sec
 // run, which would cost ISR writes for little gain (app/api/revalidate).
 export const revalidate = 86400;
 
+// Generate and cache paths on first visit, including content added after a deploy.
+export async function generateStaticParams(): Promise<{ num: string }[]> {
+  return [];
+}
+
 type Props = { params: Promise<{ num: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
