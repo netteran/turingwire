@@ -11,6 +11,11 @@ import { articleMetadata } from "@/lib/articleMetadata";
  */
 export const revalidate = false;
 
+// Generate and cache paths on first visit, including content added after a deploy.
+export async function generateStaticParams(): Promise<{ slug: string }[]> {
+  return [];
+}
+
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
